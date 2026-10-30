@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whispering Leaf</title>
+<meta name="description" content="Fictional concept site for Whispering Leaf, a Sydney landscaping company.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --leaf:#3f5a40; --leaf-d:#2c412e; --sage:#a9b8a0; --stone:#e9e3d8; --stone-2:#d8cfbf;
+  --timber:#9a6a43; --soil:#3b2c22; --ink:#22201c; --muted:#6b645a; --paper:#f6f2ea; --white:#fffdf8;
+  --radius:14px; --shadow:0 10px 30px rgba(59,44,34,.10);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+img,video{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.15;margin:0 0 .5em;letter-spacing:-.01em}
+h1{font-size:clamp(2.3rem,6vw,4.2rem)} h2{font-size:clamp(1.8rem,4vw,2.7rem)} h3{font-size:1.3rem}
+p{margin:0 0 1em}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+section{padding:88px 0}
+.eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--timber);font-weight:600;margin-bottom:.8em}
+.lede{color:var(--muted);max-width:60ch;font-size:1.08rem}
+.notice{background:#fff6e0;border:1px solid #e6cf95;color:#5c4813;border-radius:10px;padding:10px 14px;font-size:.88rem}
+.tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--stone);color:var(--soil);padding:3px 9px;border-radius:99px}
+:focus-visible{outline:3px solid var(--timber);outline-offset:3px;border-radius:6px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.5em;font:600 .98rem var(--sans);padding:14px 24px;border-radius:99px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;transition:transform .2s,background .2s,box-shadow .2s,color .2s}
+.btn-primary{background:var(--leaf);color:var(--white)}
+.btn-primary:hover{background:var(--leaf-d);transform:translateY(-2px);box-shadow:0 8px 20px rgba(44,65,46,.3)}
+.btn-ghost{border-color:currentColor;color:var(--white);background:transparent}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-line{border-color:var(--leaf);color:var(--leaf);background:transparent}
+.btn-line:hover{background:var(--leaf);color:var(--white)}
+
+/* Header */
+header.top{position:sticky;top:0;z-index:50;background:rgba(246,242,234,.88);backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .3s}
+header.top.scrolled{border-color:var(--stone-2)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--serif);font-size:1.3rem}
+.brand svg{width:28px;height:28px}
+.nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0;align-items:center}
+.nav ul a{text-decoration:none;font-size:.93rem;color:var(--muted);position:relative;padding:4px 0}
+.nav ul a:not(.btn)::after{content:"";position:absolute;left:0;bottom:-2px;width:100%;height:1.5px;background:var(--timber);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.nav ul a:not(.btn):hover,.nav ul a.active{color:var(--ink)}
+.nav ul a:not(.btn):hover::after,.nav ul a.active::after{transform:scaleX(1)}
+.nav .btn{padding:10px 18px;font-size:.88rem;color:var(--white)}
+.menu-btn{display:none;background:none;border:0;padding:8px;cursor:pointer}
+.menu-btn span{display:block;width:24px;height:2px;background:var(--ink);margin:5px 0;transition:.3s}
+@media (max-width:860px){
+  .menu-btn{display:block}
+  .nav ul{position:fixed;inset:68px 0 auto 0;flex-direction:column;background:var(--paper);padding:20px;gap:16px;border-bottom:1px solid var(--stone-2);transform:translateY(-130%);visibility:hidden;transition:transform .35s,visibility .35s;align-items:stretch}
+  .nav ul.open{transform:none;visibility:visible}
+  .nav ul a{font-size:1.05rem}
+  .nav .btn{justify-content:center}
+}
+
+/* Hero */
+.hero{position:relative;min-height:88vh;display:flex;align-items:flex-end;color:var(--white);padding:0;overflow:hidden;background:var(--soil)}
+.hero video,.hero .hero-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero .hero-fallback{background:radial-gradient(120% 80% at 70% 20%,#c9a46c 0%,transparent 45%),linear-gradient(160deg,#4d6b48 0%,#2c412e 55%,#3b2c22 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(34,32,28,.15) 0%,rgba(34,32,28,.35) 45%,rgba(34,32,28,.82) 100%)}
+.hero .wrap{position:relative;z-index:2;padding-bottom:80px;padding-top:120px}
+.hero p.lede{color:rgba(255,253,248,.88);font-size:1.15rem}
+.hero .eyebrow{color:#e5c79b}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}
+.hero-meta{display:flex;gap:28px;flex-wrap:wrap;margin-top:42px;font-size:.88rem;color:rgba(255,253,248,.8)}
+.hero-meta b{display:block;font-family:var(--serif);font-weight:400;font-size:1.3rem;color:var(--white)}
+.video-toggle{position:absolute;right:20px;bottom:20px;z-index:3;background:rgba(0,0,0,.35);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:8px 14px;font:500 .8rem var(--sans);cursor:pointer}
+
+/* Services */
+.grid{display:grid;gap:22px}
+.services{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.services{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.services{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(59,44,34,.16)}
+.ph{position:relative;aspect-ratio:4/3;display:flex;align-items:flex-end;padding:14px;color:rgba(255,253,248,.92);font-size:.78rem;line-height:1.4}
+.ph::before{content:"Image placeholder";position:absolute;top:12px;left:12px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;background:rgba(0,0,0,.28);padding:3px 8px;border-radius:99px}
+.ph-garden{background:radial-gradient(60% 60% at 30% 30%,#7c9a6c,transparent 70%),linear-gradient(135deg,#4a6b47,#2c412e)}
+.ph-paving{background:repeating-linear-gradient(90deg,#cfc4b1 0 58px,#b9ad98 58px 61px),#cfc4b1;background-blend-mode:multiply}
+.ph-wall{background:repeating-linear-gradient(0deg,#a89a85 0 34px,#8d806d 34px 37px),linear-gradient(#a89a85,#8d806d)}
+.ph-drive{background:linear-gradient(170deg,#6f685f 0%,#57514a 60%,#4a6b47 60%,#3f5a40 100%)}
+.ph-turf{background:repeating-linear-gradient(100deg,#6d8f55 0 30px,#628549 30px 60px)}
+.ph-pergola{background:repeating-linear-gradient(90deg,transparent 0 40px,#9a6a43 40px 50px),linear-gradient(180deg,#d9c4a0,#a9b8a0)}
+.ph-before{background:linear-gradient(160deg,#a39a87,#7e7462 60%,#6b6455)}
+.ph-after{background:radial-gradient(50% 50% at 75% 30%,#e8cf9e,transparent 70%),linear-gradient(160deg,#5d7d55,#3f5a40 55%,#9a6a43)}
+.ph-site{background:linear-gradient(160deg,#b9ad98,#8d806d 50%,#6b6455)}
+.ph span{position:relative;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.card-body{padding:22px 22px 24px;flex:1;display:flex;flex-direction:column}
+.card-body p{color:var(--muted);font-size:.95rem}
+.card-body .more{margin-top:auto;font-weight:600;font-size:.9rem;color:var(--leaf);background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.card-body .more:hover{text-decoration:underline}
+
+/* Process */
+.process-bg{background:var(--stone)}
+.steps{grid-template-columns:repeat(4,1fr);counter-reset:s;margin-top:40px}
+@media (max-width:860px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.steps{grid-template-columns:1fr}}
+.step{position:relative;padding:26px 22px;background:var(--paper);border-radius:var(--radius);border-top:3px solid var(--sage);transition:border-color .3s}
+.step:hover{border-color:var(--leaf)}
+.step::before{counter-increment:s;content:"0" counter(s);font-family:var(--serif);font-size:2.2rem;color:var(--timber);display:block;margin-bottom:6px}
+.step p{color:var(--muted);font-size:.93rem;margin:0}
+.step small{display:block;margin-top:12px;font-weight:600;color:var(--leaf);font-size:.8rem}
+
+/* Story */
+.story{grid-template-columns:1.1fr 1fr;align-items:center;gap:48px}
+@media (max-width:900px){.story{grid-template-columns:1fr}}
+.ba{position:relative;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3;box-shadow:var(--shadow);user-select:none;touch-action:pan-y}
+.ba .ph{position:absolute;inset:0;aspect-ratio:auto;font-size:.85rem}
+.ba .after-layer{clip-path:inset(0 0 0 var(--pos,50%))}
+.ba .label{position:absolute;top:14px;z-index:3;background:rgba(255,253,248,.92);color:var(--ink);font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px}
+.ba .l-b{left:14px}.ba .l-a{right:14px}
+.ba .ph::before{top:auto;bottom:auto;display:none}
+.ba-handle{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:2px;background:var(--white);z-index:4;transform:translateX(-1px);pointer-events:none}
+.ba-handle::after{content:"⟷";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:var(--white);color:var(--leaf);display:grid;place-items:center;font-size:1.1rem;box-shadow:var(--shadow)}
+.ba input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;z-index:5;margin:0}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.facts div{background:var(--white);border-radius:10px;padding:12px 14px;font-size:.88rem;color:var(--muted)}
+.facts b{display:block;color:var(--ink);font-weight:600}
+
+/* Quote form */
+.quote-bg{background:var(--leaf-d);color:var(--white)}
+.quote-bg .lede{color:rgba(255,253,248,.8)}
+.quote-bg .eyebrow{color:#e5c79b}
+.quote{grid-template-columns:.9fr 1.1fr;gap:56px}
+@media (max-width:900px){.quote{grid-template-columns:1fr;gap:30px}}
+form{background:var(--white);color:var(--ink);border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.row{grid-template-columns:1fr}form{padding:22px}}
+.field{margin-bottom:16px}
+label{display:block;font-size:.86rem;font-weight:600;margin-bottom:6px}
+label .opt{font-weight:400;color:var(--muted)}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--stone-2);border-radius:10px;background:var(--paper);color:var(--ink);transition:border-color .2s,box-shadow .2s,background .2s}
+input:hover,select:hover,textarea:hover{border-color:var(--sage)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--leaf);background:var(--white);box-shadow:0 0 0 4px rgba(63,90,64,.15)}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:#b4532f;background:#fdf3ef}
+.err{display:none;color:#a2461f;font-size:.8rem;margin-top:5px}
+.field.invalid .err{display:block}
+textarea{min-height:120px;resize:vertical}
+.counter{font-size:.75rem;color:var(--muted);text-align:right;margin-top:4px}
+form .btn{width:100%;justify-content:center;margin-top:6px}
+form .notice{margin-bottom:18px}
+.success{display:none;text-align:center;padding:20px 6px}
+.success.show{display:block;animation:rise .5s ease}
+.success .tick{width:64px;height:64px;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;font-size:1.8rem;margin:0 auto 16px}
+.success pre{text-align:left;background:var(--paper);padding:14px;border-radius:10px;font-size:.78rem;overflow:auto;white-space:pre-wrap}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Portal */
+.portal{background:var(--white);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;margin-top:34px}
+.portal-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:22px 26px;border-bottom:1px solid var(--stone)}
+.portal-head h3{margin:0}
+.track{display:grid;grid-template-columns:repeat(4,1fr);padding:26px 26px 6px;gap:8px}
+.track div{text-align:center;font-size:.82rem;color:var(--muted);position:relative}
+.track div::before{content:"";display:block;height:6px;border-radius:99px;background:var(--stone);margin-bottom:10px}
+.track .done::before{background:var(--sage)}
+.track .now::before{background:linear-gradient(90deg,var(--leaf) 60%,var(--stone) 60%)}
+.track .now{color:var(--ink);font-weight:600}
+.portal-body{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:20px;padding:22px 26px 28px}
+@media (max-width:900px){.portal-body{grid-template-columns:1fr}.track{grid-template-columns:1fr 1fr}}
+.pbox{background:var(--paper);border-radius:12px;padding:18px}
+.pbox h4{margin:0 0 8px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--timber)}
+.pbox p{font-size:.93rem;margin:0 0 .5em}
+.pbox .ph{border-radius:10px;aspect-ratio:16/10}
+.pbox time{font-size:.78rem;color:var(--muted)}
+
+/* Contact */
+.contact{background:var(--soil);color:var(--white);text-align:center}
+.contact .lede{color:rgba(255,253,248,.75);margin:0 auto 34px}
+.contact-links{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+.contact-links a{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;background:rgba(255,253,248,.07);border:1px solid rgba(255,253,248,.18);border-radius:16px;padding:20px 24px;min-width:min(260px,100%);max-width:100%;transition:background .25s,transform .25s}
+.contact-links a:hover{background:rgba(255,253,248,.14);transform:translateY(-3px)}
+.contact-links small{color:#e5c79b;letter-spacing:.12em;text-transform:uppercase;font-size:.72rem;font-weight:600}
+.contact-links span{font-family:var(--serif);font-size:clamp(1.15rem,4.6vw,1.5rem);overflow-wrap:anywhere}
+footer{background:#2a1f18;color:rgba(255,253,248,.6);font-size:.82rem;padding:28px 0}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* Modal */
+dialog{border:0;border-radius:18px;max-width:520px;width:calc(100% - 32px);padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(34,32,28,.55)}
+dialog .close{float:right;background:none;border:0;font-size:1.5rem;cursor:pointer;line-height:1}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="notice" style="border-radius:0;text-align:center;border-width:0 0 1px">
+  Design concept for a <strong>fictional</strong> company. All names, projects, prices and contact details are placeholders.
+</div>
+
+<header class="top" id="top">
+  <div class="wrap nav">
+    <a href="#home" class="brand" aria-label="Whispering Leaf home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 26C6 13 15 5 27 5c0 12-8 21-21 21z" fill="#3f5a40"/><path d="M7 25C12 19 17 14 23 10" stroke="#e9e3d8" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      Whispering Leaf
+    </a>
+    <button class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <ul id="menu">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#story">Projects</a></li>
+      <li><a href="#portal">Client portal</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="#quote" class="btn btn-primary">Book a site visit</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="home">
+  <div class="hero-fallback" aria-hidden="true"></div>
+  <video id="heroVideo" autoplay muted loop playsinline poster="" aria-hidden="true">
+    <source src="whispering-leaf-promo.mp4" type="video/mp4">
+  </video>
+  <div class="wrap">
+    <div class="eyebrow">Sydney landscape design &amp; construction</div>
+    <h1>Outdoor spaces,<br>thoughtfully built.</h1>
+    <p class="lede">Gardens, paving, walls and pergolas designed around how you live. Built by one team, with a fixed plan and updates you can see at every stage.</p>
+    <div class="hero-actions">
+      <a href="#quote" class="btn btn-primary">Book a free site visit →</a>
+      <a href="#process" class="btn btn-ghost">How we work</a>
+    </div>
+    <div class="hero-meta">
+      <div><b>4 stages</b>no surprises</div>
+      <div><b>Itemised</b>written quotes</div>
+      <div><b>Weekly</b>photo updates</div>
+    </div>
+  </div>
+  <button class="video-toggle" id="videoToggle" type="button">Pause video</button>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <div class="eyebrow reveal">What we build</div>
+    <h2 class="reveal">Everything outside, done properly.</h2>
+    <p class="lede reveal">One crew from first sketch to final sweep, so nothing falls between trades.</p>
+    <div class="grid services" style="margin-top:38px">
+      <!-- Cards injected from data below -->
+    </div>
+  </div>
+</section>
+
+<section id="process" class="process-bg">
+  <div class="wrap">
+    <div class="eyebrow reveal">How it works</div>
+    <h2 class="reveal">Four clear stages. You always know what's next.</h2>
+    <div class="grid steps">
+      <div class="step reveal"><h3>Site visit</h3><p>We walk the block with you, check levels, drainage, access and soil, and listen to how you want to use the space.</p><small>Free · about 1 hour</small></div>
+      <div class="step reveal"><h3>Design &amp; quote</h3><p>A concept plan, material samples and an itemised fixed quote. Revise until it's right; nothing starts until you sign.</p><small>Typically 1–2 weeks*</small></div>
+      <div class="step reveal"><h3>Construction</h3><p>A dedicated site lead, a tidy site and a weekly photo update in your client portal.</p><small>Duration set in your quote</small></div>
+      <div class="step reveal"><h3>Handover</h3><p>A final walkthrough, a care guide for your plants and materials, and a check-in visit after the first season.</p><small>Includes care guide</small></div>
+    </div>
+    <p style="font-size:.8rem;color:var(--muted);margin-top:18px">*Indicative concept timing only, not a real service commitment.</p>
+  </div>
+</section>
+
+<section id="story">
+  <div class="wrap grid story">
+    <div class="reveal">
+      <div class="ba" id="ba" style="--pos:50%">
+        <div class="ph ph-before"><span>BEFORE (placeholder): sloping clay backyard, cracked concrete path, failing timber sleeper wall, patchy lawn.</span></div>
+        <div class="ph ph-after after-layer"><span style="margin-left:auto;text-align:right;max-width:55%">AFTER (placeholder): sandstone-paved terrace, rendered retaining wall, spotted-gum pergola, native planting, soft evening light.</span></div>
+        <span class="label l-b">Before</span><span class="label l-a">After</span>
+        <div class="ba-handle"></div>
+        <input type="range" min="0" max="100" value="50" aria-label="Drag to compare before and after">
+      </div>
+    </div>
+    <div class="reveal">
+      <span class="tag">Fictional sample project</span>
+      <h2 style="margin-top:14px">The sloping yard that became the family's favourite room</h2>
+      <p class="lede">A steep, unusable backyard in a fictional Inner West home. The owners wanted somewhere flat to eat outdoors and a garden that didn't need constant watering.</p>
+      <div class="facts">
+        <div><b>Location</b>Marrickville (illustrative)</div>
+        <div><b>Scope</b>Wall, paving, pergola, planting</div>
+        <div><b>Build time</b>7 weeks (invented)</div>
+        <div><b>Budget band</b>$60k–$90k (invented)</div>
+      </div>
+      <p style="color:var(--muted)">We cut the slope into two levels behind a drained retaining wall, laid sandstone on a compacted base, and planted drought-tolerant natives around a timber pergola. <em>This story, client and figures are invented for the concept.</em></p>
+    </div>
+  </div>
+</section>
+
+<section id="quote" class="quote-bg">
+  <div class="wrap grid quote">
+    <div>
+      <div class="eyebrow">Free site visit</div>
+      <h2>Tell us about your space.</h2>
+      <p class="lede">Share a few details and we'll arrange a time to visit. No obligation, no pressure.</p>
+      <ul style="color:rgba(255,253,248,.85);padding-left:1.1em;line-height:2">
+        <li>Reply within one business day (concept wording)</li>
+        <li>Itemised, fixed-price quotes</li>
+        <li>Plant and material samples on site</li>
+      </ul>
+    </div>
+    <form id="quoteForm" novalidate>
+      <div class="notice"><strong>Demo form:</strong> it validates your input but does <strong>not</strong> send or store anything. Nothing leaves your browser.</div>
+      <div id="formFields">
+        <div class="row">
+          <div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" required minlength="2"><div class="err">Please enter your name.</div></div>
+          <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required><div class="err">Please enter a valid email address.</div></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="suburb">Suburb</label><input id="suburb" name="suburb" list="suburbs" required autocomplete="address-level2"><datalist id="suburbs"><option>Marrickville<option>Manly<option>Parramatta<option>Randwick<option>Hornsby<option>Cronulla<option>Castle Hill</datalist><div class="err">Please tell us your suburb.</div></div>
+          <div class="field"><label for="service">Service type</label>
+            <select id="service" name="service" required>
+              <option value="">Choose a service…</option>
+              <option>Gardens</option><option>Paving</option><option>Retaining walls</option><option>Driveways</option><option>Turf</option><option>Pergolas</option><option>Several / not sure yet</option>
+            </select><div class="err">Please choose a service.</div></div>
+        </div>
+        <div class="field"><label for="budget">Budget range</label>
+          <select id="budget" name="budget" required>
+            <option value="">Choose a range…</option>
+            <option>Under $15,000</option><option>$15,000 – $40,000</option><option>$40,000 – $80,000</option><option>$80,000 – $150,000</option><option>$150,000+</option><option>Not sure yet</option>
+          </select><div class="err">Please choose a budget range (or "Not sure yet").</div></div>
+        <div class="field"><label for="desc">Project description</label>
+          <textarea id="desc" name="desc" required minlength="20" maxlength="1000" placeholder="e.g. Sloping backyard, want a flat entertaining area and low-water planting."></textarea>
+          <div class="counter"><span id="count">0</span>/1000</div>
+          <div class="err">Please add a little more detail (at least 20 characters).</div></div>
+        <button type="submit" class="btn btn-primary">Request my free site visit</button>
+      </div>
+      <div class="success" id="success" role="status" aria-live="polite">
+        <div class="tick">✓</div>
+        <h3>Thanks, <span id="sName"></span>. Your request is valid.</h3>
+        <p style="color:var(--muted)">In a live site this would now be sent to the team. <strong>In this demo nothing was sent.</strong> Here's what would have been submitted:</p>
+        <pre id="payload"></pre>
+        <button type="button" class="btn btn-line" id="resetForm" style="margin-top:14px">Start another request</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="portal">
+  <div class="wrap">
+    <div class="eyebrow reveal">Client portal preview</div>
+    <h2 class="reveal">See your project, not just hear about it.</h2>
+    <p class="lede reveal">Every client gets a private page with their stage, next step and weekly photos. Below is a fictional example.</p>
+    <div class="portal reveal">
+      <div class="portal-head">
+        <div><span class="tag">Fictional demo client</span><h3 style="margin-top:8px">The Nguyen garden · Randwick</h3></div>
+        <div style="font-size:.88rem;color:var(--muted)">Site lead: Sam (fictional) · Job WL-0000</div>
+      </div>
+      <div class="track" aria-label="Project stages">
+        <div class="done">Site visit ✓</div>
+        <div class="done">Design &amp; quote ✓</div>
+        <div class="now" aria-current="step">Construction · 60%</div>
+        <div>Handover</div>
+      </div>
+      <div class="portal-body">
+        <div class="pbox"><h4>Current stage</h4><p><strong>Construction, week 4 of 6</strong></p><p>Retaining wall complete and backfilled. Drainage tested. Paving base compacted.</p></div>
+        <div class="pbox"><h4>Next step</h4><p><strong>Sandstone paving install</strong></p><p>Starts Monday (sample date). Please keep side gate unlocked 7am–4pm.</p><button class="btn btn-line" style="padding:8px 16px;font-size:.85rem" data-modal="portalNote">Message site lead</button></div>
+        <div class="pbox"><h4>Recent update</h4><time>Thursday · sample entry</time><div class="ph ph-site" style="margin:8px 0"><span>Photo placeholder: finished block wall with ag-pipe and gravel backfill visible.</span></div><p style="font-size:.88rem">"Wall capped and drainage flushed, flowing well. Pavers delivered Friday." (Sam)</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="contact">
+  <div class="wrap">
+    <div class="eyebrow" style="color:#e5c79b">Talk to a person</div>
+    <h2>Prefer to call?</h2>
+    <p class="lede">Weekdays 7:30am–5pm. These are fictional placeholder details.</p>
+    <div class="contact-links">
+      <a href="tel:+61200000000"><small>Phone (placeholder)</small><span>(02) 0000 0000</span></a>
+      <a href="mailto:hello@whisperingleaf.example"><small>Email (placeholder)</small><span>hello@whisperingleaf.example</span></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© Whispering Leaf. A fictional concept, not a real business.</span><span>No licence numbers, reviews or awards shown because none exist.</span><a href="#home">Back to top ↑</a></div></footer>
+
+<dialog id="serviceModal"><button class="close" aria-label="Close">×</button><div id="modalBody"></div><a href="#quote" class="btn btn-primary" id="modalCta" style="margin-top:12px">Request a site visit</a></dialog>
+<dialog id="portalNote"><button class="close" aria-label="Close">×</button><h3>Messaging is a demo</h3><p>In a real portal this would open a thread with your site lead, backed by a login and a database (e.g. Supabase or a CRM like ServiceM8/Tradify). Nothing is sent here.</p></dialog>
+
+<script>
+const services=[
+ {k:"Gardens",c:"ph-garden",img:"Layered native and subtropical planting along a curved path, dappled morning light.",d:"Planting design suited to Sydney's climate and your soil, with irrigation and mulch done right.",x:"Includes soil testing, plant schedule, drip irrigation options and a 12-week establishment guide."},
+ {k:"Paving",c:"ph-paving",img:"Large-format sandstone pavers with tight joints around a timber deck edge.",d:"Sandstone, porcelain and concrete pavers laid on properly compacted bases that stay flat.",x:"Base preparation, falls for drainage, sealing advice and matching coping for steps and pools."},
+ {k:"Retaining walls",c:"ph-wall",img:"Rendered block retaining wall with integrated steps and garden bed above.",d:"Engineered walls with drainage behind them, so they hold their shape for decades.",x:"Block, sandstone and sleeper options. Engineering and council requirements checked per site."},
+ {k:"Driveways",c:"ph-drive",img:"Exposed-aggregate driveway bordered by a low hedge and lawn strip.",d:"Concrete, exposed aggregate and permeable paving driveways with clean edges.",x:"Includes excavation, base, reinforcement, stormwater drainage and kerb/crossover coordination."},
+ {k:"Turf",c:"ph-turf",img:"Freshly laid soft-leaf buffalo lawn with crisp steel edging.",d:"The right grass for your sun and traffic, laid on prepared soil for a lawn that takes.",x:"Soil prep, levelling, turf variety advice (buffalo, kikuyu, couch, zoysia) and edging."},
+ {k:"Pergolas",c:"ph-pergola",img:"Spotted-gum pergola over a dining area, climbing jasmine starting on the posts.",d:"Hardwood and aluminium pergolas that frame outdoor rooms and add shade.",x:"Timber or aluminium, louvred or open. Footings, approvals and finishes managed for you."}
+];
+const grid=document.querySelector('.services');
+services.forEach((s,i)=>{grid.insertAdjacentHTML('beforeend',`<article class="card reveal"><div class="ph ${s.c}"><span>${s.img}</span></div><div class="card-body"><h3>${s.k}</h3><p>${s.d}</p><button class="more" data-i="${i}">Learn more →</button></div></article>`)});
+
+// Service modal
+const sm=document.getElementById('serviceModal');
+grid.addEventListener('click',e=>{const b=e.target.closest('.more');if(!b)return;const s=services[b.dataset.i];
+  document.getElementById('modalBody').innerHTML=`<span class="tag">Service</span><h2 style="margin-top:10px">${s.k}</h2><p>${s.d}</p><p style="color:var(--muted)">${s.x}</p>`;
+  document.getElementById('modalCta').dataset.service=s.k; sm.showModal();});
+document.getElementById('modalCta').addEventListener('click',e=>{const v=e.currentTarget.dataset.service;const sel=document.getElementById('service');[...sel.options].forEach(o=>{if(o.text===v)sel.value=v});sm.close();});
+document.querySelectorAll('[data-modal]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.modal).showModal()));
+document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').onclick=()=>d.close();d.addEventListener('click',e=>{if(e.target===d)d.close()})});
+
+// Mobile menu
+const mb=document.querySelector('.menu-btn'),menu=document.getElementById('menu');
+mb.onclick=()=>{const o=menu.classList.toggle('open');mb.setAttribute('aria-expanded',o)};
+menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{menu.classList.remove('open');mb.setAttribute('aria-expanded',false)}));
+
+// Header + active nav
+const hdr=document.getElementById('top');addEventListener('scroll',()=>hdr.classList.toggle('scrolled',scrollY>10),{passive:true});
+const links=[...menu.querySelectorAll('a:not(.btn)')];
+const navObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-45% 0px -50% 0px'});
+document.querySelectorAll('main section[id]').forEach(s=>navObs.observe(s));
+
+// Reveal
+const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// Hero video
+const v=document.getElementById('heroVideo'),vt=document.getElementById('videoToggle');
+v.addEventListener('error',()=>{v.remove();vt.remove()},true);
+v.querySelector('source').addEventListener('error',()=>{v.remove();vt.remove()});
+vt.onclick=()=>{if(v.paused){v.play();vt.textContent='Pause video'}else{v.pause();vt.textContent='Play video'}};
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){v.removeAttribute('autoplay');v.pause();vt.textContent='Play video'}
+
+// Before/after
+const ba=document.getElementById('ba');ba.querySelector('input').addEventListener('input',e=>ba.style.setProperty('--pos',e.target.value+'%'));
+
+// Form
+const f=document.getElementById('quoteForm'),desc=document.getElementById('desc');
+desc.addEventListener('input',()=>document.getElementById('count').textContent=desc.value.length);
+const check=el=>{const ok=el.checkValidity()&&el.value.trim().length>=(+el.getAttribute('minlength')||1);el.closest('.field').classList.toggle('invalid',!ok);el.setAttribute('aria-invalid',!ok);return ok};
+f.querySelectorAll('input,select,textarea').forEach(el=>{el.addEventListener('blur',()=>check(el));el.addEventListener('input',()=>{if(el.closest('.field').classList.contains('invalid'))check(el)})});
+f.addEventListener('submit',e=>{e.preventDefault();const els=[...f.querySelectorAll('input,select,textarea')];const bad=els.filter(el=>!check(el));
+  if(bad.length){bad[0].focus();return}
+  const data=Object.fromEntries(new FormData(f));
+  document.getElementById('sName').textContent=data.name.split(' ')[0];
+  document.getElementById('payload').textContent=JSON.stringify(data,null,2);
+  document.getElementById('formFields').hidden=true;f.querySelector('.notice').hidden=true;
+  const s=document.getElementById('success');s.classList.add('show');s.focus?.()});
+document.getElementById('resetForm').onclick=()=>{f.reset();document.getElementById('count').textContent=0;document.getElementById('formFields').hidden=false;f.querySelector('.notice').hidden=false;document.getElementById('success').classList.remove('show')};
+</script>
+</body>
+</html>
