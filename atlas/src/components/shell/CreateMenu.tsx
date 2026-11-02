@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Icon } from "./Icon";
 
 /** Only actions that have a working form are offered. */
-const ITEMS = [{ href: "/customers/new", label: "New customer" }];
+const ITEMS = [
+  { href: "/pipeline/new", label: "New enquiry" },
+  { href: "/customers/new", label: "New customer" },
+  { href: "/tasks/new", label: "New task" },
+];
 
 export function CreateMenu() {
   const [open, setOpen] = useState(false);

@@ -88,10 +88,53 @@ await step("settings show the configured business rules", async () => {
   assert.match(t, /30%/); assert.match(t, /23\.1% gross margin/); assert.match(t, /QuickBooks\s*Not connected/);
 });
 
+await step("pipeline: new enquiry, log contact, move, lose with reason", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/pipeline/new`);
+  await p.selectOption("#customerId", { label: "Casey Demo · Kellyville · 0491 570 099" });
+  await p.fill("#serviceRequested", "Timber deck, about 20 m2");
+  await p.fill("#budget", "15000");
+  await p.click("button[type=submit]");
+  await p.waitForURL(/\/pipeline$/);
+  const col = p.getByRole("region", { name: "New" });
+  await col.getByRole("button", { name: /Casey Demo/ }).click();
+  await p.getByRole("dialog").locator("input[name=summary]").fill("Called, booked a site visit");
+  await p.getByRole("dialog").locator("#status").selectOption("Site Visit Booked");
+  await p.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+  await p.getByRole("region", { name: "Visit booked" }).getByRole("button", { name: /Casey Demo/ }).waitFor();
+  await p.getByRole("region", { name: "Visit booked" }).getByRole("button", { name: /Casey Demo/ }).click();
+  await p.getByRole("dialog").locator("#status").selectOption("Lost");
+  await p.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+  assert.ok(await p.getByRole("dialog").locator("#reason:invalid").count(), "lost reason should be required");
+  await p.getByRole("dialog").locator("#reason").selectOption("Timing");
+  await p.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+  await p.getByRole("dialog").waitFor({ state: "detached" });
+  await p.goto(`${BASE}/pipeline?show=closed`);
+  await p.getByRole("region", { name: "Lost" }).getByText("Timing").waitFor();
+  await p.goto(`${BASE}/customers`);
+  await p.getByRole("link", { name: "Casey Demo" }).click();
+  await p.getByRole("heading", { name: "Contact history" }).waitFor();
+  const t = await p.innerText("main");
+  assert.match(t, /Called, booked a site visit/);
+  assert.match(t, /Lost/);
+  await p.screenshot({ path: `${shots}/customer-detail.png`, fullPage: true });
+});
+await step("tasks: create and complete", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/tasks/new`);
+  await p.fill("#title", "Order deck timber sample");
+  await p.click("button[type=submit]");
+  await p.waitForURL(/\/tasks$/);
+  await p.getByRole("button", { name: 'Mark "Order deck timber sample" done' }).click();
+  await p.goto(`${BASE}/tasks?view=done`);
+  await p.getByText("Order deck timber sample").waitFor();
+});
+
 const worker = await login("worker@example.com");
 await step("worker cannot see customers, money or settings", async () => {
   const nav = await worker.page.innerText("nav");
-  assert.doesNotMatch(nav, /Customers|Settings|Audit/);
+  assert.doesNotMatch(nav, /Customers|Pipeline|Settings|Audit/);
+  assert.equal((await worker.page.request.patch(`${BASE}/api/enquiries/recDemoEnq0000001`, { data: { status: "Won" } })).status(), 403);
   assert.doesNotMatch(await worker.page.innerText("main"), /Overdue payments|\$/i);
   await worker.page.goto(`${BASE}/customers`);
   assert.match(worker.page.url(), /forbidden/);

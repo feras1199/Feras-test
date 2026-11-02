@@ -16,10 +16,11 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const c = await repo.get("customers", id);
   if (!c) notFound();
   const linked = <T extends { customerIds?: string[] }>(rows: T[]) => rows.filter((r) => r.customerIds?.includes(id));
-  const [enquiries, projects, estimates] = await Promise.all([
+  const [enquiries, projects, estimates, comms] = await Promise.all([
     repo.list("enquiries").then(linked),
     repo.list("projects").then(linked),
     can(s.role, "estimates.view") ? repo.list("estimates").then(linked) : Promise.resolve([]),
+    repo.list("communications").then(linked).then((r) => r.sort((a, b) => (b.at ?? "").localeCompare(a.at ?? ""))),
   ]);
   const editable = can(s.role, "crm.edit");
 
@@ -34,7 +35,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
 
   return (
     <>
-      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && <a href="?edit=1" className="btn-secondary">Edit details</a>} />
+      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && (<><a href="?edit=1" className="btn-secondary">Edit details</a><a href={`/tasks/new?customer=${c.id}`} className="btn-secondary">Add task</a><a href={`/pipeline/new?customer=${c.id}`} className="btn-primary">New enquiry</a></>)} />
       {c.doNotContact && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-800">Do not contact this customer.</p>}
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="card p-5 lg:col-span-1">
@@ -68,6 +69,14 @@ export default async function CustomerPage({ params, searchParams }: { params: P
               )}
             </section>
           )}
+          <section className="card p-5">
+            <h2 className="mb-3 font-semibold">Contact history</h2>
+            {comms.length === 0 ? <Empty title="No contact logged">Log calls and messages from the enquiry card in the Pipeline.</Empty> : (
+              <ul className="divide-y divide-stone-100">{comms.slice(0, 20).map((m) => (
+                <li key={m.id} className="py-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{m.channel} · {m.direction}</span><span className="text-stone-500">{formatDate(m.at)}{m.loggedBy ? ` · ${m.loggedBy}` : ""}</span></div>{m.message && <p className="text-stone-700">{m.message}</p>}</li>
+              ))}</ul>
+            )}
+          </section>
           <section className="card p-5">
             <h2 className="mb-3 font-semibold">Projects</h2>
             {projects.length === 0 ? <Empty title="No projects yet" /> : (

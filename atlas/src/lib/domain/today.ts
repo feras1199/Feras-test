@@ -42,7 +42,7 @@ export async function buildToday(repo: Repository, role: Role, today: string) {
   }
   for (const t of tasks) {
     if (!OPEN_TASK.has(t.status ?? "")) continue;
-    if (t.dueDate && t.dueDate <= today) items.push({ kind: "task", id: t.id, title: t.title ?? "Task", detail: `${t.taskType ?? "Task"} · ${t.assignedTo ?? "Unassigned"}`, href: "#", due: t.dueDate, overdue: t.dueDate < today });
+    if (t.dueDate && t.dueDate <= today) items.push({ kind: "task", id: t.id, title: t.title ?? "Task", detail: `${t.taskType ?? "Task"} · ${t.assignedTo ?? "Unassigned"}`, href: "/tasks", due: t.dueDate, overdue: t.dueDate < today });
   }
   let dueCents = 0;
   let overdueCents = 0;
