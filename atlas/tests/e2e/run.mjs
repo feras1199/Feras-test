@@ -351,6 +351,11 @@ await step("mobile navigation works and has no horizontal scroll", async () => {
   await mobile.page.waitForURL(/\/customers$/);
   const overflow = await mobile.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert.ok(overflow <= 0, `page overflows by ${overflow}px`);
+  for (const path of ["/", "/pipeline", "/estimates/recDemoEst0000001", "/projects/recDemoProj000001", "/inspections", "/timesheets", "/customers/recDemoCust000001"]) {
+    await mobile.page.goto(`${BASE}${path}`);
+    const o = await mobile.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(o <= 0, `${path} overflows by ${o}px on a phone`);
+  }
   await mobile.page.screenshot({ path: `${shots}/customers-mobile.png`, fullPage: true });
 });
 

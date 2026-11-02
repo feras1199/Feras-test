@@ -89,7 +89,7 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
       {e.status === "Accepted" && e.projectId && <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-900">Accepted. The project and payment schedule have been created.</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_340px] [&>*]:min-w-0">
         <div className="space-y-6">
           <section className="card overflow-hidden">
             <div className="flex items-center justify-between border-b border-stone-100 p-4"><h2 className="font-semibold">Cost lines</h2><span className="text-sm text-stone-500">{lines.length} lines · {summary.personHours} person-hours</span></div>

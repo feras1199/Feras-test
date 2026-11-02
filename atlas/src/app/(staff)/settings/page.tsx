@@ -25,7 +25,7 @@ export default async function SettingsPage() {
       <p className="mb-4 rounded-xl bg-stone-100 p-3 text-sm text-stone-700">
         These values are set in the server configuration (ATLAS_SETTINGS_JSON). Editing them here needs the additive “Atlas Settings” table in Airtable, which is waiting on your approval.
       </p>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5">
           <h2 className="mb-2 font-semibold">Pricing</h2>
           <dl>

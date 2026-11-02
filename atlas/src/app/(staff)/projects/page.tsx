@@ -21,7 +21,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
     <>
       <PageHeader title="Projects" subtitle={`${rows.length} ${show === "all" ? "in total" : "active"}`} actions={!staffOnly && <Link href={show === "all" ? "/projects" : "/projects?show=all"} className="btn-secondary">{show === "all" ? "Active only" : "Show all"}</Link>} />
       {rows.length === 0 ? <Empty title="No active projects">Projects are created when a customer accepts a quote.</Empty> : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2 [&>*]:min-w-0">
           {rows.map((p) => (
             <Link key={p.id} href={`/projects/${p.id}`} className="card block p-4 transition hover:border-forest-300">
               <div className="flex items-start justify-between gap-2"><p className="font-semibold">{p.name}</p><Chip tone={statusTone(p.status)}>{p.status}</Chip></div>

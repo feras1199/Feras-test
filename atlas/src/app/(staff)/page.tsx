@@ -52,7 +52,7 @@ export default async function TodayPage() {
         {t.activeProjects.length === 0 ? (
           <Empty title="No active projects" />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 [&>*]:min-w-0">
             {t.activeProjects.map((p) => (
               <div key={p.id} className="card p-4">
                 <div className="flex items-start justify-between gap-2">

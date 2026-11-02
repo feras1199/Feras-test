@@ -34,7 +34,7 @@ export function InspectionEditor({ inspection: i, measurements, editable }: { in
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
       <section className="card p-5">
         <h2 className="mb-3 font-semibold">Site notes</h2>
         <form className="space-y-3" onSubmit={(ev) => {

@@ -57,7 +57,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         </section>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5">
           <h2 className="mb-3 font-semibold">Status and next step</h2>
           {can(s.role, "projects.edit") ? <ProjectStatusForm project={{ id: p.id, status: p.status ?? "", health: p.health ?? "", progress: p.progress ?? 0, nextAction: p.nextAction ?? "", nextActionDate: p.nextActionDate ?? "", startDate: p.startDate ?? "", completionDate: p.completionDate ?? "" }} /> : (

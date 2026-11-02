@@ -21,7 +21,7 @@ export default async function TimesheetsPage() {
   return (
     <>
       <PageHeader title="My time" subtitle={`${Math.round(week * 100) / 100} person-hours in the last 7 days`} />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5">
           {projects.length === 0 ? <Empty title="No live projects to log time against" /> : (
             <QuickForm endpoint="/api/timesheets" title="Log time" submitLabel="Submit time" fields={[

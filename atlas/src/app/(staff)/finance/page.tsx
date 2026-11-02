@@ -54,7 +54,7 @@ export default async function FinancePage() {
         <Stat label="Received this month" value={formatAud(receivedMonth, { whole: true })} />
         <Stat label="Quotes awaiting answer" value={formatAud(sumCents(quoted.map((e) => e.customerTotalIncGst)), { whole: true })} hint={`${quoted.length} quote(s) · ${wonMonth.length} won this month`} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5"><h2 className="mb-2 font-semibold">Overdue and due soon</h2>
           {overdue.length + dueSoon.length === 0 ? <Empty title="Nothing overdue or due in the next 14 days" /> : <ul className="divide-y divide-stone-100">{overdue.map((p) => <PayRow key={p.id} p={p} tone="red" />)}{dueSoon.map((p) => <PayRow key={p.id} p={p} tone="gold" />)}</ul>}
         </section>
