@@ -216,10 +216,59 @@ await step("sales can build but not approve; locked estimate rejects edits", asy
   await sales.ctx.close();
 });
 
+await step("project: checklist, schedule, cost, variation approval", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/projects`);
+  await p.getByRole("link", { name: /Taylor Demo – Front Yard/ }).click();
+  await p.getByRole("heading", { name: "Checklists" }).waitFor();
+  let t = await p.innerText("main");
+  assert.match(t, /\$38,500/); // contract
+  assert.match(t, /\$495\.00 of costs not allocated|\$450\.00 of costs not allocated/);
+  await p.getByRole("button", { name: "Add the standard job checklist" }).click();
+  await p.getByRole("button", { name: "Tick Materials ordered" }).click();
+  await p.getByRole("button", { name: "Untick Materials ordered" }).waitFor();
+  await p.getByText("Record a cost").click();
+  const cf = p.getByRole("form", { name: "Save cost" });
+  await cf.getByLabel("What *").fill("LED path lights");
+  await cf.getByLabel("Supplier *").fill("Demo Lighting Co");
+  await cf.getByLabel("Amount inc GST ($) *").fill("1100");
+  await cf.getByLabel("Part of the job").selectOption({ label: "Lighting" });
+  await cf.getByRole("button", { name: "Save cost" }).click();
+  await p.getByText("LED path lights – Demo Lighting Co").waitFor();
+  p.once("dialog", (d) => d.accept("Taylor Demo"));
+  await p.getByRole("button", { name: "Record approval" }).click();
+  await p.getByText("incl. $858 variations").waitFor();
+});
+await step("finance: raise a stage and mark a payment received", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/finance`);
+  await p.getByRole("heading", { name: "Overdue and due soon" }).waitFor();
+  const row = p.locator("li", { hasText: "Q-DEMO-001 Progress 1" });
+  await row.getByText("Mark received").click();
+  await row.getByRole("button", { name: /Confirm \$11,550\.00 received/ }).click();
+  await p.getByText("Q-DEMO-001 Progress 1").waitFor({ state: "detached" });
+  p.once("dialog", (d) => d.accept());
+  await p.locator("li", { hasText: "Q-2026-001 Progress 1" }).getByRole("button", { name: "Raise now" }).click();
+  await p.locator("section", { hasText: "Overdue and due soon" }).getByText("Q-2026-001 Progress 1").waitFor();
+  assert.match(await p.innerText("main"), /QuickBooks\s*Not connected/);
+});
+
 const worker = await login("worker@example.com");
 await step("worker cannot see customers, money or settings", async () => {
   const nav = await worker.page.innerText("nav");
-  assert.doesNotMatch(nav, /Customers|Pipeline|Settings|Audit/);
+  assert.doesNotMatch(nav, /Customers|Pipeline|Settings|Audit|Finance|Estimates/);
+  await worker.page.goto(`${BASE}/projects`);
+  await worker.page.getByRole("link", { name: /Taylor Demo – Front Yard/ }).click();
+  await worker.page.getByRole("heading", { name: "Time on this job" }).waitFor();
+  const wt = await worker.page.innerText("main");
+  assert.doesNotMatch(wt, /\$|Contract|Profit|Payments|Demo Supplies/);
+  const tf = worker.page.getByRole("form", { name: "Submit time" });
+  await tf.getByLabel("People in crew").fill("2");
+  await tf.getByRole("button", { name: "Submit time" }).click();
+  await worker.page.getByText("Demo Worker ·").first().waitFor();
+  assert.equal((await worker.page.request.get(`${BASE}/finance`)).url().includes("forbidden"), true);
+  const pay = await worker.page.request.patch(`${BASE}/api/payments/recDemoPay0000002`, { data: { action: "received", confirm: true, receivedDate: "2026-11-01", method: "Cash" } });
+  assert.equal(pay.status(), 403);
   assert.equal((await worker.page.request.patch(`${BASE}/api/enquiries/recDemoEnq0000001`, { data: { status: "Won" } })).status(), 403);
   assert.doesNotMatch(await worker.page.innerText("main"), /Overdue payments|\$/i);
   await worker.page.goto(`${BASE}/customers`);

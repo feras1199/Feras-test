@@ -4,6 +4,7 @@
  * and phone numbers use the 0491 570 xxx range ACMA reserves for fiction.
  */
 import type { EntityName, Rec } from "../entities";
+import { zonedToUtc } from "../../dates";
 
 type Store = { [E in EntityName]?: Rec<E>[] };
 
@@ -63,9 +64,9 @@ export function buildFixtures(now = new Date()): Store {
       { id: id("DemoCost", 3), createdTime: T, title: "Skip bin", projectIds: [proj(1)], componentIds: [], costType: "Disposal", supplier: "Sample Skips", quantity: 1, unitCostInc: 49_500, costDate: D(-5), reference: "", reviewed: false, unplanned: true, marketingCost: false },
     ],
     timesheets: [
-      { id: id("DemoTime", 1), createdTime: T, title: "Crew – planting", projectIds: [proj(1)], componentIds: [comp(2)], staffName: "Demo Crew", workDate: D(-6), start: `${D(-6)}T07:00:00.000Z`, finish: `${D(-6)}T15:30:00.000Z`, breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 2, workType: "Construction", submitted: true },
-      { id: id("DemoTime", 2), createdTime: T, title: "Crew – planting day 2", projectIds: [proj(1)], componentIds: [comp(2)], staffName: "Demo Crew", workDate: D(-5), start: `${D(-5)}T07:00:00.000Z`, finish: `${D(-5)}T15:30:00.000Z`, breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 2, workType: "Construction", submitted: true },
-      { id: id("DemoTime", 3), createdTime: T, title: "Crew – paving prep", projectIds: [proj(1)], componentIds: [comp(1)], staffName: "Demo Crew", workDate: D(-1), start: `${D(-1)}T07:00:00.000Z`, finish: `${D(-1)}T15:00:00.000Z`, breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 3, workType: "Construction", submitted: false },
+      { id: id("DemoTime", 1), createdTime: T, title: "Crew – planting", projectIds: [proj(1)], componentIds: [comp(2)], staffName: "Demo Crew", workDate: D(-6), start: zonedToUtc(D(-6), "07:00"), finish: zonedToUtc(D(-6), "15:30"), breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 2, workType: "Construction", submitted: true },
+      { id: id("DemoTime", 2), createdTime: T, title: "Crew – planting day 2", projectIds: [proj(1)], componentIds: [comp(2)], staffName: "Demo Crew", workDate: D(-5), start: zonedToUtc(D(-5), "07:00"), finish: zonedToUtc(D(-5), "15:30"), breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 2, workType: "Construction", submitted: true },
+      { id: id("DemoTime", 3), createdTime: T, title: "Crew – paving prep", projectIds: [proj(1)], componentIds: [comp(1)], staffName: "Demo Crew", workDate: D(-1), start: zonedToUtc(D(-1), "07:00"), finish: zonedToUtc(D(-1), "15:00"), breakMinutes: 30, rate: 4_500, rateBasis: "Per Person", crewSize: 3, workType: "Construction", submitted: false },
     ],
     tasks: [
       { id: id("DemoTask", 1), createdTime: T, title: "Call Sam & Jo about the retaining wall proposal", customerIds: [cust(2)], enquiryIds: [enq(2)], assignedTo: "Owner", status: "Today", priority: "High", dueDate: D(-1), taskType: "Lead Follow-up", needsAttention: true },

@@ -134,15 +134,16 @@ export function unallocatedCosts(lines: CostLineForDuplicateCheck[]): string[] {
 }
 
 export interface VariationLike {
-  status: "Pending" | "Approved" | "Rejected" | "Cancelled" | string;
+  /** Airtable statuses: Draft, Sent for Approval, Approved, Declined, Completed. */
+  status: string;
   customerPrice: Cents;
   estimatedCost: Cents;
 }
 
 /** Only approved variations change contract value. Pending ones are reported separately. */
 export function contractWithVariations(originalContract: Cents, variations: VariationLike[]) {
-  const approved = variations.filter((v) => v.status === "Approved");
-  const pending = variations.filter((v) => v.status === "Pending");
+  const approved = variations.filter((v) => v.status === "Approved" || v.status === "Completed");
+  const pending = variations.filter((v) => v.status === "Sent for Approval" || v.status === "Pending");
   return {
     original: originalContract,
     approvedVariations: sumCents(approved.map((v) => v.customerPrice)),

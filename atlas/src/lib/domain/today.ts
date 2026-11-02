@@ -53,7 +53,7 @@ export async function buildToday(repo: Repository, role: Role, today: string) {
     if (st === "overdue" || soon) {
       if (st === "overdue") overdueCents += p.amount ?? 0;
       else dueCents += p.amount ?? 0;
-      items.push({ kind: "payment", id: p.id, title: p.title ?? "Payment", detail: st === "overdue" ? "Overdue" : p.dueDate === today ? "Due today" : "Due this week", href: "#", due: p.dueDate ?? null, overdue: st === "overdue" });
+      items.push({ kind: "payment", id: p.id, title: p.title ?? "Payment", detail: st === "overdue" ? "Overdue" : p.dueDate === today ? "Due today" : "Due this week", href: "/finance", due: p.dueDate ?? null, overdue: st === "overdue" });
     }
   }
   items.sort((a, b) => Number(b.overdue) - Number(a.overdue) || (a.due ?? "").localeCompare(b.due ?? ""));

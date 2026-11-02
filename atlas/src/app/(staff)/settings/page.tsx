@@ -60,7 +60,7 @@ export default async function SettingsPage() {
           <dl>
             <Row k="Data source" v={airtable ? "Airtable (live)" : "Demo data (fictional)"} />
             <Row k="Timezone" v={st.business.timezone} />
-            <Row k="QuickBooks" v="Not connected" />
+            <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
             <Row k="AI assistant" v={process.env.ANTHROPIC_API_KEY ? "API key present, not yet tested" : "Not configured"} />
           </dl>
         </section>
