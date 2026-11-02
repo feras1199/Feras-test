@@ -18,6 +18,7 @@ export const NAV: NavItem[] = [
   { href: "/finance", label: "Finance", icon: "money", perm: "finance.view" },
   { href: "/timesheets", label: "My time", icon: "clock", perm: "timesheets.submit" },
   { href: "/tasks", label: "Tasks", icon: "check", perm: "dashboard.view" },
+  { href: "/assistant", label: "Ask ATLAS", icon: "spark", perm: "ai.use" },
   { href: "/settings", label: "Settings", icon: "settings", perm: "settings.view" },
   { href: "/audit", label: "Audit log", icon: "shield", perm: "audit.view" },
 ];

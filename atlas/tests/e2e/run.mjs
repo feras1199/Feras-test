@@ -359,6 +359,14 @@ await step("cross-site writes are blocked", async () => {
   assert.equal(res.status(), 403);
 });
 
+await step("assistant: honest 'not set up' state without an API key; customers can't reach it", async () => {
+  await owner.page.goto(`${BASE}/assistant`);
+  assert.match(await owner.page.innerText("main"), /isn't set up yet/);
+  const res = await owner.page.request.post(`${BASE}/api/assistant`, { data: { messages: [{ role: "user", content: "What's overdue?" }] } });
+  assert.equal(res.status(), 503);
+  assert.equal((await customer.page.request.post(`${BASE}/api/assistant`, { data: { messages: [{ role: "user", content: "hi" }] } })).status(), 403);
+});
+
 await browser.close();
 for (const r of results) console.log(r.join("  "));
 const failed = results.filter((r) => r[0] === "FAIL").length;
