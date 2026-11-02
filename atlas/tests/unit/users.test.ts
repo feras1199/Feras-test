@@ -21,3 +21,24 @@ describe("session revocation", () => {
     expect(stillAuthorised({ uid: "c1", role: "customer", customerId: "recOld00000000001" })).toBe(false);
   });
 });
+
+describe("owner login from host variables", () => {
+  it("signs in the owner with ATLAS_OWNER_EMAIL / ATLAS_OWNER_PASSWORD, and nobody else", async () => {
+    const { authenticate, loadUsers } = await import("@/lib/auth/users");
+    const prev = { ...process.env };
+    process.env.ATLAS_DATA_SOURCE = "postgres";
+    delete process.env.ATLAS_USERS_JSON;
+    process.env.ATLAS_OWNER_EMAIL = "boss@example.com";
+    process.env.ATLAS_OWNER_PASSWORD = "a-long-owner-pass";
+    try {
+      expect(loadUsers().map((u) => u.role)).toEqual(["owner"]);
+      expect((await authenticate("BOSS@example.com", "a-long-owner-pass"))?.role).toBe("owner");
+      expect(await authenticate("boss@example.com", "wrong-password!!")).toBeNull();
+      expect(await authenticate("owner@example.com", "atlas-demo-2026")).toBeNull();
+      process.env.ATLAS_OWNER_PASSWORD = "short";
+      expect(loadUsers()).toEqual([]);
+    } finally {
+      process.env = prev;
+    }
+  });
+});

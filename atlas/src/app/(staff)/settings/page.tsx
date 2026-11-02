@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { formatAud, formatPct } from "@/lib/finance/money";
 import { markupToMargin } from "@/lib/finance/pricing";
 import { dataSource, getSettings, requirePage } from "@/lib/server/context";
+import { can } from "@/lib/auth/roles";
 import { ROLE_LABELS, ROLE_PERMISSIONS, ROLES } from "@/lib/auth/roles";
 
 export const metadata = { title: "Settings" };
@@ -16,9 +18,9 @@ function Row({ k, v, note }: { k: string; v: React.ReactNode; note?: string }) {
 }
 
 export default async function SettingsPage() {
-  await requirePage("settings.view");
+  const s = await requirePage("settings.view");
   const st = getSettings();
-  const airtable = dataSource() === "airtable";
+  const source = dataSource();
   return (
     <>
       <PageHeader title="Settings" subtitle="Business rules ATLAS uses for every calculation." />
@@ -58,11 +60,12 @@ export default async function SettingsPage() {
         <section className="card p-5">
           <h2 className="mb-2 font-semibold">System</h2>
           <dl>
-            <Row k="Data source" v={airtable ? "Airtable (live)" : "Demo data (fictional)"} />
+            <Row k="Data source" v={source === "postgres" ? "ATLAS database (live)" : source === "airtable" ? "Airtable (live)" : "Demo data (fictional)"} />
             <Row k="Timezone" v={st.business.timezone} />
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
             <Row k="AI assistant" v={process.env.ANTHROPIC_API_KEY ? "API key present, not yet tested" : "Not configured"} />
           </dl>
+          {can(s.role, "settings.edit") && <Link href="/settings/data" className="btn-secondary mt-3 inline-flex">Backup and import data</Link>}
         </section>
         <section className="card p-5 lg:col-span-2">
           <h2 className="mb-2 font-semibold">Roles</h2>

@@ -7,10 +7,10 @@ export const metadata = { title: "Audit log" };
 
 export default async function AuditPage() {
   await requirePage("audit.view");
-  const rows = recentAudit();
+  const { rows, stored } = await recentAudit();
   return (
     <>
-      <PageHeader title="Audit log" subtitle="Sign-ins and every change made through ATLAS since the server last started. Entries are also written to the server log." />
+      <PageHeader title="Audit log" subtitle={stored ? "Sign-ins and every change made through ATLAS, newest first. Kept permanently in the ATLAS database." : "Sign-ins and every change made through ATLAS since the server last started. Entries are also written to the server log."} />
       {rows.length === 0 ? <Empty title="No activity recorded yet" /> : (
         <ul className="card divide-y divide-stone-100">
           {rows.map((r, i) => (

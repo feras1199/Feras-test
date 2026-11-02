@@ -1,13 +1,15 @@
-# One-click demo deployment of ATLAS on Render (fictional demo data only).
-# Not for live use: it enables the demo logins and keeps data in memory,
-# so everything resets when the service restarts or sleeps.
+# ATLAS on Render with its own Postgres database (live business data).
+# Deploying this creates a paid database (plan 0.1c-256mb) and a free web
+# service. You'll be asked for the owner email and password during setup.
+# After the first deploy: sign in, open Settings > Backup and import, and
+# import your Airtable export file.
 services:
   - type: web
-    name: atlas-demo
+    name: atlas
     runtime: node
     rootDir: atlas
-    plan: free
-    region: singapore
+    plan: free            # sleeps when idle; switch to starter to keep it awake
+    region: singapore     # closest Render region to Sydney
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /login
@@ -15,8 +17,22 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: ATLAS_DATA_SOURCE
-        value: memory
-      - key: ATLAS_ALLOW_DEMO_LOGINS
-        value: "1"
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: atlas-db
+          property: connectionString
       - key: ATLAS_SESSION_SECRET
         generateValue: true
+      - key: ATLAS_OWNER_EMAIL
+        sync: false
+      - key: ATLAS_OWNER_PASSWORD
+        sync: false
+
+databases:
+  - name: atlas-db
+    plan: 0.1c-256mb      # paid; the free plan is deleted after 30 days and has no backups
+    region: singapore
+    databaseName: atlas
+    user: atlas
+    ipAllowList: []       # only the ATLAS web service can reach it

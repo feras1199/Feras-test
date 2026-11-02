@@ -8,7 +8,7 @@ import { HttpError } from "./api";
 import { quantityBasisFor } from "../domain/inspections";
 import type { QuoteSnapshot } from "../domain/estimates";
 import { addDays } from "../domain/dates";
-import { dataSource } from "./context";
+import { dataSource, isLive } from "./context";
 import { audit } from "./audit";
 import { formatAud } from "../finance/money";
 import type { SessionPayload } from "../auth/session";
@@ -80,7 +80,7 @@ export async function acceptEstimate(repo: Repository, e: Rec<"estimates">, acto
       suburb: customer?.suburb ?? "",
       health: "On Track",
       progress: 0,
-      dataMode: dataSource() === "airtable" ? "Live" : "Practice",
+      dataMode: isLive() ? "Live" : "Practice",
     });
     projectId = p.id;
   }

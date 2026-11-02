@@ -1,6 +1,6 @@
 # ATLAS
 
-The operating system for Whispering Leaf Landscaping & Construction. A Next.js app on top of the existing Airtable base, with a server-side API that holds the Airtable token, checks permissions and logs every change.
+The operating system for Whispering Leaf Landscaping & Construction. A Next.js app with its own Postgres database (data imported once from the old Airtable base), and a server-side API that checks permissions and logs every change. It can still run directly on the Airtable base during the changeover.
 
 ## Run it locally (fictional demo data)
 
@@ -11,7 +11,19 @@ npm run dev            # http://localhost:3000
 
 Sign in with any demo account shown on the login page (password `atlas-demo-2026`). Demo mode uses fictional data only and never touches Airtable.
 
-## Connect to Airtable
+## Run on ATLAS's own database (recommended)
+
+```
+ATLAS_DATA_SOURCE=postgres
+DATABASE_URL=postgres://user:pass@host:5432/atlas
+ATLAS_SESSION_SECRET=...        # openssl rand -hex 32
+ATLAS_OWNER_EMAIL=you@yourdomain.com.au
+ATLAS_OWNER_PASSWORD=...        # 12+ characters
+```
+
+Tables are created on first use. Bring data in from Settings → Backup and import. On Render, `render.yaml` sets all of this up; see `docs/DEPLOYMENT.md`. Postgres tests run when `TEST_DATABASE_URL` is set (they recreate the ATLAS tables in that database).
+
+## Connect to Airtable (old base, during the changeover)
 
 Create `.env.local` from `.env.example`:
 
