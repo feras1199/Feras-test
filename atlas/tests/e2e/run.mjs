@@ -131,6 +131,22 @@ await step("tasks: create and complete", async () => {
 });
 
 let acceptedEstimateUrl = "";
+await step("inspection: book, measure, complete", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/inspections/new?enquiry=recDemoEnq0000001`);
+  await p.getByRole("button", { name: "Book inspection" }).click();
+  await p.waitForURL(/\/inspections\/rec/);
+  const f = p.getByRole("form", { name: "Add measurement" });
+  await f.getByLabel("Area *").fill("Rear patio");
+  await f.getByLabel("Length (m)").fill("10");
+  await f.getByLabel("Width (m)").fill("5");
+  await f.getByRole("button", { name: "Add measurement" }).click();
+  await p.getByText("50 m²").waitFor();
+  await p.getByLabel("Existing conditions").fill("Old concrete slab to break out");
+  await p.getByLabel("Inspection complete").check();
+  await p.getByRole("button", { name: "Save notes" }).click();
+  await p.getByRole("status").waitFor();
+});
 await step("estimate: build, check, approve, quote, send, accept", async () => {
   const p = owner.page;
   await p.goto(`${BASE}/estimates/new?customer=recDemoCust000001`);
@@ -143,7 +159,8 @@ await step("estimate: build, check, approve, quote, send, accept", async () => {
   async function addLine(type, desc, qty, price, opts = {}) {
     await form.getByLabel("Type").selectOption(type);
     await form.getByLabel("Description *").fill(desc);
-    await form.locator("input[name=quantity]").fill(String(qty));
+    if (opts.measurement) await form.getByLabel("Quantity from a site measurement").selectOption({ label: opts.measurement });
+    else await form.locator("input[name=quantity]").fill(String(qty));
     await form.getByLabel(/Unit price|Rate per person-hour/).fill(String(price));
     if (opts.exGst) await form.getByLabel("Price includes GST").uncheck();
     if (opts.waste) await form.getByLabel("Waste %").fill(String(opts.waste));
@@ -153,7 +170,7 @@ await step("estimate: build, check, approve, quote, send, accept", async () => {
     await p.waitForTimeout(300);
   }
   // 50 m2 @ $44 inc GST + 8% waste = $2,160 ex GST
-  await addLine("Material", "Sandstone pavers", 50, 44, { waste: 8 });
+  await addLine("Material", "Sandstone pavers", 50, 44, { waste: 8, measurement: "Rear patio · Paving: 50 m²" });
   await addLine("Labour", "Lay pavers, 2 people x 4 days", 64, 45);
   await addLine("Disposal", "Skip bin", 1, 495);
   await addLine("Material", "Road base and sand", 1, 1452, { exGst: true });
@@ -163,6 +180,7 @@ await step("estimate: build, check, approve, quote, send, accept", async () => {
   assert.match(t, /\$6,942\.00/);
   assert.match(t, /\$9,927\.06/);
   assert.match(t, /Customer scope written/);
+  assert.match(t, /\+8% waste/);
   await p.getByLabel("What's included").fill("Supply and lay 50 m² of sandstone pavers on a compacted road base.");
   await p.getByLabel("Exclusions and assumptions have been reviewed").check();
   await p.getByRole("button", { name: "Save scope" }).click();

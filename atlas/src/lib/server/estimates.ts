@@ -5,6 +5,21 @@ import { summarise } from "../domain/estimates";
 import { getSettings } from "./context";
 import { todayIn } from "../dates";
 import { HttpError } from "./api";
+import { quantityBasisFor } from "../domain/inspections";
+
+export async function measurementLink(repo: Repository, id: string | undefined): Promise<Partial<Rec<"estimateLines">>> {
+  if (!id) return { measurementIds: [] };
+  const m = await repo.get("measurements", id);
+  if (!m) throw new HttpError(400, "That measurement no longer exists");
+  return { measurementIds: [m.id], quantityBasis: quantityBasisFor(m.unit) as never };
+}
+
+/** Measurements from inspections for the same customer or enquiry, for picking line quantities. */
+export async function measurementsFor(repo: Repository, e: Rec<"estimates">) {
+  const insp = await repo.list("inspections", { where: (i) => !!(i.customerIds?.some((c) => e.customerIds?.includes(c)) || i.enquiryIds?.some((x) => e.enquiryIds?.includes(x))) });
+  const ids = new Set(insp.map((i) => i.id));
+  return repo.list("measurements", { where: (m) => !!m.inspectionIds?.some((i) => ids.has(i)) });
+}
 
 /** Load an estimate with everything needed to price and check it. */
 export async function loadEstimate(repo: Repository, id: string) {

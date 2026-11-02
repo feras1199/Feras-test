@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Chip, statusTone } from "../ui";
 import type { EstimateSummary } from "@/lib/domain/estimates";
 
-type Line = { id: string; description: string; costType: string; quantity: number; unit: string; wasteRate: number; unitCostCents: number; priceIncludesGst: boolean; proposalOption: string; customerDescription: string; quantityVerified: boolean; costExGst: number };
+type Line = { id: string; description: string; costType: string; quantity: number; unit: string; wasteRate: number; unitCostCents: number; priceIncludesGst: boolean; proposalOption: string; customerDescription: string; quantityVerified: boolean; measurementId: string | null; costExGst: number };
 type Est = { id: string; title: string; status: string; locked: boolean; quoteNumber: string; customerScope: string; assumptions: string; assumptionsResolved: boolean; markupOverride: number | null; managerOverride: number | null; commissionRate: number | null; validUntil: string | null; internalReviewNotes: string; projectId: string | null };
 type Props = {
   estimate: Est;
@@ -14,6 +14,7 @@ type Props = {
   summary: EstimateSummary;
   settings: { defaultMarkup: number; commissionRate: number; commissionEnabled: boolean; schedules: Record<string, { name: string; stages: { label: string; rate: number }[] }>; gstRate: number };
   costItems: { id: string; name: string; unit: string; priceIncCents: number | null; category: string }[];
+  measurements: { id: string; label: string; quantity: number; unit: string }[];
   perms: { edit: boolean; approve: boolean; owner: boolean };
 };
 
@@ -29,7 +30,7 @@ async function call(url: string, method: string, body?: unknown) {
   return json;
 }
 
-export function EstimateBuilder({ estimate: e, customer, lines, summary, settings, costItems, perms }: Props) {
+export function EstimateBuilder({ estimate: e, customer, lines, summary, settings, costItems, measurements, perms }: Props) {
   const router = useRouter();
   const editable = perms.edit && !e.locked;
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +112,7 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
                 </table>
               </div>
             )}
-            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} onDone={() => { setEditing(null); router.refresh(); }} />}
+            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} measurements={measurements} onDone={() => { setEditing(null); router.refresh(); }} />}
           </section>
 
           <ScopeEditor e={e} editable={editable} onSave={patch} busy={busy} />
@@ -213,7 +214,9 @@ function ScopeEditor({ e, editable, onSave, busy }: { e: Est; editable: boolean;
   );
 }
 
-function LineForm({ estimateId, line, costItems, onDone }: { estimateId: string; line: Line | null; costItems: Props["costItems"]; onDone: () => void }) {
+function LineForm({ estimateId, line, costItems, measurements, onDone }: { estimateId: string; line: Line | null; costItems: Props["costItems"]; measurements: Props["measurements"]; onDone: () => void }) {
+  const [measurementId, setMeasurementId] = useState(line?.measurementId ?? "");
+  const [qty, setQty] = useState(line ? String(line.quantity) : "");
   const [type, setType] = useState(line?.costType ?? "Material");
   const [desc, setDesc] = useState(line?.description ?? "");
   const [unit, setUnit] = useState(line?.unit ?? "");
@@ -238,9 +241,9 @@ function LineForm({ estimateId, line, costItems, onDone }: { estimateId: string;
     const fd = new FormData(ev.currentTarget);
     const body = {
       description: desc.trim(), costType: type, unit: labour ? "person-hour" : unit.trim(),
-      quantity: Number(fd.get("quantity")), wasteRate: labour ? 0 : Number(fd.get("waste") || 0) / 100,
+      quantity: Number(qty), wasteRate: labour ? 0 : Number(fd.get("waste") || 0) / 100,
       unitCostCents: Math.round(Number(String(price).replace(/[$,]/g, "")) * 100), priceIncludesGst: !labour && incGst,
-      proposalOption: fd.get("proposalOption"), customerDescription: String(fd.get("customerDescription") ?? ""), quantityVerified: fd.get("quantityVerified") === "on", costItemId,
+      proposalOption: fd.get("proposalOption"), customerDescription: String(fd.get("customerDescription") ?? ""), quantityVerified: fd.get("quantityVerified") === "on", costItemId, measurementId: measurementId || undefined,
     };
     if (!Number.isFinite(body.quantity) || !Number.isFinite(body.unitCostCents)) return setError("Quantity and price must be numbers");
     setBusy(true);
@@ -248,7 +251,7 @@ function LineForm({ estimateId, line, costItems, onDone }: { estimateId: string;
     try {
       await call(line ? `/api/estimates/${estimateId}/lines/${line.id}` : `/api/estimates/${estimateId}/lines`, line ? "PATCH" : "POST", body);
       (ev.target as HTMLFormElement).reset();
-      setDesc(""); setPrice(""); setUnit(""); setCostItemId(undefined); setIncGst(true);
+      setDesc(""); setPrice(""); setUnit(""); setCostItemId(undefined); setIncGst(true); setQty(""); setMeasurementId("");
       onDone();
     } catch (err) {
       setError((err as Error).message);
@@ -268,7 +271,14 @@ function LineForm({ estimateId, line, costItems, onDone }: { estimateId: string;
           </label>
         )}
         <label className="text-sm sm:col-span-3"><span className="label">Description *</span><input className="input" required minLength={2} name="description" value={desc} onChange={(x) => setDesc(x.target.value)} placeholder={labour ? "e.g. Lay pavers (2 people × 5 days × 8 h)" : "e.g. Sandstone pavers 400×400"} /></label>
-        <label className="text-sm"><span className="label">{labour ? "Person-hours *" : "Quantity *"}</span><input className="input" name="quantity" required inputMode="decimal" defaultValue={line?.quantity ?? ""} /></label>
+        {!labour && measurements.length > 0 && (
+          <label className="text-sm sm:col-span-3"><span className="label">Quantity from a site measurement</span>
+            <select className="input" value={measurementId} onChange={(x) => { setMeasurementId(x.target.value); const m = measurements.find((y) => y.id === x.target.value); if (m) { setQty(String(m.quantity)); setUnit(m.unit); } }}>
+              <option value="">Not linked</option>{measurements.map((m) => <option key={m.id} value={m.id}>{m.label}: {m.quantity} {m.unit}</option>)}
+            </select>
+          </label>
+        )}
+        <label className="text-sm"><span className="label">{labour ? "Person-hours *" : "Quantity *"}</span><input className="input" name="quantity" required inputMode="decimal" value={qty} onChange={(x) => setQty(x.target.value)} /></label>
         {!labour && <label className="text-sm"><span className="label">Unit</span><input className="input" value={unit} onChange={(x) => setUnit(x.target.value)} placeholder="m², lm, each" /></label>}
         {!labour && <label className="text-sm"><span className="label">Waste %</span><input className="input" name="waste" inputMode="decimal" defaultValue={line ? (line.wasteRate * 100).toString() : "0"} /></label>}
         <label className="text-sm"><span className="label">{labour ? "Rate per person-hour *" : "Unit price *"}</span><input className="input" required inputMode="decimal" value={price} onChange={(x) => setPrice(x.target.value)} /></label>

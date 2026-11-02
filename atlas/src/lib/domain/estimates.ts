@@ -175,6 +175,7 @@ export const LineInput = z.object({
   proposalOption: z.enum(["Included", "Optional Upgrade", "Alternative", "Internal Only"]).default("Included"),
   quantityVerified: z.boolean().default(false),
   costItemId: z.string().regex(/^rec[A-Za-z0-9]{14}$/).optional(),
+  measurementId: z.string().regex(/^rec[A-Za-z0-9]{14}$/).optional(),
   notes: z.string().max(2000).optional(),
 });
 export type LineInput = z.infer<typeof LineInput>;
@@ -195,7 +196,7 @@ export function lineFields(i: LineInput, gstRate: number): Partial<Rec<"estimate
     proposalOption: i.proposalOption,
     included: true,
     quantityVerified: i.quantityVerified,
-    quantityBasis: labour ? "Manual quantity" : "Manual quantity",
+    quantityBasis: "Manual quantity",
     labourHours: labour ? i.quantity : null,
     labourRate: labour ? i.unitCostCents : null,
     costItemIds: i.costItemId ? [i.costItemId] : [],

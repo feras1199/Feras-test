@@ -57,6 +57,7 @@ export function EnquiryPanel({ card, canEdit, onClose }: { card: Card; statuses:
         <div className="mb-4 flex flex-wrap gap-2">
           {card.phone && <a href={`tel:${card.phone.replace(/\s/g, "")}`} className="btn-secondary">Call {card.phone}</a>}
           {card.customerId && <Link href={`/customers/${card.customerId}`} className="btn-secondary">Customer record</Link>}
+          {canEdit && card.customerId && <Link href={`/inspections/new?enquiry=${card.id}`} className="btn-secondary">Book inspection</Link>}
           {canEdit && card.customerId && <Link href={`/estimates/new?enquiry=${card.id}`} className="btn-secondary">Start estimate</Link>}
         </div>
         {card.flags.length > 0 && <ul className="mb-4 list-inside list-disc text-sm text-red-800">{card.flags.map((f) => <li key={f}>{f}</li>)}</ul>}
