@@ -16,7 +16,7 @@ export function CreateMenu() {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <button className="btn-gold !px-3 sm:!px-4" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu">
+      <button className="btn-gold !px-3 sm:!px-4" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu" aria-label="Create">
         <Icon name="plus" /> <span className="hidden sm:inline">Create</span>
       </button>
       {open && (

@@ -1,0 +1,22 @@
+# One-click demo deployment of ATLAS on Render (fictional demo data only).
+# Not for live use: it enables the demo logins and keeps data in memory,
+# so everything resets when the service restarts or sleeps.
+services:
+  - type: web
+    name: atlas-demo
+    runtime: node
+    rootDir: atlas
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ATLAS_DATA_SOURCE
+        value: memory
+      - key: ATLAS_ALLOW_DEMO_LOGINS
+        value: "1"
+      - key: ATLAS_SESSION_SECRET
+        generateValue: true
