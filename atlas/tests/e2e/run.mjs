@@ -253,6 +253,59 @@ await step("finance: raise a stage and mark a payment received", async () => {
   assert.match(await p.innerText("main"), /QuickBooks\s*Not connected/);
 });
 
+await step("portal: customer sees updates and accepts their own quote; other quotes stay hidden", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/projects/recDemoProj000001`);
+  await p.getByText("Post an update to the customer portal").click();
+  await p.getByLabel("What happened (the customer sees this) *").fill("Pavers are down at the front path. Planting is finished.");
+  await p.getByRole("button", { name: "Publish to portal" }).click();
+  await p.getByRole("status").waitFor();
+  // A second quote for Taylor, approved and sent by the owner
+  await p.goto(`${BASE}/estimates/new?customer=recDemoCust000003`);
+  await p.fill("#title", "Side garden retaining wall");
+  await p.getByRole("button", { name: "Create draft" }).click();
+  await p.waitForURL(/\/estimates\/rec/);
+  const form = p.getByRole("form", { name: "Add line" });
+  for (const [type, desc, qty, price] of [["Material", "Sleepers and posts", 1, 2200], ["Labour", "Build wall", 24, 50], ["Disposal", "Spoil removal", 1, 330]]) {
+    await form.getByLabel("Type").selectOption(type);
+    await form.getByLabel("Description *").fill(desc);
+    await form.locator("input[name=quantity]").fill(String(qty));
+    await form.getByLabel(/Unit price|Rate per person-hour/).fill(String(price));
+    await form.getByLabel("Quantity checked against measurements").check();
+    await form.getByRole("button", { name: "Add line" }).click();
+    await p.getByRole("cell", { name: desc }).first().waitFor();
+  }
+  await p.getByLabel("What's included").fill("Build a 6 m treated pine sleeper wall along the side garden.");
+  await p.getByLabel("Exclusions and assumptions have been reviewed").check();
+  await p.getByRole("button", { name: "Save scope" }).click();
+  await p.waitForTimeout(800);
+  await p.getByRole("button", { name: "Approve price" }).click();
+  await p.getByRole("dialog").getByRole("button", { name: /Approve/ }).click();
+  await p.getByText("Locked").waitFor();
+  await p.getByRole("button", { name: "Mark as sent" }).click();
+  await p.getByRole("dialog").getByRole("button", { name: "Yes, it's been sent" }).click();
+  await p.getByRole("button", { name: "Declined" }).waitFor();
+
+  const c = await login("taylor.demo@example.com", { width: 390, height: 844 });
+  await c.page.getByText("Pavers are down at the front path").waitFor();
+  const t = await c.page.innerText("main");
+  assert.doesNotMatch(t, /Sam & Jo|Supplies|ex GST cost|margin|markup/i);
+  await c.page.getByRole("link", { name: /Side garden retaining wall/ }).click();
+  const q = await c.page.innerText("main");
+  assert.doesNotMatch(q, /Build wall|Spoil removal|\$50/);
+  await c.page.getByLabel("Your full name *").fill("Taylor Demo");
+  await c.page.getByRole("checkbox").check();
+  await c.page.getByRole("button", { name: "Accept quote" }).click();
+  await c.page.getByText("You've accepted this quote").waitFor();
+  await c.page.screenshot({ path: `${shots}/portal-quote.png`, fullPage: true });
+  // Someone else's estimate is invisible and can't be accepted
+  assert.equal((await c.page.request.post(`${BASE}/api/portal/accept/recDemoEst0000002`, { data: { fullName: "Taylor Demo", agree: true } })).status(), 404);
+  assert.equal((await c.page.goto(`${BASE}/portal/quote/recDemoEst0000002`)).status(), 404);
+  await c.ctx.close();
+  await p.goto(`${BASE}/audit`);
+  assert.match(await p.innerText("main"), /accepted by Taylor Demo \(portal, IP/);
+});
+
 const worker = await login("worker@example.com");
 await step("worker cannot see customers, money or settings", async () => {
   const nav = await worker.page.innerText("nav");

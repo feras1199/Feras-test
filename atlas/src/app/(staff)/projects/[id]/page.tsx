@@ -63,6 +63,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           {can(s.role, "projects.edit") ? <ProjectStatusForm project={{ id: p.id, status: p.status ?? "", health: p.health ?? "", progress: p.progress ?? 0, nextAction: p.nextAction ?? "", nextActionDate: p.nextActionDate ?? "", startDate: p.startDate ?? "", completionDate: p.completionDate ?? "" }} /> : (
             <dl className="space-y-1 text-sm"><div>Progress: {formatPct(p.progress ?? 0, 0)}</div><div>Next: {p.nextAction ?? "–"} {p.nextActionDate ? `(${formatDate(p.nextActionDate)})` : ""}</div></dl>
           )}
+          {can(s.role, "projects.edit") && <details className="mt-4"><summary className="cursor-pointer text-sm font-medium text-forest-700">Post an update to the customer portal</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/updates`} submitLabel="Publish to portal" fields={[{ name: "summary", label: "What happened (the customer sees this)", type: "textarea", required: true }, { name: "nextSteps", label: "What's next", type: "text", full: true }]} /><p className="mt-1 text-xs text-stone-500">Shows in the customer's portal. It isn't emailed.</p></div></details>}
           {(p.siteAccessNotes || p.crewNotes) && <div className="mt-4 space-y-2 rounded-xl bg-stone-50 p-3 text-sm">{p.siteAccessNotes && <p><span className="font-medium">Site access:</span> {p.siteAccessNotes}</p>}{p.crewNotes && <p><span className="font-medium">Crew notes:</span> {p.crewNotes}</p>}</div>}
         </section>
 
