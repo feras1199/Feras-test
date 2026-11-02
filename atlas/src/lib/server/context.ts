@@ -9,6 +9,7 @@ import type { Repository } from "../data/repository";
 import { resolveSettings, type Settings } from "../config/settings";
 import { SESSION_COOKIE, verifySession, type SessionPayload } from "../auth/session";
 import { can, type Permission } from "../auth/roles";
+import { stillAuthorised } from "../auth/users";
 
 const g = globalThis as unknown as { __atlasRepo?: Repository; __atlasSettings?: Settings };
 
@@ -48,7 +49,8 @@ export function sessionSecret(): string {
 
 export async function currentSession(): Promise<SessionPayload | null> {
   const jar = await cookies();
-  return verifySession(jar.get(SESSION_COOKIE)?.value, sessionSecret());
+  const s = await verifySession(jar.get(SESSION_COOKIE)?.value, sessionSecret());
+  return s && stillAuthorised(s) ? s : null;
 }
 
 /** For server components: redirect to login, or to a forbidden page, when not allowed. */

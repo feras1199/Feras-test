@@ -33,7 +33,7 @@ If fields are added or renamed in Airtable, run `AIRTABLE_TOKEN=... node scripts
 npm run typecheck
 npm test                 # unit tests (finance engine, data mapping, permissions, CRM)
 npm run build && ATLAS_ALLOW_DEMO_LOGINS=1 ATLAS_SESSION_SECRET=$(openssl rand -hex 32) npm start &
-BASE_URL=http://localhost:3000 npm run e2e   # browser tests (Playwright)
+BASE_URL=http://localhost:3000 npm run e2e   # browser tests (Playwright); start a fresh server each run
 ```
 
 ## Layout
@@ -43,8 +43,18 @@ BASE_URL=http://localhost:3000 npm run e2e   # browser tests (Playwright)
 | `src/lib/finance` | Pricing, GST, commission, payment schedules, labour, reconciliation. Pure functions, fully tested. |
 | `src/lib/data` | Entity mapping, Airtable client (field IDs, rate limit, retries), in-memory demo store |
 | `src/lib/auth` | Roles and permissions, signed sessions, password hashing, field redaction |
-| `src/lib/server` | Request context, API wrapper, audit log |
+| `src/lib/domain` | CRM, estimates, inspections, projects: validation and calculations built on the finance engine |
+| `src/lib/server` | Request context, API wrapper, audit log, search, portal allow-list |
+| `src/lib/ai` | Ask ATLAS: role-filtered read tools, confirm-before-save suggestions, the model loop |
 | `src/app` | Pages and API routes |
 | `docs/` | Airtable audit, schema snapshot, financial rules |
 
-See `docs/FINANCIAL_RULES.md` for how every number is calculated and `docs/AIRTABLE_AUDIT.md` for the issues found in the existing base.
+## Docs
+
+| Doc | For |
+|---|---|
+| `docs/DEPLOYMENT.md` | Hosting, environment variables, go-live checklist, rollback |
+| `docs/ADMIN_GUIDE.md` | Roles, adding people, business settings, audit log, the assistant |
+| `docs/KNOWN_LIMITATIONS.md` | What isn't built yet and what is waiting on a decision |
+| `docs/FINANCIAL_RULES.md` | How every number is calculated |
+| `docs/AIRTABLE_AUDIT.md` | Issues found in the existing base |

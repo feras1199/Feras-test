@@ -18,9 +18,13 @@ export type AtlasUser = z.infer<typeof UserSchema>;
  * Users come from ATLAS_USERS_JSON until the additive "Atlas Users" table is
  * approved in Airtable. Demo users exist only in memory mode outside production.
  */
+let parsed: { raw: string; users: AtlasUser[] } | null = null;
 export function loadUsers(): AtlasUser[] {
   const raw = process.env.ATLAS_USERS_JSON;
-  if (raw) return z.array(UserSchema).parse(JSON.parse(raw));
+  if (raw) {
+    if (parsed?.raw !== raw) parsed = { raw, users: z.array(UserSchema).parse(JSON.parse(raw)) };
+    return parsed.users;
+  }
   if (demoLoginsEnabled()) return DEMO_USERS;
   return [];
 }
@@ -46,4 +50,14 @@ export async function authenticate(email: string, password: string): Promise<Atl
   // Always run a hash comparison so response time doesn't reveal whether the email exists.
   const ok = await verifyPassword(password, u?.passwordHash ?? DEMO_HASH);
   return u && ok ? u : null;
+}
+
+/**
+ * A signed cookie stays valid until it expires, so each request also checks the
+ * user is still listed, active, and has the same role and customer link.
+ * Removing or deactivating someone signs them out on their next click.
+ */
+export function stillAuthorised(p: { uid: string; role: string; customerId?: string }) {
+  const u = loadUsers().find((x) => x.id === p.uid);
+  return !!u && u.active && u.role === p.role && (u.customerId ?? undefined) === (p.customerId ?? undefined);
 }
