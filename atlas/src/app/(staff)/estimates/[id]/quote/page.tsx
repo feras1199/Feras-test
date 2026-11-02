@@ -39,7 +39,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
         <PrintButton />
         {draft && <p className="self-center text-sm text-red-700">Draft preview: approve the price before sending.</p>}
       </div>
-      <article className="relative mx-auto max-w-3xl bg-white p-6 shadow-card sm:p-10 print:max-w-none print:p-0 print:shadow-none">
+      <article className="relative mx-auto max-w-3xl overflow-hidden break-words bg-white p-6 shadow-card sm:p-10 print:max-w-none print:p-0 print:shadow-none">
         {draft && <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center text-[120px] font-bold text-red-500/10">DRAFT</div>}
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-200 pb-6">
           <div className="flex items-center gap-3"><Logo className="h-12 w-12" /><div><p className="font-display text-xl font-semibold text-forest-900">{b.name}</p><p className="text-xs text-stone-600">{[b.abn && `ABN ${b.abn}`, b.licenceNumber && `Licence ${b.licenceNumber}`, b.phone, b.email].filter(Boolean).join(" · ")}</p></div></div>
