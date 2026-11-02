@@ -204,6 +204,59 @@ await step("estimate: build, check, approve, quote, send, accept", async () => {
   t = await p.innerText("main");
   assert.match(t, /accepted by Alex Demo \(Signed quote\)\. 5 payment stages created totalling \$9,927\.06/);
 });
+await step("estimate: cost library type-ahead fills a line; new items can be saved and found straight away", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/estimates/new?customer=recDemoCust000004`);
+  await p.fill("#title", "Driveway and edging");
+  await p.getByRole("button", { name: "Create draft" }).click();
+  await p.waitForURL(/\/estimates\/rec/);
+  const form = p.getByRole("form", { name: "Add line" });
+  const desc = form.getByRole("combobox", { name: "Description *" });
+  await desc.pressSequentially("sa");
+  const list = p.getByRole("listbox", { name: "Cost Library matches" });
+  await list.waitFor();
+  const first = await list.getByRole("option").first().innerText();
+  assert.match(first, /^Sandstone paver/);
+  assert.match(first, /\$79\.00 \/ m2/);
+  await list.getByRole("option", { name: /Sandstone paver 600×400/ }).click();
+  assert.equal(await desc.inputValue(), "Sandstone paver 600×400×30");
+  assert.equal(await form.getByLabel("Unit", { exact: true }).inputValue(), "m2");
+  assert.equal(await form.getByLabel("Unit price *").inputValue(), "86");
+  await form.locator("input[name=quantity]").fill("10");
+  await form.getByRole("button", { name: "Add line" }).click();
+  await p.getByRole("cell", { name: "Sandstone paver 600×400×30" }).first().waitFor();
+  // Keyboard: arrow down + Enter picks a labour item and switches the type
+  await desc.pressSequentially("paver lay");
+  await list.waitFor();
+  await desc.press("Enter");
+  assert.equal(await form.getByLabel("Type").inputValue(), "Labour");
+  assert.equal(await form.getByLabel("Rate per person-hour *").inputValue(), "75");
+  await form.getByLabel("Type").selectOption("Material");
+  await desc.fill("");
+  // A new item, saved to the library from the line
+  await desc.fill("Zeolite drainage gravel");
+  await form.locator("input[name=quantity]").fill("2");
+  await form.getByLabel("Unit", { exact: true }).fill("Tonne");
+  await form.getByLabel("Unit price *").fill("100");
+  await form.getByLabel("Price includes GST").uncheck();
+  await form.getByLabel(/Save “Zeolite drainage gravel” to the Cost Library/).check();
+  await form.getByRole("button", { name: "Add line" }).click();
+  await p.getByRole("cell", { name: "Zeolite drainage gravel" }).first().waitFor();
+  await p.getByText("is now in your Cost Library").waitFor();
+  await desc.pressSequentially("zeo");
+  await list.waitFor();
+  const z = await list.getByRole("option").first().innerText();
+  assert.match(z, /Zeolite drainage gravel/);
+  assert.match(z, /\$110\.00 \/ Tonne/); // saved inc GST
+  const api = await (await p.request.get(`${BASE}/api/cost-items`)).json();
+  assert.ok(api.items.some((i) => i.name === "Zeolite drainage gravel" && i.priceIncCents === 11000));
+  // Saving the same name twice doesn't make a duplicate
+  const again = await (await p.request.post(`${BASE}/api/cost-items`, { data: { name: "zeolite  drainage gravel", priceIncCents: 1 } })).json();
+  assert.equal(again.existed, true);
+  await p.goto(`${BASE}/audit`);
+  assert.match(await p.innerText("main"), /Cost Library: added "Zeolite drainage gravel"/);
+});
+
 await step("sales can build but not approve; locked estimate rejects edits", async () => {
   const sales = await login("sales@example.com");
   await sales.page.goto(acceptedEstimateUrl);
@@ -322,6 +375,8 @@ await step("worker cannot see customers, money or settings", async () => {
   assert.equal((await worker.page.request.get(`${BASE}/finance`)).url().includes("forbidden"), true);
   const pay = await worker.page.request.patch(`${BASE}/api/payments/recDemoPay0000002`, { data: { action: "received", confirm: true, receivedDate: "2026-11-01", method: "Cash" } });
   assert.equal(pay.status(), 403);
+  assert.equal((await worker.page.request.get(`${BASE}/api/cost-items`)).status(), 403);
+  assert.equal((await worker.page.request.post(`${BASE}/api/cost-items`, { data: { name: "Sneaky item", priceIncCents: 1 } })).status(), 403);
   assert.equal((await worker.page.request.patch(`${BASE}/api/enquiries/recDemoEnq0000001`, { data: { status: "Won" } })).status(), 403);
   assert.doesNotMatch(await worker.page.innerText("main"), /Overdue payments|\$/i);
   await worker.page.goto(`${BASE}/customers`);

@@ -25,6 +25,35 @@ export function buildFixtures(now = new Date()): Store {
   const est = (n: number) => id("DemoEst", n);
 
   return {
+    // Fictional cost library: names are generic, suppliers and prices are made up for the demo.
+    costItems: [
+      { id: id("DemoCost", 1), createdTime: T, name: "Sandstone paver 400×400×30", unit: "m2", category: "Paver", supplier: "Demo Stone Supplies", currentUnitCostInc: 7900, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 2), createdTime: T, name: "Sandstone paver 600×400×30", unit: "m2", category: "Paver", supplier: "Demo Stone Supplies", currentUnitCostInc: 8600, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 3), createdTime: T, name: "Bluestone paver 600×300×20", unit: "m2", category: "Paver", supplier: "Demo Stone Supplies", currentUnitCostInc: 11500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 4), createdTime: T, name: "Porcelain paver 600×600×20", unit: "m2", category: "Paver", supplier: "Demo Tile Co", currentUnitCostInc: 9800, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 5), createdTime: T, name: "Concrete paver charcoal 400×400", unit: "m2", category: "Paver", supplier: "Demo Landscape Yard", currentUnitCostInc: 4200, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 6), createdTime: T, name: "Sandstone wall block 500×250×150", unit: "Each", category: "Material - Wall", supplier: "Demo Stone Supplies", currentUnitCostInc: 1850, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 7), createdTime: T, name: "Road base (DGB20)", unit: "Tonne", category: "Gravel", supplier: "Demo Landscape Yard", currentUnitCostInc: 6500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 8), createdTime: T, name: "Bedding sand", unit: "Tonne", category: "Soil", supplier: "Demo Landscape Yard", currentUnitCostInc: 7200, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 9), createdTime: T, name: "Cement GP 20 kg", unit: "Each", category: "Material", supplier: "Demo Hardware", currentUnitCostInc: 1250, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 10), createdTime: T, name: "Ag pipe 100 mm slotted with sock", unit: "lm", category: "Drainage", supplier: "Demo Hardware", currentUnitCostInc: 450, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 11), createdTime: T, name: "Blue metal 20 mm", unit: "Tonne", category: "Gravel", supplier: "Demo Landscape Yard", currentUnitCostInc: 9500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 12), createdTime: T, name: "Garden mix soil", unit: "M3", category: "Soil", supplier: "Demo Landscape Yard", currentUnitCostInc: 8900, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 13), createdTime: T, name: "Premium turf underlay", unit: "M3", category: "Soil", supplier: "Demo Landscape Yard", currentUnitCostInc: 9900, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 14), createdTime: T, name: "Sir Walter buffalo turf", unit: "m2", category: "Turf", supplier: "Demo Turf Farm", currentUnitCostInc: 1450, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 15), createdTime: T, name: "Hardwood mulch", unit: "M3", category: "Mulch", supplier: "Demo Landscape Yard", currentUnitCostInc: 7500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 16), createdTime: T, name: "Pine bark mulch", unit: "M3", category: "Mulch", supplier: "Demo Landscape Yard", currentUnitCostInc: 8200, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 17), createdTime: T, name: "River pebble 20–40 mm", unit: "Bulka Bag", category: "Pebble", supplier: "Demo Landscape Yard", currentUnitCostInc: 29500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 18), createdTime: T, name: "Lilly pilly 200 mm pot", unit: "Each", category: "Material - Plant", supplier: "Demo Nursery", currentUnitCostInc: 3200, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 19), createdTime: T, name: "Lomandra 140 mm pot", unit: "Each", category: "Material - Plant", supplier: "Demo Nursery", currentUnitCostInc: 1100, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 20), createdTime: T, name: "Mondo grass tube", unit: "Each", category: "Material - Plant", supplier: "Demo Nursery", currentUnitCostInc: 350, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 21), createdTime: T, name: "Steel garden edging 100 mm", unit: "lm", category: "Edging", supplier: "Demo Hardware", currentUnitCostInc: 2400, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 22), createdTime: T, name: "Treated pine sleeper 200×75×2.4", unit: "Each", category: "Timber", supplier: "Demo Timber", currentUnitCostInc: 3600, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 23), createdTime: T, name: "Low-voltage path light", unit: "Each", category: "Lighting", supplier: "Demo Lighting", currentUnitCostInc: 8900, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 24), createdTime: T, name: "Skip bin 6 m³", unit: "Each", category: "Disposal", supplier: "Demo Waste", currentUnitCostInc: 52000, active: false, confidence: "Estimate" },
+      { id: id("DemoCost", 25), createdTime: T, name: "Labourer", unit: "hour", category: "Labour", supplier: "", currentUnitCostInc: 5500, active: true, confidence: "Estimate" },
+      { id: id("DemoCost", 26), createdTime: T, name: "Paver layer", unit: "hour", category: "Labour", supplier: "", currentUnitCostInc: 7500, active: true, confidence: "Estimate" },
+    ],
     customers: [
       { id: cust(1), createdTime: T, name: "Alex Demo", phone: "0491 570 001", email: "alex.demo@example.com", address: "1 Example Street", suburb: "Castle Hill", preferredContact: "Phone", customerType: "Family", leadSource: "Google", leadStatus: "Site Visit Booked", enquiryDate: D(-6), nextFollowUp: D(1), nextFollowUpAction: "Confirm site visit time", lastContactDate: D(-2), doNotContact: false, projectIds: [], enquiryIds: [enq(1)] },
       { id: cust(2), createdTime: T, name: "Sam & Jo Demo", phone: "0491 570 002", email: "samjo.demo@example.com", address: "22 Sample Avenue", suburb: "Baulkham Hills", preferredContact: "Email", customerType: "Couple", leadSource: "Referral", leadStatus: "Proposal Sent", enquiryDate: D(-20), nextFollowUp: D(-1), nextFollowUpAction: "Follow up on proposal", lastContactDate: D(-8), doNotContact: false, projectIds: [proj(2)], enquiryIds: [enq(2)] },

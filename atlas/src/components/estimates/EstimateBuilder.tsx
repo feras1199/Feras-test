@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Chip, statusTone } from "../ui";
 import type { EstimateSummary } from "@/lib/domain/estimates";
+import { searchCostItems, type CostOption } from "@/lib/domain/costLibrary";
 
 type Line = { id: string; description: string; costType: string; quantity: number; unit: string; wasteRate: number; unitCostCents: number; priceIncludesGst: boolean; proposalOption: string; customerDescription: string; quantityVerified: boolean; measurementId: string | null; costExGst: number };
 type Est = { id: string; title: string; status: string; locked: boolean; quoteNumber: string; customerScope: string; assumptions: string; assumptionsResolved: boolean; markupOverride: number | null; managerOverride: number | null; commissionRate: number | null; validUntil: string | null; internalReviewNotes: string; projectId: string | null };
@@ -13,7 +14,7 @@ type Props = {
   lines: Line[];
   summary: EstimateSummary;
   settings: { defaultMarkup: number; commissionRate: number; commissionEnabled: boolean; schedules: Record<string, { name: string; stages: { label: string; rate: number }[] }>; gstRate: number };
-  costItems: { id: string; name: string; unit: string; priceIncCents: number | null; category: string }[];
+  costItems: CostOption[];
   measurements: { id: string; label: string; quantity: number; unit: string }[];
   perms: { edit: boolean; approve: boolean; owner: boolean };
 };
@@ -112,7 +113,7 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
                 </table>
               </div>
             )}
-            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} measurements={measurements} onDone={() => { setEditing(null); router.refresh(); }} />}
+            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} gstRate={settings.gstRate} measurements={measurements} onDone={() => { setEditing(null); router.refresh(); }} />}
           </section>
 
           <ScopeEditor e={e} editable={editable} onSave={patch} busy={busy} />
@@ -214,7 +215,7 @@ function ScopeEditor({ e, editable, onSave, busy }: { e: Est; editable: boolean;
   );
 }
 
-function LineForm({ estimateId, line, costItems, measurements, onDone }: { estimateId: string; line: Line | null; costItems: Props["costItems"]; measurements: Props["measurements"]; onDone: () => void }) {
+function LineForm({ estimateId, line, costItems, gstRate, measurements, onDone }: { estimateId: string; line: Line | null; costItems: CostOption[]; gstRate: number; measurements: Props["measurements"]; onDone: () => void }) {
   const [measurementId, setMeasurementId] = useState(line?.measurementId ?? "");
   const [qty, setQty] = useState(line ? String(line.quantity) : "");
   const [type, setType] = useState(line?.costType ?? "Material");
@@ -223,17 +224,37 @@ function LineForm({ estimateId, line, costItems, measurements, onDone }: { estim
   const [price, setPrice] = useState(line ? (line.unitCostCents / 100).toString() : "");
   const [incGst, setIncGst] = useState(line?.priceIncludesGst ?? true);
   const [costItemId, setCostItemId] = useState<string | undefined>(undefined);
+  const [library, setLibrary] = useState<CostOption[]>(costItems);
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState(0);
+  const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const listId = useId();
+  useEffect(() => setLibrary(costItems), [costItems]); // pick up items added elsewhere after a refresh
   const labour = type === "Labour";
+  const matches = useMemo(() => (open && !costItemId ? searchCostItems(library, desc, 8) : []), [open, costItemId, library, desc]);
+  const showList = open && !costItemId && desc.trim().length > 0;
+  const canSave = !costItemId && desc.trim().length >= 2;
 
-  function pick(id: string) {
-    const c = costItems.find((x) => x.id === id);
-    if (!c) return;
+  function pick(c: CostOption) {
     setCostItemId(c.id);
     setDesc(c.name);
-    setUnit(c.unit);
+    if (c.lineType === "Labour") setType("Labour");
+    else if (labour) setType("Material");
+    if (c.unit) setUnit(c.unit);
     if (c.priceIncCents !== null) { setPrice((c.priceIncCents / 100).toString()); setIncGst(true); }
+    setOpen(false);
+    setSaveToLibrary(false);
+  }
+
+  function onDescKey(ev: React.KeyboardEvent<HTMLInputElement>) {
+    if (!showList) { if (ev.key === "ArrowDown" && desc.trim()) { setOpen(true); setHi(0); ev.preventDefault(); } return; }
+    if (ev.key === "ArrowDown") { ev.preventDefault(); setHi((h) => Math.min(h + 1, matches.length - 1)); }
+    else if (ev.key === "ArrowUp") { ev.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
+    else if (ev.key === "Enter" && matches[hi]) { ev.preventDefault(); pick(matches[hi]!); }
+    else if (ev.key === "Escape") { ev.preventDefault(); setOpen(false); }
   }
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
@@ -248,13 +269,25 @@ function LineForm({ estimateId, line, costItems, measurements, onDone }: { estim
     if (!Number.isFinite(body.quantity) || !Number.isFinite(body.unitCostCents)) return setError("Quantity and price must be numbers");
     setBusy(true);
     setError(null);
+    setNote(null);
+    const form = ev.currentTarget;
+    let saved: CostOption | null = null;
     try {
+      if (saveToLibrary && canSave) {
+        const priceIncCents = body.priceIncludesGst || labour ? body.unitCostCents : Math.round(body.unitCostCents * (1 + gstRate));
+        const res = await call("/api/cost-items", "POST", { name: body.description, unit: labour ? (unit.trim() || "hour") : body.unit, category: type, priceIncCents });
+        saved = res.item as CostOption;
+        body.costItemId = saved.id;
+        setLibrary((l) => (l.some((x) => x.id === saved!.id) ? l : [...l, saved!]));
+        setCostItemId(saved.id);
+      }
       await call(line ? `/api/estimates/${estimateId}/lines/${line.id}` : `/api/estimates/${estimateId}/lines`, line ? "PATCH" : "POST", body);
-      (ev.target as HTMLFormElement).reset();
-      setDesc(""); setPrice(""); setUnit(""); setCostItemId(undefined); setIncGst(true); setQty(""); setMeasurementId("");
+      form.reset();
+      setDesc(""); setPrice(""); setUnit(""); setCostItemId(undefined); setIncGst(true); setQty(""); setMeasurementId(""); setSaveToLibrary(false);
+      if (saved) setNote(`“${saved.name}” is now in your Cost Library.`);
       onDone();
     } catch (err) {
-      setError((err as Error).message);
+      setError(saved ? `Saved “${saved.name}” to the Cost Library, but the line wasn't added: ${(err as Error).message}` : (err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -263,14 +296,39 @@ function LineForm({ estimateId, line, costItems, measurements, onDone }: { estim
   return (
     <form onSubmit={submit} className="space-y-3 border-t border-stone-200 bg-stone-50 p-4" aria-label={line ? "Edit line" : "Add line"}>
       <p className="text-sm font-semibold">{line ? `Edit “${line.description}”` : "Add a cost line"}</p>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 [&>*]:min-w-0">
         <label className="text-sm"><span className="label">Type</span><select className="input" value={type} onChange={(x) => setType(x.target.value)}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select></label>
-        {!labour && costItems.length > 0 && !line && (
-          <label className="text-sm sm:col-span-2"><span className="label">From cost library (optional)</span>
-            <select className="input" defaultValue="" onChange={(x) => pick(x.target.value)}><option value="">Type it in instead</option>{costItems.map((c) => <option key={c.id} value={c.id}>{c.name}{c.priceIncCents !== null ? ` · $${(c.priceIncCents / 100).toFixed(2)}/${c.unit || "unit"}` : ""}</option>)}</select>
-          </label>
-        )}
-        <label className="text-sm sm:col-span-3"><span className="label">Description *</span><input className="input" required minLength={2} name="description" value={desc} onChange={(x) => setDesc(x.target.value)} placeholder={labour ? "e.g. Lay pavers (2 people × 5 days × 8 h)" : "e.g. Sandstone pavers 400×400"} /></label>
+        <div className="relative text-sm sm:col-span-2">
+          <label htmlFor={`${listId}-desc`} className="label">Description *</label>
+          <input
+            id={`${listId}-desc`} className="input" required minLength={2} name="description" autoComplete="off"
+            role="combobox" aria-expanded={showList} aria-controls={`${listId}-list`} aria-autocomplete="list" aria-describedby={`${listId}-hint`}
+            aria-activedescendant={showList && matches[hi] ? `${listId}-o${hi}` : undefined}
+            value={desc}
+            onChange={(x) => { setDesc(x.target.value); setOpen(true); setHi(0); if (costItemId) setCostItemId(undefined); }}
+            onFocus={() => desc.trim() && !costItemId && setOpen(true)}
+            onBlur={() => setOpen(false)}
+            onKeyDown={onDescKey}
+            placeholder={labour ? "e.g. Lay pavers (2 people × 5 days × 8 h)" : "Start typing, e.g. sa for sandstone"}
+          />
+          {!costItemId && <p id={`${listId}-hint`} className="mt-1 text-xs text-stone-500">Start typing to search your Cost Library ({library.length} items).</p>}
+          {costItemId && <p className="mt-1 text-xs text-emerald-700">From your Cost Library. Edit the price below for this quote only, if needed.</p>}
+          {showList && (
+            <ul id={`${listId}-list`} role="listbox" aria-label="Cost Library matches" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-stone-200 bg-white shadow-lg">
+              {matches.length === 0 && <li className="px-3 py-2 text-stone-500">No match in the Cost Library. Fill in the line and tick “Save to Cost Library” to add it.</li>}
+              {matches.map((c, i) => (
+                <li
+                  key={c.id} id={`${listId}-o${i}`} role="option" aria-selected={i === hi}
+                  onMouseDown={(x) => x.preventDefault()} onClick={() => pick(c)} onMouseEnter={() => setHi(i)}
+                  className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 ${i === hi ? "bg-emerald-50" : ""}`}
+                >
+                  <span className="min-w-0"><span className="block break-words font-medium">{c.name}</span><span className="block text-xs text-stone-500">{[c.category, c.supplier].filter(Boolean).join(" · ") || "No category"}</span></span>
+                  <span className="shrink-0 text-right text-xs tabular-nums">{c.priceIncCents !== null ? `${aud(c.priceIncCents)}${c.unit ? ` / ${c.unit}` : ""}` : "No price"}{c.priceIncCents !== null && <span className="block text-stone-500">inc GST</span>}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {!labour && measurements.length > 0 && (
           <label className="text-sm sm:col-span-3"><span className="label">Quantity from a site measurement</span>
             <select className="input" value={measurementId} onChange={(x) => { setMeasurementId(x.target.value); const m = measurements.find((y) => y.id === x.target.value); if (m) { setQty(String(m.quantity)); setUnit(m.unit); } }}>
@@ -286,8 +344,10 @@ function LineForm({ estimateId, line, costItems, measurements, onDone }: { estim
         <label className="text-sm"><span className="label">On the quote as</span><select name="proposalOption" className="input" defaultValue={line?.proposalOption ?? "Included"}>{["Included", "Optional Upgrade", "Alternative", "Internal Only"].map((o) => <option key={o}>{o}</option>)}</select></label>
         <label className="text-sm sm:col-span-2"><span className="label">Customer wording (optional)</span><input name="customerDescription" className="input" defaultValue={line?.customerDescription ?? ""} /></label>
         <label className="flex items-center gap-2 text-sm sm:col-span-3"><input type="checkbox" name="quantityVerified" defaultChecked={line?.quantityVerified ?? false} className="h-5 w-5" />Quantity checked against measurements</label>
+        {canSave && <label className="flex items-center gap-2 text-sm sm:col-span-3"><input type="checkbox" className="h-5 w-5" checked={saveToLibrary} onChange={(x) => setSaveToLibrary(x.target.checked)} />Save “{desc.trim()}” to the Cost Library so it can be picked next time</label>}
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+      {note && <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{note}</p>}
       <div className="flex gap-2"><button className="btn-primary" disabled={busy}>{busy ? "Saving…" : line ? "Save line" : "Add line"}</button>{line && <button type="button" className="btn-secondary" onClick={onDone}>Cancel</button>}</div>
     </form>
   );
