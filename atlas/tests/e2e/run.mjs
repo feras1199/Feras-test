@@ -367,6 +367,21 @@ await step("assistant: honest 'not set up' state without an API key; customers c
   assert.equal((await customer.page.request.post(`${BASE}/api/assistant`, { data: { messages: [{ role: "user", content: "hi" }] } })).status(), 403);
 });
 
+await step("raw page data: no money in a worker's project page, no internal fields in the portal", async () => {
+  const w = await (await worker.page.request.get(`${BASE}/projects/recDemoProj000001`)).text();
+  assert.doesNotMatch(w, /\$\d{1,3}(,\d{3})*\.\d{2}|estimatedCost|unitCostInc|quotedRevenue|customerPrice/);
+  for (const path of ["/portal", "/portal/quote/recDemoEst0000001"]) {
+    const html = await (await customer.page.request.get(`${BASE}${path}`)).text();
+    assert.doesNotMatch(html, /estimatedCost|unitCostSnapshot|costType|markup|internalReviewNotes|crewNotes|siteAccessNotes|recDemoCust000002/);
+  }
+  assert.equal((await customer.page.request.get(`${BASE}/portal/quote/recDemoEst0000002`)).status(), 404);
+});
+
+await step("oversized requests are refused before parsing", async () => {
+  const res = await owner.page.request.post(`${BASE}/api/customers`, { data: { name: "x".repeat(300_000) } });
+  assert.equal(res.status(), 413);
+});
+
 await browser.close();
 for (const r of results) console.log(r.join("  "));
 const failed = results.filter((r) => r[0] === "FAIL").length;

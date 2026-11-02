@@ -30,7 +30,7 @@ export const SettingsSchema = z.object({
   }),
   payments: z.object({
     defaultSchedule: z.string(),
-    schedules: z.record(z.object({ name: z.string(), stages: z.array(stage).min(1) })),
+    schedules: z.record(z.string(), z.object({ name: z.string(), stages: z.array(stage).min(1) })),
     /** Warn when a deposit exceeds this. NSW Home Building Act caps residential deposits at 10% (verify for each contract). */
     maxDepositRate: z.number().min(0).max(1),
     dueDays: z.number().int().nonnegative(),

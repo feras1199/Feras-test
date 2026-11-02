@@ -11,6 +11,9 @@ export class HttpError extends Error {
   }
 }
 
+/** No form in ATLAS sends anywhere near this; it stops oversized payloads before they are parsed. */
+const MAX_BODY_BYTES = 256 * 1024;
+
 type Handler<P> = (ctx: { session: SessionPayload; req: NextRequest; params: P }) => Promise<unknown>;
 
 /**
@@ -23,6 +26,7 @@ export function route<P = Record<string, string>>(perm: Permission, handler: Han
       if (req.method !== "GET" && req.method !== "HEAD") {
         const origin = req.headers.get("origin");
         if (origin && new URL(origin).host !== req.headers.get("host")) throw new HttpError(403, "Cross-site request blocked");
+        if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) throw new HttpError(413, "That request is too large");
       }
       const session = await currentSession();
       if (!session) throw new HttpError(401, "Please sign in");
