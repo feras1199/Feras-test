@@ -35,7 +35,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
 
   return (
     <>
-      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && (<><a href="?edit=1" className="btn-secondary">Edit details</a><a href={`/tasks/new?customer=${c.id}`} className="btn-secondary">Add task</a><a href={`/pipeline/new?customer=${c.id}`} className="btn-primary">New enquiry</a></>)} />
+      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && (<><a href="?edit=1" className="btn-secondary">Edit details</a><a href={`/tasks/new?customer=${c.id}`} className="btn-secondary">Add task</a><a href={`/pipeline/new?customer=${c.id}`} className="btn-secondary">New enquiry</a>{can(s.role, "estimates.edit") && <a href={`/estimates/new?customer=${c.id}`} className="btn-primary">New estimate</a>}</>)} />
       {c.doNotContact && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-800">Do not contact this customer.</p>}
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="card p-5 lg:col-span-1">
@@ -64,7 +64,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
               <h2 className="mb-3 font-semibold">Quotes and estimates</h2>
               {estimates.length === 0 ? <Empty title="No estimates yet" /> : (
                 <ul className="divide-y divide-stone-100">{estimates.map((e) => (
-                  <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{e.title}</span><span className="flex items-center gap-2">{e.status && <Chip tone={statusTone(e.status)}>{e.status}</Chip>}<span className="font-medium">{typeof e.customerTotalIncGst === "number" ? `${formatAud(e.customerTotalIncGst)} inc GST` : "–"}</span></span></li>
+                  <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><a href={`/estimates/${e.id}`} className="text-forest-800 underline">{e.title}</a><span className="flex items-center gap-2">{e.status && <Chip tone={statusTone(e.status)}>{e.status}</Chip>}<span className="font-medium">{typeof e.customerTotalIncGst === "number" ? `${formatAud(e.customerTotalIncGst)} inc GST` : "–"}</span></span></li>
                 ))}</ul>
               )}
             </section>

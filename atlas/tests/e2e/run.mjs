@@ -130,6 +130,74 @@ await step("tasks: create and complete", async () => {
   await p.getByText("Order deck timber sample").waitFor();
 });
 
+let acceptedEstimateUrl = "";
+await step("estimate: build, check, approve, quote, send, accept", async () => {
+  const p = owner.page;
+  await p.goto(`${BASE}/estimates/new?customer=recDemoCust000001`);
+  await p.selectOption("#enquiry", { index: 1 });
+  await p.fill("#title", "Rear yard paving and turf");
+  await p.click("button[type=submit]");
+  await p.waitForURL(/\/estimates\/rec/);
+  acceptedEstimateUrl = p.url();
+  const form = p.getByRole("form", { name: "Add line" });
+  async function addLine(type, desc, qty, price, opts = {}) {
+    await form.getByLabel("Type").selectOption(type);
+    await form.getByLabel("Description *").fill(desc);
+    await form.locator("input[name=quantity]").fill(String(qty));
+    await form.getByLabel(/Unit price|Rate per person-hour/).fill(String(price));
+    if (opts.exGst) await form.getByLabel("Price includes GST").uncheck();
+    if (opts.waste) await form.getByLabel("Waste %").fill(String(opts.waste));
+    await form.getByLabel("Quantity checked against measurements").check();
+    await form.getByRole("button", { name: "Add line" }).click();
+    await p.getByRole("cell", { name: desc }).first().waitFor();
+    await p.waitForTimeout(300);
+  }
+  // 50 m2 @ $44 inc GST + 8% waste = $2,160 ex GST
+  await addLine("Material", "Sandstone pavers", 50, 44, { waste: 8 });
+  await addLine("Labour", "Lay pavers, 2 people x 4 days", 64, 45);
+  await addLine("Disposal", "Skip bin", 1, 495);
+  await addLine("Material", "Road base and sand", 1, 1452, { exGst: true });
+  await p.screenshot({ path: `${shots}/estimate.png`, fullPage: true });
+  let t = await p.innerText("main");
+  // cost 2160 + 2880 + 450 + 1452 = 6942 -> x1.3 = 9024.60 -> +GST 902.46 = 9927.06
+  assert.match(t, /\$6,942\.00/);
+  assert.match(t, /\$9,927\.06/);
+  assert.match(t, /Customer scope written/);
+  await p.getByLabel("What's included").fill("Supply and lay 50 m² of sandstone pavers on a compacted road base.");
+  await p.getByLabel("Exclusions and assumptions have been reviewed").check();
+  await p.getByRole("button", { name: "Save scope" }).click();
+  await p.waitForTimeout(800);
+  await p.getByRole("button", { name: "Approve price" }).click();
+  await p.getByRole("dialog").getByRole("button", { name: "Approve and lock" }).click();
+  await p.getByText("Locked").waitFor();
+  await p.getByRole("link", { name: "Quote document" }).click();
+  const q = await p.innerText("article");
+  assert.match(q, /Total including GST\s*\$9,927\.06/);
+  assert.doesNotMatch(q, /markup|margin|Skip bin|Lay pavers|6,942/i);
+  await p.screenshot({ path: `${shots}/quote.png`, fullPage: true });
+  await p.getByRole("link", { name: "Back to estimate" }).click();
+  await p.getByRole("button", { name: "Mark as sent" }).click();
+  await p.getByRole("dialog").getByRole("button", { name: "Yes, it's been sent" }).click();
+  await p.getByRole("button", { name: "Record acceptance" }).click();
+  await p.getByRole("dialog").getByLabel("Accepted by *").fill("Alex Demo");
+  await p.getByRole("dialog").getByRole("button", { name: "Record acceptance" }).click();
+  await p.getByText("The project and payment schedule have been created").waitFor();
+  await p.goto(`${BASE}/audit`);
+  t = await p.innerText("main");
+  assert.match(t, /accepted by Alex Demo \(Signed quote\)\. 5 payment stages created totalling \$9,927\.06/);
+});
+await step("sales can build but not approve; locked estimate rejects edits", async () => {
+  const sales = await login("sales@example.com");
+  await sales.page.goto(acceptedEstimateUrl);
+  assert.equal(await sales.page.getByRole("button", { name: /Approve price|Record acceptance/ }).count(), 0);
+  const id = acceptedEstimateUrl.split("/").pop();
+  const r = await sales.page.request.post(`${BASE}/api/estimates/${id}/lines`, { data: { description: "Sneaky", costType: "Material", quantity: 1, unitCostCents: 100 } });
+  assert.equal(r.status(), 409);
+  const a = await sales.page.request.post(`${BASE}/api/estimates/${id}/action`, { data: { action: "approve" } });
+  assert.equal(a.status(), 403);
+  await sales.ctx.close();
+});
+
 const worker = await login("worker@example.com");
 await step("worker cannot see customers, money or settings", async () => {
   const nav = await worker.page.innerText("nav");

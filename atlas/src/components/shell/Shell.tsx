@@ -51,15 +51,15 @@ export function Shell({ nav, user, demo, canCreate, children }: { nav: NavItem[]
   );
 
   return (
-    <div className="min-h-screen lg:pl-64">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{sidebar}</aside>
+    <div className="min-h-screen lg:pl-64 print:!pl-0">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block print:!hidden">{sidebar}</aside>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
           <button className="absolute inset-0 bg-black/40" aria-label="Close menu" onClick={() => setOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-72 max-w-[85%]">{sidebar}</aside>
         </div>
       )}
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-paper/90 backdrop-blur">
+      <header className="sticky top-0 z-20 print:hidden border-b border-stone-200 bg-paper/90 backdrop-blur">
         <div className="flex items-center gap-2 px-4 py-2 sm:px-6">
           <button className="btn-secondary !px-3 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
             <Icon name="menu" />

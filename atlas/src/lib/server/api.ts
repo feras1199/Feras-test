@@ -30,7 +30,7 @@ export function route<P = Record<string, string>>(perm: Permission, handler: Han
       const data = await handler({ session, req, params: await ctx.params });
       return NextResponse.json(data ?? { ok: true });
     } catch (e) {
-      if (e instanceof HttpError) return NextResponse.json({ error: e.message, ...("dupes" in e ? { dupes: (e as { dupes: unknown }).dupes } : {}) }, { status: e.status });
+      if (e instanceof HttpError) return NextResponse.json({ error: e.message, ...("dupes" in e ? { dupes: (e as { dupes: unknown }).dupes } : {}), ...("blocking" in e ? { blocking: (e as { blocking: unknown }).blocking } : {}) }, { status: e.status });
       if (e instanceof ZodError) return NextResponse.json({ error: "Invalid input", issues: e.issues.map((i) => ({ path: i.path.join("."), message: i.message })) }, { status: 400 });
       console.error(e);
       const msg = e instanceof Error && /Airtable|calculated|expects/.test(e.message) ? e.message : "Something went wrong. Nothing was saved.";

@@ -7,6 +7,7 @@ import { Icon } from "./Icon";
 const ITEMS = [
   { href: "/pipeline/new", label: "New enquiry" },
   { href: "/customers/new", label: "New customer" },
+  { href: "/estimates/new", label: "New estimate" },
   { href: "/tasks/new", label: "New task" },
 ];
 
