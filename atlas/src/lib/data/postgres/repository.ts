@@ -24,6 +24,18 @@ CREATE TABLE IF NOT EXISTS atlas_audit (
   at      timestamptz NOT NULL,
   entry   jsonb       NOT NULL
 );
+CREATE TABLE IF NOT EXISTS atlas_users (
+  id            text        PRIMARY KEY,
+  email         text        NOT NULL,
+  name          text        NOT NULL,
+  role          text        NOT NULL,
+  customer_id   text,
+  password_hash text        NOT NULL,
+  active        boolean     NOT NULL DEFAULT true,
+  created_time  timestamptz NOT NULL DEFAULT now(),
+  updated_time  timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS atlas_users_email ON atlas_users (lower(email));
 CREATE TABLE IF NOT EXISTS atlas_imports (
   seq         bigserial   PRIMARY KEY,
   at          timestamptz NOT NULL DEFAULT now(),
@@ -50,6 +62,10 @@ function payload(entity: EntityName, data: Record<string, unknown>) {
   }
   return out;
 }
+
+export interface DbUser { id: string; email: string; name: string; role: string; customerId?: string; passwordHash: string; active: boolean }
+type UserRow = { id: string; email: string; name: string; role: string; customer_id: string | null; password_hash: string; active: boolean };
+const toUser = (r: UserRow): DbUser => ({ id: r.id, email: r.email, name: r.name, role: r.role, customerId: r.customer_id ?? undefined, passwordHash: r.password_hash, active: r.active });
 
 export type ImportMode = "add-new" | "replace";
 export interface ImportResult { entity: EntityName; added: number; replaced: number; skipped: number }
@@ -162,5 +178,41 @@ export class PostgresRepository implements Repository {
     await this.ensureSchema();
     const { rows } = await this.pool.query<{ entry: T }>("SELECT entry FROM atlas_audit ORDER BY seq DESC LIMIT $1", [limit]);
     return rows.map((r) => r.entry);
+  }
+
+  async listUsers(): Promise<DbUser[]> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<UserRow>("SELECT * FROM atlas_users ORDER BY created_time");
+    return rows.map(toUser);
+  }
+
+  /** Throws "email taken" if another login already uses the email. */
+  async createUser(u: Omit<DbUser, "id" | "active">): Promise<DbUser> {
+    await this.ensureSchema();
+    try {
+      const { rows } = await this.pool.query<UserRow>(
+        "INSERT INTO atlas_users (id, email, name, role, customer_id, password_hash) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+        ["usr" + newRecordId().slice(3), u.email.trim(), u.name.trim(), u.role, u.customerId ?? null, u.passwordHash],
+      );
+      return toUser(rows[0]!);
+    } catch (e) {
+      if ((e as { code?: string }).code === "23505") throw new Error("email taken");
+      throw e;
+    }
+  }
+
+  async updateUser(id: string, patch: Partial<Pick<DbUser, "name" | "role" | "customerId" | "passwordHash" | "active">>): Promise<DbUser | null> {
+    await this.ensureSchema();
+    const cols: string[] = [];
+    const vals: unknown[] = [id];
+    const set = (col: string, v: unknown) => { vals.push(v); cols.push(`${col} = $${vals.length}`); };
+    if (patch.name !== undefined) set("name", patch.name.trim());
+    if (patch.role !== undefined) set("role", patch.role);
+    if ("customerId" in patch) set("customer_id", patch.customerId ?? null);
+    if (patch.passwordHash !== undefined) set("password_hash", patch.passwordHash);
+    if (patch.active !== undefined) set("active", patch.active);
+    if (!cols.length) return (await this.listUsers()).find((u) => u.id === id) ?? null;
+    const { rows } = await this.pool.query<UserRow>(`UPDATE atlas_users SET ${cols.join(", ")}, updated_time = now() WHERE id = $1 RETURNING *`, vals);
+    return rows[0] ? toUser(rows[0]) : null;
   }
 }

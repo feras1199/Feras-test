@@ -41,8 +41,10 @@ export function Shell({ nav, user, demo, canCreate, children }: { nav: NavItem[]
       </Link>
       {links}
       <div className="mt-auto border-t border-forest-800 pt-3">
-        <div className="px-3 text-sm text-stone-100">{user.name}</div>
-        <div className="px-3 text-xs text-forest-300">{user.roleLabel}</div>
+        <Link href="/account" onClick={() => setOpen(false)} className="block rounded-xl px-3 py-1 hover:bg-forest-800">
+          <span className="block text-sm text-stone-100">{user.name}</span>
+          <span className="block text-xs text-forest-300">{user.roleLabel} · My account</span>
+        </Link>
         <button onClick={logout} className="mt-2 flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-sm text-forest-100 hover:bg-forest-800">
           <Icon name="logout" /> Sign out
         </button>

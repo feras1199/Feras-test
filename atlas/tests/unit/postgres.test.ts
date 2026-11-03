@@ -10,7 +10,7 @@ describe.skipIf(!url)("PostgresRepository", () => {
   let repo: PostgresRepository;
   beforeAll(async () => {
     pool = new Pool({ connectionString: url });
-    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports");
+    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users");
     repo = new PostgresRepository(pool);
   });
   afterAll(async () => { await pool.end(); });
@@ -61,5 +61,17 @@ describe.skipIf(!url)("PostgresRepository", () => {
     await repo.writeAudit({ at: "2026-01-02T00:00:00.000Z", summary: "second" } as never);
     const rows = await repo.readAudit<{ summary: string }>(5);
     expect(rows.map((r) => r.summary)).toEqual(["second", "first"]);
+  });
+
+  it("stores logins with unique emails (any case) and updates them", async () => {
+    const u = await repo.createUser({ email: "Jo.Demo@example.com", name: "Jo Demo", role: "worker", passwordHash: "scrypt$x" });
+    expect(u).toMatchObject({ role: "worker", active: true });
+    await expect(repo.createUser({ email: "jo.demo@EXAMPLE.com", name: "Other", role: "worker", passwordHash: "scrypt$y" })).rejects.toThrow("email taken");
+    const up = await repo.updateUser(u.id, { role: "supervisor", active: false });
+    expect(up).toMatchObject({ role: "supervisor", active: false, passwordHash: "scrypt$x" });
+    const c = await repo.updateUser(u.id, { role: "customer", customerId: "recDemoCust000001" });
+    expect(c!.customerId).toBe("recDemoCust000001");
+    expect(await repo.updateUser("usrNope", { name: "X" })).toBeNull();
+    expect((await repo.listUsers()).map((x) => x.email)).toEqual(["Jo.Demo@example.com"]);
   });
 });

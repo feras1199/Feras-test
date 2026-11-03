@@ -17,7 +17,15 @@ Permissions are checked on the server for every page and every API call. Hiding 
 
 ## Adding and removing people
 
-Until the additive "Atlas Users" table is approved in Airtable, logins live in the `ATLAS_USERS_JSON` server variable:
+**With ATLAS's own database (recommended):** Settings → **People and logins**. The owner can do all of this from a phone:
+- Add someone with a role, and give them the starting password shown on screen. It is shown only once.
+- Change a role. The person is signed out and sees only what the new role allows.
+- Reset a password, or switch a login off. Switching off signs them out straight away, and their records stay.
+- Link a customer login to that customer's record.
+
+Anyone added this way can change their own password under **My account**. The owner's first login comes from `ATLAS_OWNER_EMAIL` / `ATLAS_OWNER_PASSWORD` on the host, and can only be changed there. Logins are not included in the backup download; after restoring into a new database, add people again.
+
+**Without the database (Airtable or demo mode)**, logins live in the `ATLAS_USERS_JSON` server variable:
 
 ```json
 [

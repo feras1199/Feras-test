@@ -65,7 +65,10 @@ export default async function SettingsPage() {
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
             <Row k="AI assistant" v={process.env.ANTHROPIC_API_KEY ? "API key present, not yet tested" : "Not configured"} />
           </dl>
-          {can(s.role, "settings.edit") && <Link href="/settings/data" className="btn-secondary mt-3 inline-flex">Backup and import data</Link>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {can(s.role, "users.manage") && <Link href="/settings/people" className="btn-secondary inline-flex">People and logins</Link>}
+            {can(s.role, "settings.edit") && <Link href="/settings/data" className="btn-secondary inline-flex">Backup and import data</Link>}
+          </div>
         </section>
         <section className="card p-5 lg:col-span-2">
           <h2 className="mb-2 font-semibold">Roles</h2>

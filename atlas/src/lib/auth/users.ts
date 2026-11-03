@@ -15,6 +15,36 @@ const UserSchema = z.object({
 });
 export type AtlasUser = z.infer<typeof UserSchema>;
 
+/** Logins kept in ATLAS's own database, added and managed from Settings > People. */
+export interface UserStore {
+  list(): Promise<AtlasUser[]>;
+}
+const g = globalThis as unknown as { __atlasUserStore?: UserStore };
+export function setUserStore(store: UserStore | undefined) {
+  g.__atlasUserStore = store;
+}
+export function hasUserStore() {
+  return !!g.__atlasUserStore;
+}
+
+/** Where each login comes from: host variables can't be edited in the app. */
+export type UserSource = "host" | "database" | "demo";
+
+/**
+ * Everyone who can sign in: the owner from host variables, ATLAS_USERS_JSON,
+ * then people added in the app. An email set on the host wins over the same
+ * email in the database.
+ */
+export async function allUsers(): Promise<(AtlasUser & { source: UserSource })[]> {
+  const base = loadUsers().map((u) => ({ ...u, source: (demoLoginsEnabled() && !process.env.ATLAS_USERS_JSON && u.passwordHash === DEMO_HASH ? "demo" : "host") as UserSource }));
+  const store = g.__atlasUserStore;
+  if (!store) return base;
+  const taken = new Set(base.map((u) => u.email.toLowerCase()));
+  const ids = new Set(base.map((u) => u.id));
+  const db = (await store.list()).filter((u) => !taken.has(u.email.toLowerCase()) && !ids.has(u.id));
+  return [...base, ...db.map((u) => ({ ...u, source: "database" as const }))];
+}
+
 /**
  * Users come from ATLAS_USERS_JSON until the additive "Atlas Users" table is
  * approved in Airtable. Demo users exist only in memory mode outside production.
@@ -72,7 +102,7 @@ const DEMO_USERS: AtlasUser[] = [
 ];
 
 export async function authenticate(email: string, password: string): Promise<AtlasUser | null> {
-  const u = loadUsers().find((x) => x.active && x.email.toLowerCase() === email.trim().toLowerCase());
+  const u = (await allUsers()).find((x) => x.active && x.email.toLowerCase() === email.trim().toLowerCase());
   // Always run a hash comparison so response time doesn't reveal whether the email exists.
   if (u?.passwordHash === ENV_OWNER_MARK) {
     await verifyPassword(password, DEMO_HASH); // keep timing similar
@@ -87,7 +117,7 @@ export async function authenticate(email: string, password: string): Promise<Atl
  * user is still listed, active, and has the same role and customer link.
  * Removing or deactivating someone signs them out on their next click.
  */
-export function stillAuthorised(p: { uid: string; role: string; customerId?: string }) {
-  const u = loadUsers().find((x) => x.id === p.uid);
+export async function stillAuthorised(p: { uid: string; role: string; customerId?: string }) {
+  const u = (await allUsers()).find((x) => x.id === p.uid);
   return !!u && u.active && u.role === p.role && (u.customerId ?? undefined) === (p.customerId ?? undefined);
 }

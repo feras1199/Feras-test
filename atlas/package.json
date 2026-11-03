@@ -12,7 +12,8 @@
     "hash-password": "node scripts/hash-password.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "node tests/e2e/run.mjs"
+    "e2e": "node tests/e2e/run.mjs",
+    "e2e:people": "node tests/e2e/people.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
