@@ -51,11 +51,15 @@ export function newRecordId(): string {
   return "rec" + Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
 }
 
-/** A photo or voice note attached to a record (only site inspections for now). */
-export type FileKind = "photo" | "voice";
+/**
+ * A photo, voice note or PDF. Site inspection files belong to the inspection;
+ * files shared in Ask ATLAS belong to the person who shared them ("assistant", record id = their user id).
+ */
+export type FileKind = "photo" | "voice" | "document";
+export type FileOwner = EntityName | "assistant";
 export interface StoredFile {
   id: string;
-  entity: EntityName;
+  entity: FileOwner;
   recordId: string;
   kind: FileKind;
   mime: string;
@@ -75,7 +79,7 @@ export type NewFile = Omit<StoredFile, "id" | "createdTime" | "archived" | "tran
  * one; Airtable mode does not. Files are never hard-deleted, only archived.
  */
 export interface FileStore {
-  listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]>;
+  listFiles(entity: FileOwner, recordId: string): Promise<StoredFile[]>;
   getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null>;
   addFile(meta: NewFile, bytes: Buffer): Promise<StoredFile>;
   setFileArchived(id: string, archived: boolean): Promise<StoredFile | null>;

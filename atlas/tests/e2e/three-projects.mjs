@@ -71,7 +71,7 @@ async function addMeasurement(area, work, unit, l, w) {
 async function completeInspection() {
   await p.locator("input[name=complete]").check();
   await p.getByRole("button", { name: "Save notes" }).click();
-  await p.getByRole("status").filter({ hasText: "Saved" }).waitFor();
+  await p.getByRole("status").filter({ hasText: /^Saved/ }).waitFor();
 }
 async function estimateFrom(inspUrl) {
   await p.goto(inspUrl);
@@ -153,7 +153,7 @@ await step("Job 1 · three voice notes, then the AI fills the site notes and wri
   // Something typed by hand first: the AI must leave it alone.
   await p.locator("textarea[name=risks]").fill("Owner's note: neighbours are sensitive about noise before 8 am");
   await p.getByRole("button", { name: "Save notes" }).click();
-  await p.getByRole("status").filter({ hasText: "Saved" }).waitFor();
+  await p.getByRole("status").filter({ hasText: /^Saved/ }).waitFor();
   for (let i = 0; i < 3; i++) {
     await p.getByRole("button", { name: "● Record a voice note" }).click();
     await p.waitForTimeout(1600);
@@ -217,9 +217,10 @@ await step("Job 2 · Cost Library: add a new item and change a price", async () 
   await shot("job2-cost-library-edit");
   await ed.getByRole("button", { name: "Save" }).click();
   await p.getByRole("status").filter({ hasText: "Saved Garden mix soil" }).waitFor();
-  assert.match(await p.getByRole("list", { name: "Cost Library items" }).innerText(), /\$95\.00/);
+  // The list redraws after saving, so wait for the new price rather than reading it straight away.
+  await p.getByRole("list", { name: "Cost Library items" }).getByText(/\$95\.00/).first().waitFor();
   await p.fill("#cl-search", "kikuyu");
-  assert.match(await p.getByRole("list", { name: "Cost Library items" }).innerText(), /\$9\.80/);
+  await p.getByRole("list", { name: "Cost Library items" }).getByText(/\$9\.80/).first().waitFor();
 });
 await step("Job 2 · customer, enquiry, 2:00 pm visit with photos, measurements", async () => {
   c2 = await newCustomer(J2);

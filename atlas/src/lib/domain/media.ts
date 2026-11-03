@@ -42,3 +42,16 @@ export function parseRange(header: string | null, size: number): { start: number
   if (start > end || start >= size) return "invalid";
   return { start, end };
 }
+
+/** PDFs shared in Ask ATLAS (quotes, plans, emails saved as PDF). Kept well under the AI's request limit. */
+export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+/** What Ask ATLAS accepts: PDFs plus the same photos and recordings as site visits. */
+export function sniffAttachment(b: Uint8Array): { kind: FileKind; mime: string } | null {
+  if (b.length >= 5 && String.fromCharCode(...b.slice(0, 5)) === "%PDF-") return { kind: "document", mime: "application/pdf" };
+  return sniffMedia(b);
+}
+
+export function maxBytesFor(kind: FileKind): number {
+  return kind === "photo" ? MAX_PHOTO_BYTES : kind === "voice" ? MAX_VOICE_BYTES : MAX_DOCUMENT_BYTES;
+}

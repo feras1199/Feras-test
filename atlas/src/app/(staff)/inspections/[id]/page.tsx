@@ -31,7 +31,7 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
       </>} />
       <div className="mb-4"><ContactButtons phone={customer?.phone} email={customer?.email} address={insp.siteAddress || customer?.address} suburb={insp.siteAddress ? null : customer?.suburb} doNotContact={!!customer?.doNotContact} /></div>
       <div className="mb-6">
-        <SiteMedia inspectionId={insp.id} available={!!store} editable={can(s.role, "inspections.edit")} files={files.map((f) => ({ id: f.id, kind: f.kind, name: f.name, durationS: f.durationS, createdBy: f.createdBy, createdTime: f.createdTime, transcript: f.transcript }))} ai={voiceAiStatus()} summary={insp.aiMeetingSummary ?? ""} />
+        <SiteMedia inspectionId={insp.id} available={!!store} editable={can(s.role, "inspections.edit")} files={files.flatMap((f) => (f.kind === "document" ? [] : [{ id: f.id, kind: f.kind, name: f.name, durationS: f.durationS, createdBy: f.createdBy, createdTime: f.createdTime, transcript: f.transcript }]))} ai={voiceAiStatus()} summary={insp.aiMeetingSummary ?? ""} />
       </div>
       <InspectionEditor
         key={insp.aiFilledJson ?? "manual"}

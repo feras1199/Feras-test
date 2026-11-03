@@ -12,6 +12,10 @@ import { summarise } from "../domain/estimates";
 import { TaskCreate, TASK_PRIORITIES, TASK_TYPES } from "../domain/crm";
 import { addDays } from "../domain/dates";
 import { searchRecords } from "../server/search";
+import { AiLinesInput, aiLineToInput, CUSTOMER_FIELD_LABELS, CustomerFill, planCustomerFill } from "../domain/aiFill";
+import { CustomerInput, findDuplicates } from "../domain/customers";
+import { searchCostItems, toCostOption, toCostOptions } from "../domain/costLibrary";
+import { COST_TYPES } from "../domain/estimates";
 
 export interface ToolContext {
   repo: Repository;
@@ -27,8 +31,10 @@ export interface ToolContext {
  */
 export interface Proposal {
   id: string;
-  kind: "task" | "follow-up" | "change-request";
+  kind: "task" | "follow-up" | "change-request" | "customer" | "customer-fill" | "enquiry" | "estimate-lines";
   summary: string;
+  /** Line-by-line detail shown on the Confirm card, e.g. each estimate line with its price. */
+  details?: string[];
   endpoint: string;
   method: "POST" | "PATCH";
   body: Record<string, unknown>;
@@ -299,6 +305,136 @@ export const TOOLS: ToolDef[] = [
       const c = ChangeRequest.parse(input);
       const summary = `Send change request "${c.title}" (${c.size}) to the owner`;
       return { data: { status: "proposed, awaiting the person's confirmation", summary }, proposal: { id: "", kind: "change-request", summary, endpoint: "/api/change-requests", method: "POST", body: c as unknown as Record<string, unknown> } };
+    },
+  },
+  {
+    name: "search_cost_library",
+    description: "Search the Cost Library (the business's price list) for materials, labour, plant and other items. Use the returned id as cost_item_id in propose_estimate_lines so ATLAS uses the library's own price. Search with short words, e.g. 'turf', 'sandstone', 'road base'.",
+    perm: "estimates.edit",
+    input_schema: { type: "object", properties: { query: { type: "string", description: "1 to 4 words" } }, required: ["query"], additionalProperties: false },
+    async run(input, ctx) {
+      const { query } = z.object({ query: z.string().trim().min(2).max(60) }).parse(input);
+      const items = toCostOptions(await ctx.repo.list("costItems"));
+      const hits = searchCostItems(items, query, 10);
+      return { data: { count: hits.length, items: hits.map((h) => ({ id: h.id, name: h.name, inUse: h.active, unit: h.unit || null, category: h.category || null, lineType: h.lineType, priceIncGst: h.priceIncCents === null ? "no price yet" : aud(h.priceIncCents) })), note: hits.length ? undefined : items.length ? "No match. Try another word, or propose the line without a cost_item_id." : "The Cost Library is empty." } };
+    },
+  },
+  {
+    name: "propose_customer_details",
+    description: "Suggest customer details read from a shared file or the conversation. With customer_id: fills only that customer's EMPTY boxes (saved details are never overwritten). Without customer_id: suggests a new customer (search_records first; if they may already exist, you'll get the matches back instead). Nothing is saved until the person presses Confirm.",
+    perm: "crm.edit",
+    input_schema: {
+      type: "object",
+      properties: {
+        customer_id: { type: "string", description: "Existing customer to fill gaps on" },
+        name: { type: "string", description: "Required for a new customer" },
+        phone: { type: "string" },
+        email: { type: "string" },
+        address: { type: "string", description: "Street address" },
+        suburb: { type: "string" },
+        service_requested: { type: "string", description: "What work they want, in a sentence" },
+        source: { type: "string", description: "Where the details came from, e.g. the file name" },
+      },
+      required: ["source"],
+      additionalProperties: false,
+    },
+    async run(input, ctx) {
+      const i = z.object({ customer_id: recId.optional(), name: z.string().optional(), phone: z.string().optional(), email: z.string().optional(), address: z.string().optional(), suburb: z.string().optional(), service_requested: z.string().optional(), source: z.string().trim().min(2).max(200) }).strict().parse(input);
+      const fill = CustomerFill.parse({ phone: i.phone, email: i.email, address: i.address, suburb: i.suburb, serviceRequested: i.service_requested });
+      const shown = (o: Record<string, string | undefined>) => Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${CUSTOMER_FIELD_LABELS[k as keyof typeof CUSTOMER_FIELD_LABELS] ?? k}: ${v}`);
+      if (i.customer_id) {
+        const c = await mustGet(ctx.repo, "customers", i.customer_id);
+        const { updates, differs } = planCustomerFill(c, fill);
+        const differences = differs.map((d) => `${CUSTOMER_FIELD_LABELS[d.field]}: saved "${d.saved}", file says "${d.inFile}" (left as saved)`);
+        if (!Object.keys(updates).length) return { data: { status: "nothing to fill: every box this file has details for is already filled in", differences } };
+        const summary = `Fill empty details on ${c.name} (from ${i.source})`;
+        return { data: { status: "proposed, awaiting the person's confirmation", summary, differences }, proposal: { id: "", kind: "customer-fill", summary, details: [...shown(updates), ...differences], endpoint: `/api/customers/${c.id}/fill`, method: "POST", body: updates } };
+      }
+      const body = CustomerInput.parse({ name: i.name, ...fill });
+      const dupes = findDuplicates(body, await ctx.repo.list("customers"));
+      if (dupes.length) return { data: { status: "not proposed: this may be an existing customer. Use customer_id with one of these, or ask the person.", possibleMatches: dupes.slice(0, 5).map((d) => ({ id: d.id, name: d.name, why: d.reasons.join(", ") })) } };
+      const summary = `Add new customer ${body.name} (from ${i.source})`;
+      return { data: { status: "proposed, awaiting the person's confirmation", summary }, proposal: { id: "", kind: "customer", summary, details: shown({ phone: body.phone, email: body.email, address: body.address, suburb: body.suburb, serviceRequested: body.serviceRequested }), endpoint: "/api/customers", method: "POST", body: body as unknown as Record<string, unknown> } };
+    },
+  },
+  {
+    name: "propose_enquiry",
+    description: "Suggest a new enquiry (a job lead) for an existing customer, e.g. after reading their request. Nothing is saved until the person presses Confirm. Check get_customer first so you don't duplicate an open enquiry.",
+    perm: "crm.edit",
+    input_schema: {
+      type: "object",
+      properties: { customer_id: { type: "string" }, service_requested: { type: "string", description: "What work they want" }, budget_dollars: { type: "number", description: "Only if they stated a budget" } },
+      required: ["customer_id", "service_requested"],
+      additionalProperties: false,
+    },
+    async run(input, ctx) {
+      const i = z.object({ customer_id: recId, service_requested: z.string().trim().min(3).max(1000), budget_dollars: z.number().positive().max(10_000_000).optional() }).strict().parse(input);
+      const c = await mustGet(ctx.repo, "customers", i.customer_id);
+      const body = { customerId: c.id, serviceRequested: i.service_requested, ...(i.budget_dollars ? { budgetCents: Math.round(i.budget_dollars * 100) } : {}) };
+      const summary = `Add enquiry for ${c.name}: ${i.service_requested.slice(0, 80)}`;
+      return { data: { status: "proposed, awaiting the person's confirmation", summary }, proposal: { id: "", kind: "enquiry", summary, details: i.budget_dollars ? [`Budget: ${aud(body.budgetCents!)}`] : undefined, endpoint: "/api/enquiries", method: "POST", body } };
+    },
+  },
+  {
+    name: "propose_estimate_lines",
+    description: "Suggest lines to ADD to a draft estimate (existing lines are never changed). Use search_cost_library first and pass cost_item_id so the library price is used. Without a cost_item_id, give unit_price_dollars only if that price is written in the shared file. Every line is marked AI suggested with its quantity unchecked. Optionally suggest the customer scope (only written if the estimate's scope is empty). Nothing is saved until the person presses Confirm.",
+    perm: "estimates.edit",
+    input_schema: {
+      type: "object",
+      properties: {
+        estimate_id: { type: "string" },
+        lines: {
+          type: "array",
+          maxItems: 30,
+          items: {
+            type: "object",
+            properties: {
+              cost_item_id: { type: "string" },
+              description: { type: "string", description: "What the file calls it" },
+              quantity: { type: "number" },
+              unit: { type: "string", description: "Only for lines without cost_item_id" },
+              cost_type: { type: "string", enum: [...COST_TYPES] },
+              unit_price_dollars: { type: "number", description: "Only when there is no cost_item_id AND the price is written in the file" },
+              price_includes_gst: { type: "boolean" },
+              source: { type: "string", description: "Where the quantity came from, e.g. 'Site plan PDF, page 2' or 'voice note'" },
+            },
+            required: ["description", "quantity", "source"],
+            additionalProperties: false,
+          },
+        },
+        customer_scope: { type: "string", description: "Plain-English scope of works for the customer, if the file makes it clear" },
+      },
+      required: ["estimate_id", "lines"],
+      additionalProperties: false,
+    },
+    async run(input, ctx) {
+      const raw = z.object({ estimate_id: recId, lines: z.array(z.record(z.string(), z.unknown())).min(1).max(30), customer_scope: z.string().optional() }).strict().parse(input);
+      const e = await mustGet(ctx.repo, "estimates", raw.estimate_id);
+      if (e.quoteLocked) throw new ToolError(`${e.title} is approved and locked. A revision is needed before lines can be added.`);
+      const body = AiLinesInput.parse({
+        lines: raw.lines.map((l) => ({
+          costItemId: l.cost_item_id || undefined,
+          description: l.description,
+          quantity: l.quantity,
+          unit: l.unit,
+          costType: l.cost_type,
+          unitPriceCents: typeof l.unit_price_dollars === "number" && !l.cost_item_id ? Math.round(l.unit_price_dollars * 100) : undefined,
+          priceIncludesGst: l.price_includes_gst,
+          source: l.source,
+        })),
+        customerScope: raw.customer_scope?.trim() || undefined,
+      });
+      const details: string[] = [];
+      for (const l of body.lines) {
+        const item = l.costItemId ? toCostOption(await mustGet(ctx.repo, "costItems", l.costItemId)) : null;
+        const li = aiLineToInput(l, item);
+        const price = li.unitCostCents ? `${aud(li.unitCostCents)} ${li.costType === "Labour" ? "per person-hour" : li.priceIncludesGst ? "inc GST" : "ex GST"}` : "no price yet";
+        details.push(`${li.quantity} ${li.unit || "×"} ${li.description}: ${price}${item ? " (Cost Library)" : l.unitPriceCents !== undefined ? " (from the file)" : ""}`);
+      }
+      const scopeNote = body.customerScope ? (e.customerScope?.trim() ? "Customer scope: already written, will be left as it is" : "Customer scope: will be written (box is empty)") : null;
+      if (scopeNote) details.push(scopeNote);
+      const summary = `Add ${body.lines.length} AI-suggested line(s) to ${e.title}`;
+      return { data: { status: "proposed, awaiting the person's confirmation", summary, lines: details, reminder: "Quantities are marked AI suggested and must be checked before approval." }, proposal: { id: "", kind: "estimate-lines", summary, details, endpoint: `/api/estimates/${e.id}/lines/ai`, method: "POST", body: JSON.parse(JSON.stringify(body)) as Record<string, unknown> } };
     },
   },
 ];

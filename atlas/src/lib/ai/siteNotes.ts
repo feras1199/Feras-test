@@ -34,22 +34,23 @@ Rules:
 - The summary is for the business owner: who was there if known, what the customer wants, key site facts, budget or timing if mentioned, and next steps agreed. 5 to 10 short lines.
 - Customer-facing promises (prices, start dates) should be quoted, not reinterpreted.`;
 
-const TOOL: Beta.BetaTool = {
-  name: "save_site_notes",
-  description: "Save the written-up site notes. Use an empty string for any field that wasn't discussed.",
-  input_schema: {
-    type: "object",
-    properties: {
-      summary: { type: "string", description: "Meeting summary for the owner." },
-      ...Object.fromEntries(Object.entries(NOTE_FIELDS).map(([k, label]) => [k, { type: "string", description: `${label}. Empty string if not discussed.` }])),
-      accessDifficulty: { type: "string", enum: ["", ...ACCESS], description: "How hard it is to get machines and materials in. Empty if not discussed." },
-      accessWidthM: { type: ["number", "null"], description: "Narrowest access width in metres, only if a number was said." },
-    },
-    required: ["summary", ...Object.keys(NOTE_FIELDS)],
+/**
+ * The answer comes back as JSON matching this schema (structured outputs). Forcing a tool call
+ * isn't allowed on current Claude models, so the schema does the job a forced tool used to.
+ */
+const NOTES_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string", description: "Meeting summary for the owner." },
+    ...Object.fromEntries(Object.entries(NOTE_FIELDS).map(([k, label]) => [k, { type: "string", description: `${label}. Empty string if not discussed.` }])),
+    accessDifficulty: { type: "string", enum: ["", ...ACCESS], description: "How hard it is to get machines and materials in. Empty if not discussed." },
+    accessWidthM: { anyOf: [{ type: "number" }, { type: "null" }], description: "Narrowest access width in metres, only if a number was said; otherwise null." },
   },
-};
+  required: ["summary", ...Object.keys(NOTE_FIELDS), "accessDifficulty", "accessWidthM"],
+  additionalProperties: false,
+} as const;
 
-/** Asks Claude to turn the transcripts into site notes. Returns only what the model put in the tool call. */
+/** Asks Claude to turn the transcripts into site notes. Returns only what the model wrote, validated. */
 export async function draftSiteNotes(client: MessagesClient, input: { transcripts: { name: string; text: string }[]; customerName?: string; enquiry?: string }, opts: { model?: string } = {}): Promise<SiteNotesDraft> {
   const body = [
     input.customerName ? `Customer: ${input.customerName}` : "",
@@ -58,16 +59,22 @@ export async function draftSiteNotes(client: MessagesClient, input: { transcript
   ].filter(Boolean).join("\n\n");
   const res = await client.beta.messages.create({
     model: opts.model || DEFAULT_MODEL,
-    max_tokens: 4000,
+    max_tokens: 16000,
     system: SYSTEM,
-    tools: [TOOL],
-    tool_choice: { type: "tool", name: TOOL.name },
-    messages: [{ role: "user", content: body }],
+    output_config: { effort: "low", format: { type: "json_schema", schema: NOTES_SCHEMA as unknown as Record<string, unknown> } },
+    messages: [{ role: "user", content: `${body}\n\nWrite up the site notes from these voice notes.` }],
   });
   if (res.stop_reason === "refusal") throw new Error("The AI declined to write up these notes.");
-  const call = res.content.find((b): b is Beta.BetaToolUseBlock => b.type === "tool_use" && b.name === TOOL.name);
-  if (!call) throw new Error("The AI didn't return any notes. Try again.");
-  return parseDraft(call.input);
+  if (res.stop_reason === "max_tokens") throw new Error("The write-up was cut short. Try again, or split very long recordings.");
+  const text = res.content.filter((b): b is Beta.BetaTextBlock => b.type === "text").map((b) => b.text).join("").trim();
+  if (!text) throw new Error("The AI didn't return any notes. Try again.");
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error("The AI's notes came back in a form ATLAS couldn't read. Nothing was changed. Try again.");
+  }
+  return parseDraft(raw);
 }
 
 /** Validates the model's tool input; anything malformed is dropped rather than saved. */

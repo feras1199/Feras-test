@@ -1,34 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { clock, recorderType, shrinkPhoto } from "@/components/media/browser";
 
 export type MediaFile = { id: string; kind: "photo" | "voice"; name: string; durationS?: number; createdBy: string; createdTime: string; transcript?: string };
 type AiStatus = { demo: boolean; transcription: boolean; writeUp: boolean };
 
 const MAX_SECONDS = 15 * 60;
-const PHOTO_EDGE = 1600;
-
-/** Shrinks a phone photo to a sensible size (and turns HEIC into JPEG) before it is uploaded. */
-async function shrinkPhoto(file: File): Promise<Blob> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    const scale = Math.min(1, PHOTO_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, "image/jpeg", 0.82));
-    if (!blob) throw new Error();
-    return blob;
-  } catch {
-    throw new Error(`Couldn't read ${file.name}. Try taking the photo again.`);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 
 async function upload(inspectionId: string, blob: Blob, extra: Record<string, string> = {}) {
   const fd = new FormData();
@@ -39,12 +17,6 @@ async function upload(inspectionId: string, blob: Blob, extra: Record<string, st
   if (!res?.ok) throw new Error(json.error ?? "Couldn't reach the server. Check your signal and try again.");
 }
 
-function recorderType(): string {
-  if (typeof MediaRecorder === "undefined") return "";
-  return ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"].find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
-}
-
-const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const when = (iso: string) => new Date(iso).toLocaleString("en-AU", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 
 export function SiteMedia({ inspectionId, files, editable, available, ai = { demo: false, transcription: false, writeUp: false }, summary = "" }: { inspectionId: string; files: MediaFile[]; editable: boolean; available: boolean; ai?: AiStatus; summary?: string }) {

@@ -16,7 +16,8 @@
     "e2e:people": "node tests/e2e/people.mjs",
     "e2e:media": "node tests/e2e/media.mjs",
     "e2e:walkthrough": "node tests/e2e/walkthrough.mjs",
-    "e2e:three-projects": "node tests/e2e/three-projects.mjs"
+    "e2e:three-projects": "node tests/e2e/three-projects.mjs",
+    "e2e:assistant-files": "node tests/e2e/assistant-files.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

@@ -26,13 +26,26 @@ describe("parseDraft", () => {
 });
 
 describe("draftSiteNotes", () => {
-  it("forces the save tool and reads its input", async () => {
-    const create = vi.fn(async () => ({ stop_reason: "tool_use", content: [{ type: "tool_use", id: "t", name: "save_site_notes", input: { summary: "ok", scope: "Paving" } }] }));
+  it("asks for JSON matching the notes schema (no forced tool) and reads it", async () => {
+    const create = vi.fn(async () => ({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify({ summary: "ok", scope: "Paving", drainage: "", accessDifficulty: "", accessWidthM: null }) }] }));
     const d = await draftSiteNotes({ beta: { messages: { create } } } as never, { transcripts: [{ name: "Voice note 1", text: "We'd like paving" }] });
-    expect(d.fields.scope).toBe("Paving");
+    expect(d.fields).toEqual({ scope: "Paving" });
+    expect(d.accessWidthM).toBeUndefined();
     const params = (create.mock.calls[0] as unknown as [Record<string, unknown>])[0];
-    expect(params.tool_choice).toEqual({ type: "tool", name: "save_site_notes" });
+    expect(params.tool_choice).toBeUndefined();
+    expect(params.tools).toBeUndefined();
+    const format = (params.output_config as { format: { type: string; schema: { required: string[]; additionalProperties: boolean } } }).format;
+    expect(format.type).toBe("json_schema");
+    expect(format.schema.additionalProperties).toBe(false);
+    expect(format.schema.required).toEqual(expect.arrayContaining(["summary", "scope", "accessWidthM"]));
     expect(JSON.stringify(params.messages)).toContain("We'd like paving");
+  });
+
+  it("fails safely when the reply isn't readable or is cut short", async () => {
+    const bad = vi.fn(async () => ({ stop_reason: "end_turn", content: [{ type: "text", text: "Sure! Here are the notes" }] }));
+    await expect(draftSiteNotes({ beta: { messages: { create: bad } } } as never, { transcripts: [{ name: "n", text: "t" }] })).rejects.toThrow(/couldn't read/);
+    const cut = vi.fn(async () => ({ stop_reason: "max_tokens", content: [] }));
+    await expect(draftSiteNotes({ beta: { messages: { create: cut } } } as never, { transcripts: [{ name: "n", text: "t" }] })).rejects.toThrow(/cut short/);
   });
 });
 

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { EntityName, Rec } from "../entities";
-import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
+import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
 import { buildFixtures } from "./fixtures";
 
 export { newRecordId };
@@ -66,7 +66,7 @@ export class MemoryRepository implements Repository, FileStore {
     return structuredClone(rows[i]!);
   }
 
-  async listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]> {
+  async listFiles(entity: FileOwner, recordId: string): Promise<StoredFile[]> {
     return [...this.files.values()].filter((f) => f.meta.entity === entity && f.meta.recordId === recordId).map((f) => ({ ...f.meta }));
   }
 

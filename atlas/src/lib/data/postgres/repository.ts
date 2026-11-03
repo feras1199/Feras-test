@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import { ENTITIES, type EntityName, type Rec } from "../entities";
-import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
+import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
 
 /**
  * ATLAS's own database. One table holds every record as JSON, keyed by entity
@@ -83,7 +83,7 @@ export interface DbUser { id: string; email: string; name: string; role: string;
 type UserRow = { id: string; email: string; name: string; role: string; customer_id: string | null; password_hash: string; active: boolean };
 const toUser = (r: UserRow): DbUser => ({ id: r.id, email: r.email, name: r.name, role: r.role, customerId: r.customer_id ?? undefined, passwordHash: r.password_hash, active: r.active });
 
-type FileRow = { id: string; entity: EntityName; record_id: string; kind: StoredFile["kind"]; mime: string; name: string; size: number; duration_s: number | null; created_by: string; created_time: Date; archived: boolean; transcript: string | null };
+type FileRow = { id: string; entity: FileOwner; record_id: string; kind: StoredFile["kind"]; mime: string; name: string; size: number; duration_s: number | null; created_by: string; created_time: Date; archived: boolean; transcript: string | null };
 const FILE_COLS = "id, entity, record_id, kind, mime, name, size, duration_s, created_by, created_time, archived, transcript";
 const toFile = (r: FileRow): StoredFile => ({ id: r.id, entity: r.entity, recordId: r.record_id, kind: r.kind, mime: r.mime, name: r.name, size: r.size, durationS: r.duration_s ?? undefined, createdBy: r.created_by, createdTime: r.created_time.toISOString(), archived: r.archived, transcript: r.transcript ?? undefined });
 
@@ -236,7 +236,7 @@ export class PostgresRepository implements Repository, FileStore {
     return rows[0] ? toUser(rows[0]) : null;
   }
 
-  async listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]> {
+  async listFiles(entity: FileOwner, recordId: string): Promise<StoredFile[]> {
     await this.ensureSchema();
     const { rows } = await this.pool.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files WHERE entity = $1 AND record_id = $2 ORDER BY created_time, id`, [entity, recordId]);
     return rows.map(toFile);
