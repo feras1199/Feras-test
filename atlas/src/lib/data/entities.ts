@@ -28,6 +28,8 @@ export interface FieldSpec {
   field: string;
   kind: FieldKind;
   readOnly?: boolean;
+  /** Kept in ATLAS's own database only; there is no Airtable column for it. */
+  local?: boolean;
 }
 
 export interface EntitySpec {
@@ -48,6 +50,12 @@ const dt = mk("datetime");
 const b = mk("checkbox");
 const s = mk("select");
 const l = mk("links");
+/** A field that exists only in ATLAS's own database (added after the move off Airtable). */
+const own =
+  <K extends FieldKind>(kind: K) =>
+  (field: string) => ({ field, kind, local: true as const });
+const ownText = own("text");
+
 function ro(field: string): { field: string; kind: "computed"; readOnly: true };
 function ro<K extends FieldKind>(field: string, kind: K): { field: string; kind: K; readOnly: true };
 function ro(field: string, kind: FieldKind = "computed") {
@@ -150,6 +158,8 @@ export const ENTITIES = {
       enquiryIds: l("Enquiry"),
       inspector: t("Inspector"),
       inspectionDate: d("Inspection Date"),
+      /** "HH:MM", 24-hour, Sydney time. */
+      inspectionTime: ownText("Inspection Time"),
       siteAddress: t("Site Address"),
       budget: c("Customer Stated Maximum Budget (Optional)"),
       desiredStart: d("Desired Start Date"),
@@ -171,6 +181,9 @@ export const ENTITIES = {
       aiOmissionCheck: t("AI Omission Check"),
       transcript: t("Site Conversation Transcript"),
       transcriptReviewed: b("Transcript Reviewed"),
+      aiMeetingSummary: ownText("AI Meeting Summary"),
+      /** JSON {field: value} of what the AI last wrote, so a re-run only replaces text nobody has edited since. */
+      aiFilledJson: ownText("AI Filled Fields"),
       measurementIds: l("Site Measurements"),
       photos: ro("Photos", "attachments"),
       atlasKey: t("Atlas Key"),

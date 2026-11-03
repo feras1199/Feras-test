@@ -5,8 +5,9 @@ import type { Rec } from "@/lib/data/entities";
 const rec = (id: string, f: Partial<Rec<"costItems">>) => ({ id, createdTime: "2026-01-01T00:00:00.000Z", ...f }) as Rec<"costItems">;
 
 describe("toCostOption", () => {
-  it("prefers the library's effective price (dollars), then current price (cents), then old text", () => {
-    expect(toCostOption(rec("a", { name: "A", effectiveUnitCostInc: 45.5 as never, currentUnitCostInc: 9999 }))!.priceIncCents).toBe(4550);
+  it("prefers the current price (cents, what ATLAS edits), then the imported effective price (dollars), then old text", () => {
+    expect(toCostOption(rec("a", { name: "A", effectiveUnitCostInc: 45.5 as never, currentUnitCostInc: 9999 }))!.priceIncCents).toBe(9999);
+    expect(toCostOption(rec("e", { name: "E", effectiveUnitCostInc: 45.5 as never }))!.priceIncCents).toBe(4550);
     expect(toCostOption(rec("b", { name: "B", currentUnitCostInc: 1234 }))!.priceIncCents).toBe(1234);
     expect(toCostOption(rec("c", { name: "C", legacyCostText: "$1,250.00 per tonne" }))!.priceIncCents).toBe(125000);
     expect(toCostOption(rec("d", { name: "D" }))!.priceIncCents).toBeNull();

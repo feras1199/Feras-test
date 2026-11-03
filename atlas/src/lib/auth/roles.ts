@@ -27,6 +27,7 @@ export const PERMISSIONS = [
   "timesheets.viewAll",
   "costs.create",
   "costs.view", // internal costs, pay rates
+  "costs.manage", // edit Cost Library prices and items
   "profit.view", // margins and profit
   "variations.edit",
   "variations.approve",

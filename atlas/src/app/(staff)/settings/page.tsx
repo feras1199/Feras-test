@@ -2,10 +2,14 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { formatAud, formatPct } from "@/lib/finance/money";
 import { markupToMargin } from "@/lib/finance/pricing";
-import { dataSource, getSettings, requirePage } from "@/lib/server/context";
+import { dataSource, getRepo, getSettings, requirePage } from "@/lib/server/context";
+import { transcriptionProvider } from "@/lib/ai/transcribe";
+import { CHANGE_PREFIX } from "@/lib/domain/changeRequests";
+import { formatDate } from "@/lib/dates";
 import { can } from "@/lib/auth/roles";
 import { ROLE_LABELS, ROLE_PERMISSIONS, ROLES } from "@/lib/auth/roles";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Settings" };
 
 function Row({ k, v, note }: { k: string; v: React.ReactNode; note?: string }) {
@@ -21,6 +25,8 @@ export default async function SettingsPage() {
   const s = await requirePage("settings.view");
   const st = getSettings();
   const source = dataSource();
+  const stt = transcriptionProvider();
+  const changes = (await getRepo().list("tasks")).filter((t) => t.title?.startsWith(CHANGE_PREFIX) && !["Done", "Cancelled"].includes(t.status ?? "")).sort((a, b) => (b.createdTime ?? "").localeCompare(a.createdTime ?? ""));
   return (
     <>
       <PageHeader title="Settings" subtitle="Business rules ATLAS uses for every calculation." />
@@ -64,13 +70,33 @@ export default async function SettingsPage() {
             <Row k="Timezone" v={st.business.timezone} />
             <Row k="Version" v={(process.env.RENDER_GIT_COMMIT ?? process.env.ATLAS_VERSION ?? "local").slice(0, 7)} note="Code version running on the server" />
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
-            <Row k="AI assistant" v={process.env.ANTHROPIC_API_KEY ? "API key present, not yet tested" : "Not configured"} />
+            <Row k="AI assistant and write-ups" v={process.env.ANTHROPIC_API_KEY ? "Anthropic key present" : "Not configured"} note="ANTHROPIC_API_KEY: Ask ATLAS and voice-note write-ups" />
+            <Row k="Voice notes to text" v={stt === "deepgram" ? "Deepgram key present" : stt === "openai" ? "OpenAI key present" : "Not configured"} note="DEEPGRAM_API_KEY or OPENAI_API_KEY" />
           </dl>
           <div className="mt-3 flex flex-wrap gap-2">
             {can(s.role, "users.manage") && <Link href="/settings/people" className="btn-secondary inline-flex">People and logins</Link>}
             {can(s.role, "settings.edit") && <Link href="/settings/data" className="btn-secondary inline-flex">Backup and import data</Link>}
           </div>
         </section>
+        {can(s.role, "settings.edit") && (
+          <section className="card p-5 lg:col-span-2" aria-label="Change requests">
+            <h2 className="mb-1 font-semibold">Change requests ({changes.length})</h2>
+            <p className="mb-2 text-sm text-stone-600">Ideas for changing ATLAS, written up with Ask ATLAS. Nothing changes until a request is built. Send the ones you want to your developer.</p>
+            {changes.length === 0 ? <p className="text-sm text-stone-500">None open. Anyone can suggest one in Ask ATLAS.</p> : (
+              <ul className="divide-y divide-stone-100">
+                {changes.slice(0, 20).map((t) => (
+                  <li key={t.id} className="py-2 text-sm">
+                    <details>
+                      <summary className="cursor-pointer font-medium">{t.title!.slice(CHANGE_PREFIX.length)} <span className="text-xs font-normal text-stone-500">· {formatDate(t.createdTime?.slice(0, 10))}</span></summary>
+                      <p className="mt-1 whitespace-pre-wrap text-stone-700">{t.notes}</p>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Link href="/tasks" className="mt-2 inline-block text-sm text-forest-700 underline">Mark them done in Tasks</Link>
+          </section>
+        )}
         <section className="card p-5 lg:col-span-2">
           <h2 className="mb-2 font-semibold">Roles</h2>
           <div className="grid gap-2 text-sm sm:grid-cols-2">

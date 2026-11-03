@@ -1,3 +1,4 @@
+import { ContactButtons } from "@/components/ContactButtons";
 import { notFound } from "next/navigation";
 import { Chip, Empty, PageHeader, statusTone } from "@/components/ui";
 import { CustomerForm } from "@/components/CustomerForm";
@@ -48,6 +49,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <div><dt className="text-stone-500">Status</dt><dd>{c.leadStatus ? <Chip tone={statusTone(c.leadStatus)}>{c.leadStatus}</Chip> : "–"}</dd></div>
             <div><dt className="text-stone-500">Next follow-up</dt><dd>{formatDate(c.nextFollowUp)}{c.nextFollowUpAction ? ` · ${c.nextFollowUpAction}` : ""}</dd></div>
           </dl>
+          <div className="mt-4"><ContactButtons phone={c.phone} email={c.email} address={c.address} suburb={c.suburb} doNotContact={!!c.doNotContact} /></div>
           {c.serviceRequested && <p className="mt-4 rounded-lg bg-stone-50 p-3 text-sm">{c.serviceRequested}</p>}
         </section>
         <div className="space-y-4 lg:col-span-2">

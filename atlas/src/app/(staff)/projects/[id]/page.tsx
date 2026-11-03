@@ -1,3 +1,4 @@
+import { ContactButtons } from "@/components/ContactButtons";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Chip, Empty, PageHeader, Stat, statusTone } from "@/components/ui";
@@ -36,6 +37,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   return (
     <>
       <PageHeader title={p.name ?? "Project"} subtitle={[customer?.name, p.siteAddress, p.suburb].filter(Boolean).join(" · ")} actions={<><Chip tone={statusTone(p.status)}>{p.status}</Chip>{p.health && <Chip tone={statusTone(p.health)}>{p.health}</Chip>}</>} />
+      <div className="mb-4"><ContactButtons phone={customer?.phone} email={customer?.email} address={p.siteAddress} suburb={p.suburb} doNotContact={!!customer?.doNotContact} /></div>
 
       {financeV && (
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">

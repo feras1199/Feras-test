@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS atlas_files (
   bytes        bytea       NOT NULL
 );
 CREATE INDEX IF NOT EXISTS atlas_files_record ON atlas_files (entity, record_id);
+ALTER TABLE atlas_files ADD COLUMN IF NOT EXISTS transcript text;
 `;
 
 type Row = { id: string; created_time: Date; data: Record<string, unknown> };
@@ -82,9 +83,9 @@ export interface DbUser { id: string; email: string; name: string; role: string;
 type UserRow = { id: string; email: string; name: string; role: string; customer_id: string | null; password_hash: string; active: boolean };
 const toUser = (r: UserRow): DbUser => ({ id: r.id, email: r.email, name: r.name, role: r.role, customerId: r.customer_id ?? undefined, passwordHash: r.password_hash, active: r.active });
 
-type FileRow = { id: string; entity: EntityName; record_id: string; kind: StoredFile["kind"]; mime: string; name: string; size: number; duration_s: number | null; created_by: string; created_time: Date; archived: boolean };
-const FILE_COLS = "id, entity, record_id, kind, mime, name, size, duration_s, created_by, created_time, archived";
-const toFile = (r: FileRow): StoredFile => ({ id: r.id, entity: r.entity, recordId: r.record_id, kind: r.kind, mime: r.mime, name: r.name, size: r.size, durationS: r.duration_s ?? undefined, createdBy: r.created_by, createdTime: r.created_time.toISOString(), archived: r.archived });
+type FileRow = { id: string; entity: EntityName; record_id: string; kind: StoredFile["kind"]; mime: string; name: string; size: number; duration_s: number | null; created_by: string; created_time: Date; archived: boolean; transcript: string | null };
+const FILE_COLS = "id, entity, record_id, kind, mime, name, size, duration_s, created_by, created_time, archived, transcript";
+const toFile = (r: FileRow): StoredFile => ({ id: r.id, entity: r.entity, recordId: r.record_id, kind: r.kind, mime: r.mime, name: r.name, size: r.size, durationS: r.duration_s ?? undefined, createdBy: r.created_by, createdTime: r.created_time.toISOString(), archived: r.archived, transcript: r.transcript ?? undefined });
 
 export type ImportMode = "add-new" | "replace";
 export interface ImportResult { entity: EntityName; added: number; replaced: number; skipped: number }
@@ -259,6 +260,12 @@ export class PostgresRepository implements Repository, FileStore {
   async setFileArchived(id: string, archived: boolean): Promise<StoredFile | null> {
     await this.ensureSchema();
     const { rows } = await this.pool.query<FileRow>(`UPDATE atlas_files SET archived = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, archived]);
+    return rows[0] ? toFile(rows[0]) : null;
+  }
+
+  async setFileTranscript(id: string, transcript: string): Promise<StoredFile | null> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<FileRow>(`UPDATE atlas_files SET transcript = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, transcript]);
     return rows[0] ? toFile(rows[0]) : null;
   }
 }

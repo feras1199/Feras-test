@@ -1,4 +1,5 @@
 "use client";
+import { telUrl, whatsappUrl } from "@/lib/domain/contact";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -55,7 +56,8 @@ export function EnquiryPanel({ card, canEdit, onClose }: { card: Card; statuses:
         </div>
         {card.service && <p className="mb-3 rounded-lg bg-stone-100 p-3 text-sm">{card.service}</p>}
         <div className="mb-4 flex flex-wrap gap-2">
-          {card.phone && <a href={`tel:${card.phone.replace(/\s/g, "")}`} className="btn-secondary">Call {card.phone}</a>}
+          {card.phone && <a href={telUrl(card.phone) ?? undefined} className="btn-secondary">Call {card.phone}</a>}
+          {whatsappUrl(card.phone) && <a href={whatsappUrl(card.phone)!} target="_blank" rel="noreferrer" className="btn-secondary">WhatsApp</a>}
           {card.customerId && <Link href={`/customers/${card.customerId}`} className="btn-secondary">Customer record</Link>}
           {canEdit && card.customerId && <Link href={`/inspections/new?enquiry=${card.id}`} className="btn-secondary">Book inspection</Link>}
           {canEdit && card.customerId && <Link href={`/estimates/new?enquiry=${card.id}`} className="btn-secondary">Start estimate</Link>}

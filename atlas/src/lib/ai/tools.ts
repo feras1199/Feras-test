@@ -1,3 +1,4 @@
+import { ChangeRequest } from "../domain/changeRequests";
 import { z } from "zod";
 import type { Repository } from "../data/repository";
 import type { Settings } from "../config/settings";
@@ -26,7 +27,7 @@ export interface ToolContext {
  */
 export interface Proposal {
   id: string;
-  kind: "task" | "follow-up";
+  kind: "task" | "follow-up" | "change-request";
   summary: string;
   endpoint: string;
   method: "POST" | "PATCH";
@@ -276,6 +277,28 @@ export const TOOLS: ToolDef[] = [
       if (i.next_follow_up < ctx.today) throw new ToolError("Follow-up date is in the past");
       const summary = `Set follow-up for "${e.title}" to ${i.next_follow_up}: ${i.next_action}`;
       return { data: { status: "proposed, awaiting the person's confirmation", summary }, proposal: { id: "", kind: "follow-up", summary, endpoint: `/api/enquiries/${e.id}`, method: "PATCH", body: { nextFollowUp: i.next_follow_up, nextAction: i.next_action } } };
+    },
+  },
+  {
+    name: "propose_change_request",
+    description: "Write up a request to change ATLAS itself (a new feature, a new field, a different screen or wording). This does NOT change ATLAS: the person presses Confirm, it is saved for the owner to review, and the developer builds approved requests. Use it after you understand what they want; ask one short question first if the request is unclear.",
+    perm: "ai.use",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Short name, e.g. 'Add a time to inspection bookings'" },
+        what: { type: "string", description: "What should change, in plain words, with an example." },
+        why: { type: "string", description: "The problem it solves, in the person's words." },
+        where: { type: "string", description: "Which screen or part of ATLAS." },
+        size: { type: "string", enum: ["small", "medium", "large"], description: "large if it touches prices, payments, permissions, customer-facing documents or many screens." },
+      },
+      required: ["title", "what", "size"],
+      additionalProperties: false,
+    },
+    async run(input, ctx) {
+      const c = ChangeRequest.parse(input);
+      const summary = `Send change request "${c.title}" (${c.size}) to the owner`;
+      return { data: { status: "proposed, awaiting the person's confirmation", summary }, proposal: { id: "", kind: "change-request", summary, endpoint: "/api/change-requests", method: "POST", body: c as unknown as Record<string, unknown> } };
     },
   },
 ];

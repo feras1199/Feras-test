@@ -1,3 +1,4 @@
+import { formatTime } from "@/lib/domain/inspections";
 import Link from "next/link";
 import { Chip, Empty, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
@@ -9,7 +10,7 @@ export const metadata = { title: "Site inspections" };
 
 export default async function InspectionsPage() {
   const s = await requirePage("inspections.view");
-  const rows = (await getRepo().list("inspections")).sort((a, b) => (b.inspectionDate ?? "").localeCompare(a.inspectionDate ?? ""));
+  const rows = (await getRepo().list("inspections")).sort((a, b) => `${b.inspectionDate ?? ""} ${b.inspectionTime ?? ""}`.localeCompare(`${a.inspectionDate ?? ""} ${a.inspectionTime ?? ""}`));
   return (
     <>
       <PageHeader title="Site inspections" subtitle={`${rows.filter((r) => !r.complete).length} not yet complete`} actions={can(s.role, "inspections.edit") && <Link href="/inspections/new" className="btn-primary">Book inspection</Link>} />
@@ -18,7 +19,7 @@ export default async function InspectionsPage() {
           {rows.map((r) => (
             <li key={r.id}><Link href={`/inspections/${r.id}`} className="flex flex-wrap items-center gap-3 p-4 hover:bg-stone-50">
               <div className="min-w-0 flex-1"><p className="truncate font-medium">{r.title}</p><p className="text-xs text-stone-500">{r.siteAddress || "No address"} · {r.measurementIds?.length ?? 0} measurements</p></div>
-              <span className="text-sm text-stone-600">{formatDate(r.inspectionDate)}</span>
+              <span className="text-sm text-stone-600">{formatDate(r.inspectionDate)}{r.inspectionTime ? `, ${formatTime(r.inspectionTime)}` : ""}</span>
               <Chip tone={r.complete ? "green" : "gold"}>{r.complete ? "Complete" : "Open"}</Chip>
             </Link></li>
           ))}

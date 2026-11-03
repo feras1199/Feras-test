@@ -46,6 +46,28 @@ Anyone added this way can change their own password under **My account**. The ow
 - **Price lists from Airtable.** Settings > Backup and import > *Get your price lists from Airtable*. Paste an Airtable token with the `data.records:read` scope on the Whispering Leaf base and tap *Copy price lists from Airtable*. It copies the Cost Library, Productivity Rates and Omission Rules. Airtable is only read; the token is used once and not stored. Running it again only adds items ATLAS doesn't have yet, so edits made in ATLAS are kept. Choosing the exported `.json` file under *Import data* does the same without a token.
 - **Photos and voice notes on site visits.** Open a site inspection. *Take or add photos* opens the camera or photo library; photos are shrunk on the phone (longest side 1600 px) before upload. *Record a voice note* records from the phone's microphone (the browser asks for permission the first time) until *Stop and save*, up to 15 minutes. They are stored in ATLAS's own database, only staff who can see inspections can open them, and *Remove* archives rather than deletes. They are not in the backup download yet, and voice notes are not transcribed yet.
 
+## Cost Library
+
+Menu > Cost Library. Search by name, supplier or code, or pick a category. Owners and managers can **Add an item** and **Edit** any item: name, price inc GST, unit, category, supplier, notes, and whether it is in use. Items are never deleted; switching one off moves it down the estimate suggestions. A price change records the date, who changed it, and an entry in the price history, and new estimate lines use the new price straight away. Lines already on an estimate keep the price they were added with.
+
+## Voice notes written up by AI
+
+On a site inspection, every voice note can be turned into text and the AI fills in the site-note boxes (what the customer wants, existing conditions, slope, drainage, services, risks, priorities, other notes, access) and writes a meeting summary. It runs by itself after each voice note is saved, or with *Write up voice notes*.
+
+- It needs two keys on the server: a speech-to-text key (`DEEPGRAM_API_KEY`, or `OPENAI_API_KEY`) and `ANTHROPIC_API_KEY`. Settings shows which are present.
+- It only fills empty boxes, or boxes that still hold its own earlier text. Anything a person typed is left alone, and the result says which boxes it kept.
+- It is told to use only what was said and leave the rest blank. Read the boxes before relying on them; speech-to-text can mishear.
+- The text of each voice note is under *What was said*. Every write-up is in the audit log.
+- Rough cost: transcription is about US$0.20–0.40 per hour of audio at published third-party price summaries (Nov 2026; check the provider's own pricing page). Each write-up is one Claude request of a few thousand tokens; check Anthropic's pricing page for the current rate.
+
+## Contact buttons
+
+Customer, inspection and project pages show **Call**, **WhatsApp**, **Email** and **Map** buttons. Australian numbers are converted for WhatsApp (0412… becomes +61 412…). They are hidden for customers marked do-not-contact, except Map.
+
+## Change requests
+
+Anyone can ask Ask ATLAS for a change to ATLAS itself. It helps write the request up, the person confirms, and it lands in Settings > Change requests (also a task for the Owner). Ask ATLAS cannot change ATLAS, its settings or prices; requests are built by the developer once the owner approves them.
+
 ## Business settings
 
 Defaults match what the Airtable base already uses: GST 10%, markup 30%, marketing commission 6% of the invoice inc GST (absorbed, not added to the price), margin band 15–45%, quotes valid 30 days, default payment schedule 10/30/30/20/10, deposit warning above 10%, payments due 7 days after raising, labour $45 per person-hour, 8-hour day.

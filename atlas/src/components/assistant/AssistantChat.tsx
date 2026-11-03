@@ -7,7 +7,7 @@ interface Turn { role: "user" | "assistant"; content: string; lookups?: { tool: 
 
 const TOOL_LABELS: Record<string, string> = {
   search_records: "Search", today_overview: "Today list", list_enquiries: "Pipeline", get_customer: "Customer", get_project: "Project",
-  list_payments: "Payments", get_estimate: "Estimate", list_tasks: "Tasks", propose_task: "Task suggestion", propose_follow_up: "Follow-up suggestion",
+  list_payments: "Payments", get_estimate: "Estimate", list_tasks: "Tasks", propose_task: "Task suggestion", propose_follow_up: "Follow-up suggestion", propose_change_request: "Change request",
 };
 
 export function AssistantChat({ suggestions, canPropose }: { suggestions: string[]; canPropose: boolean }) {
@@ -64,9 +64,9 @@ export function AssistantChat({ suggestions, canPropose }: { suggestions: string
                 return (
                   <div key={p.id} className="mt-3 rounded-xl border border-gold-300 bg-gold-50 p-3 text-sm">
                     <p className="font-medium">Suggested: {p.summary}</p>
-                    {st === "saved" ? <p className="mt-2 text-forest-700">Saved.</p>
+                    {st === "saved" ? <p className="mt-2 text-forest-700">{p.kind === "change-request" ? "Sent to the owner. Nothing in ATLAS has changed yet." : "Saved."}</p>
                       : st === "dismissed" ? <p className="mt-2 text-stone-500">Dismissed. Nothing was changed.</p>
-                      : !canPropose ? <p className="mt-2 text-stone-500">You don't have permission to make this change.</p>
+                      : !canPropose && p.kind !== "change-request" ? <p className="mt-2 text-stone-500">You don't have permission to make this change.</p>
                       : (
                         <div className="mt-2 flex flex-wrap gap-2">
                           <button type="button" className="btn-primary !min-h-[36px] text-sm" disabled={st === "saving"} onClick={() => confirm(p)}>{st === "saving" ? "Saving…" : "Confirm"}</button>

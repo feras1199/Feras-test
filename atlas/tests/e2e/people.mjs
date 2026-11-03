@@ -95,7 +95,7 @@ await step("promoting the worker signs them out; switching them off blocks them"
   assert.match(await worker.page.innerText("nav"), /Schedule|Customers|Inspections/);
   await p.reload();
   p.once("dialog", (d) => d.accept());
-  await p.getByRole("button", { name: "Switch off" }).first().click();
+  await p.locator("li").filter({ hasText: workerEmail }).getByRole("button", { name: "Switch off" }).click();
   await p.getByText("Switched off").waitFor();
   await worker.page.goto(`${BASE}/`);
   assert.match(worker.page.url(), /\/login/);

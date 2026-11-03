@@ -65,8 +65,10 @@ export interface StoredFile {
   createdBy: string;
   createdTime: string;
   archived: boolean;
+  /** Speech-to-text of a voice note, once it has been transcribed. */
+  transcript?: string;
 }
-export type NewFile = Omit<StoredFile, "id" | "createdTime" | "archived">;
+export type NewFile = Omit<StoredFile, "id" | "createdTime" | "archived" | "transcript">;
 
 /**
  * Where ATLAS keeps photos and voice notes. The database and demo stores have
@@ -77,6 +79,7 @@ export interface FileStore {
   getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null>;
   addFile(meta: NewFile, bytes: Buffer): Promise<StoredFile>;
   setFileArchived(id: string, archived: boolean): Promise<StoredFile | null>;
+  setFileTranscript(id: string, transcript: string): Promise<StoredFile | null>;
 }
 
 export function fileStoreOf(repo: Repository): FileStore | null {

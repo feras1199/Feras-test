@@ -15,10 +15,11 @@ export default async function AssistantPage() {
     can(s.role, "finance.view") && "Which payments are overdue?",
     can(s.role, "projects.view") && "How are the active projects tracking?",
     "What are my open tasks?",
+    "I'd like to suggest a change to ATLAS",
   ].filter((x): x is string => !!x);
   return (
     <>
-      <PageHeader title="Ask ATLAS" subtitle="Answers come from your records. ATLAS can suggest tasks and follow-ups, but nothing is saved until you confirm it." />
+      <PageHeader title="Ask ATLAS" subtitle="Answers come from your records. ATLAS can suggest tasks and follow-ups, and write up ideas for changing ATLAS for the owner to review. Nothing is saved until you confirm it, and ATLAS can't change itself." />
       {aiConfigured() ? (
         <AssistantChat suggestions={suggestions} canPropose={can(s.role, "crm.edit")} />
       ) : (

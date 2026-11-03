@@ -32,14 +32,16 @@ function dollarsToCents(v: unknown): number | null {
 }
 
 /**
- * Price order: the library's own "Effective Unit Cost inc GST" (dollars, worked out in Airtable),
- * then the current unit cost (cents), then a number read from the old free-text cost.
+ * Price order: the current unit cost (cents), then the library's "Effective Unit Cost inc GST"
+ * (dollars, worked out in Airtable), then a number read from the old free-text cost.
  */
 export function toCostOption(c: Rec<"costItems">): CostOption | null {
   const name = tidy(c.name);
   if (!name) return null;
   const category = tidy(c.category);
-  const priceIncCents = dollarsToCents(c.effectiveUnitCostInc) ?? c.currentUnitCostInc ?? parseLegacyCost(c.legacyCostText);
+  // The current price wins: it is what Airtable's effective price was built from, and it is
+  // what ATLAS updates when someone changes a price, while the effective price is a frozen copy.
+  const priceIncCents = c.currentUnitCostInc ?? dollarsToCents(c.effectiveUnitCostInc) ?? parseLegacyCost(c.legacyCostText);
   return {
     id: c.id,
     name,
@@ -99,3 +101,16 @@ export const CostItemCreate = z.object({
   priceIncCents: z.number().int().min(0).max(100_000_000),
 });
 export type CostItemCreate = z.infer<typeof CostItemCreate>;
+
+export const CostItemUpdate = z.object({
+  name: z.string().trim().min(2).max(200).optional(),
+  unit: z.string().trim().max(40).optional(),
+  category: z.string().trim().max(80).optional(),
+  supplier: z.string().trim().max(120).optional(),
+  sku: z.string().trim().max(80).optional(),
+  notes: z.string().trim().max(2000).optional(),
+  /** null clears the price. */
+  priceIncCents: z.number().int().min(0).max(100_000_000).nullable().optional(),
+  active: z.boolean().optional(),
+});
+export type CostItemUpdate = z.infer<typeof CostItemUpdate>;

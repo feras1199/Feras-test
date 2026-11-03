@@ -82,6 +82,20 @@ describe("assistant tools", () => {
   });
 });
 
+describe("change requests", () => {
+  it("lets any staff member write up an ATLAS change, but only as a proposal", async () => {
+    const ctx = ctxFor("worker", "Wes Worker");
+    expect(toolsFor("worker").map((t) => t.name)).toContain("propose_change_request");
+    const r = await runTool("propose_change_request", { title: "Add a time to bookings", what: "Let me pick a time when booking a site visit, e.g. 9:30 am.", size: "small" }, ctx);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.outcome.proposal).toMatchObject({ kind: "change-request", endpoint: "/api/change-requests", method: "POST" });
+    expect((await ctx.repo.list("tasks")).some((t) => t.title?.includes("Add a time"))).toBe(false);
+    const bad = await runTool("propose_change_request", { title: "x", what: "y", size: "huge" }, ctx);
+    expect(bad.ok).toBe(false);
+  });
+});
+
 describe("assistant loop", () => {
   it("runs tools, sends all results back in one message, and returns the answer", async () => {
     const { client, calls } = fakeClient([

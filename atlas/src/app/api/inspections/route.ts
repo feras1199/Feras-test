@@ -11,6 +11,7 @@ export const POST = route("inspections.edit", async ({ req, session }) => {
   const enq = i.enquiryId ? await repo.get("enquiries", i.enquiryId) : null;
   const rec = await repo.create("inspections", {
     title: `${c.name} – site inspection ${i.inspectionDate}`,
+    inspectionTime: i.inspectionTime ?? null,
     customerIds: [c.id],
     enquiryIds: enq ? [enq.id] : [],
     projectIds: enq?.projectIds ?? [],

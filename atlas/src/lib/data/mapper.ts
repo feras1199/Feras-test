@@ -103,6 +103,7 @@ export function encodeValue(spec: FieldSpec, airtableType: string, value: unknow
 export function decodeRecord<E extends EntityName>(entity: E, rec: { id: string; createdTime?: string; fields: Record<string, unknown> }): Rec<E> {
   const out: Record<string, unknown> = { id: rec.id, createdTime: rec.createdTime ?? "" };
   for (const key of Object.keys(ENTITIES[entity].fields)) {
+    if ((ENTITIES[entity].fields as Record<string, FieldSpec>)[key]!.local) { out[key] = null; continue; }
     const { spec, id } = fieldMeta(entity, key);
     out[key] = decodeValue(spec, rec.fields[id]);
   }
@@ -114,6 +115,8 @@ export function encodeFields<E extends EntityName>(entity: E, data: Partial<Rec<
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     if (key === "id" || key === "createdTime" || value === undefined) continue;
+    // ATLAS-only fields have no Airtable column; in the old Airtable mode they are not kept.
+    if ((ENTITIES[entity].fields as Record<string, FieldSpec>)[key]?.local) continue;
     const { spec, id, type } = fieldMeta(entity, key);
     if (spec.readOnly) throw new Error(`${entity}.${key} is calculated in Airtable and cannot be written`);
     out[id] = encodeValue(spec, type, value);

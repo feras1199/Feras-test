@@ -22,9 +22,19 @@ const recId = z.string().regex(/^rec[A-Za-z0-9]{14}$/);
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const m = z.number().nonnegative().max(10_000).nullable().optional();
 
-export const InspectionCreate = z.object({ customerId: recId, enquiryId: recId.optional(), inspectionDate: date });
+/** "HH:MM" 24-hour, e.g. "09:30". */
+const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Pick a time");
+export const InspectionCreate = z.object({ customerId: recId, enquiryId: recId.optional(), inspectionDate: date, inspectionTime: time.optional() });
+
+/** "9:30 am" from "09:30". */
+export function formatTime(t: string | null | undefined): string {
+  if (!t || !/^\d{2}:\d{2}$/.test(t)) return "";
+  const [h, m] = t.split(":").map(Number) as [number, number];
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
+}
 export const InspectionUpdate = z.object({
   inspectionDate: date.optional(),
+  inspectionTime: time.nullable().optional(),
   siteAddress: txt(300),
   scope: txt(),
   accessDifficulty: z.enum(["Easy", "Moderate", "Difficult", "Unknown"]).optional(),

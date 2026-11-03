@@ -48,7 +48,10 @@ Once the additive "Atlas Audit Log" table is approved in Airtable, the audit log
 | `ATLAS_USERS_JSON` | yes, unless only the owner logs in | Staff and customer logins, see the admin guide. |
 | `ATLAS_SETTINGS_JSON` | no | Overrides for markup, GST, schedules, labour rate etc. Partial JSON merged over the defaults. |
 | `ATLAS_LEGACY_PAYMENT_AUTOMATIONS_OFF` | no | Set to `1` **only after** the old Airtable payment automations are turned off. Until then, accepting a quote in ATLAS is blocked in Airtable mode so payment stages are never created twice. |
-| `ANTHROPIC_API_KEY` | no | Turns on "Ask ATLAS". Without it the page says the assistant is not set up. |
+| `ANTHROPIC_API_KEY` | no | Turns on "Ask ATLAS" and the AI write-up of site visit voice notes. Without it those features say they are not set up. |
+| `DEEPGRAM_API_KEY` | no | Speech-to-text for voice notes (recommended: labels who is speaking). Model `nova-3` unless `ATLAS_DEEPGRAM_MODEL` is set. |
+| `OPENAI_API_KEY` | no | Alternative speech-to-text if there is no Deepgram key. Model `gpt-4o-mini-transcribe` unless `ATLAS_TRANSCRIBE_MODEL` is set. Used for transcription only. |
+| `ATLAS_AI_DEMO` | no | `1` turns on labelled stand-ins for transcription and the write-up, **only** in demo-data mode, so the flow can be tested without keys. Ignored with real data. |
 | `ATLAS_AI_MODEL` | no | Defaults to `claude-opus-5-5`. |
 | `QUICKBOOKS_CLIENT_ID` / `QUICKBOOKS_CLIENT_SECRET` | no | Reserved. The QuickBooks connection is not built yet (see known limitations). |
 | `ATLAS_ALLOW_DEMO_LOGINS` | never in production | Enables the demo accounts. Only for test environments. |

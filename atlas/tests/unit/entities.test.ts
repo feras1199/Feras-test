@@ -9,7 +9,8 @@ describe("entity mapping matches the live Airtable schema", () => {
     it(name, () => {
       const table = (AIRTABLE_SCHEMA as Record<string, { fields: Record<string, { id: string; type: string }> }>)[spec.table];
       expect(table, `table ${spec.table}`).toBeDefined();
-      for (const [key, f] of Object.entries(spec.fields)) {
+      for (const [key, f] of Object.entries(spec.fields) as [string, { field: string; readOnly?: boolean; local?: boolean }][]) {
+        if (f.local) continue; // lives in ATLAS's own database only
         const field = table!.fields[f.field];
         expect(field, `${name}.${key} -> "${f.field}"`).toBeDefined();
         // A computed Airtable field must never be mapped as writable.

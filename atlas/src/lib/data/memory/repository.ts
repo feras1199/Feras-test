@@ -87,4 +87,11 @@ export class MemoryRepository implements Repository, FileStore {
     f.meta.archived = archived;
     return { ...f.meta };
   }
+
+  async setFileTranscript(id: string, transcript: string): Promise<StoredFile | null> {
+    const f = this.files.get(id);
+    if (!f) return null;
+    f.meta.transcript = transcript;
+    return { ...f.meta };
+  }
 }
