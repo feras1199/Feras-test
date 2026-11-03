@@ -2,13 +2,15 @@
 
 This file is for anyone, person or AI, who is reviewing ATLAS. It explains what was built, how it works, what has been tested, and what is missing or assumed. It doesn't depend on any other material, but the source code and the detailed docs are linked below.
 
-**Prepared:** 2 November 2026
+**Prepared:** 2 November 2026, updated 3 November 2026
+
+**New readers start here:** `docs/ARCHITECTURE.md` explains how the website is built, step by step, and how to extend it or build something similar.
 **Branch:** `claude/project-thread-wby4er`
 **Base branch:** `whispering-leaf-concept`
 
 ## 1. What ATLAS is
 
-ATLAS is a business operating system for **Whispering Leaf Landscaping & Construction**, a landscaping and construction business in Sydney. It's a Next.js web app that sits on top of the business's existing Airtable base, "Whispering Leaf Operating System", which has 30 tables.
+ATLAS is a business operating system for **Whispering Leaf Landscaping & Construction**, a landscaping and construction business in Sydney. It's a Next.js web app with **its own Postgres database**. The business's old Airtable base ("Whispering Leaf Operating System", 30 tables) is now only a read-only source for a one-time import. The owner wants to stop using Airtable.
 
 It covers the full job lifecycle, in this order:
 
@@ -43,10 +45,11 @@ It also includes:
 |---|---|
 | Code for all 10 planned phases | Written, committed, pushed |
 | Typecheck (TypeScript strict) | Clean |
-| Unit tests (Vitest) | 121 pass |
-| Browser end-to-end tests (Playwright, production build) | 22 of 22 pass |
-| Running against the **live** Airtable base | **Not yet.** No Airtable personal access token has been provided, and the build environment couldn't reach api.airtable.com. The Airtable client is written and unit-tested against the real schema snapshot. It has not made a live request. |
-| Hosted anywhere | **No.** There is a Render blueprint (`render.yaml`) for a demo deployment, but it hasn't been deployed or tested. |
+| Unit tests (Vitest) | 136 pass, plus 6 Postgres tests that run against a real database when `TEST_DATABASE_URL` is set (142 of 142 pass on Postgres 16) |
+| Browser end-to-end tests (Playwright, production build) | 23 of 23 pass on demo data **and** on a Postgres-backed server; 6 of 6 for logins managed in the database |
+| Own database (Postgres) | Built and tested locally. Import from Airtable tested with the real price libraries (570 cost items, 35 productivity rates, 12 omission rules). |
+| Hosted anywhere | **Not yet.** `render.yaml` creates the web service and a paid Postgres database. The owner deploys it with one link; it hasn't been run yet. |
+| Running against the live Airtable base directly | Not tested live (no personal access token). No longer the plan; Airtable is only an import source. |
 | AI assistant against the real model | **Not tested live.** There was no API key. The tool loop, permissions and confirm-before-save flow are unit-tested with a fake model client. |
 | QuickBooks, email, SMS, calendar, file uploads | **Not built.** Adapters are placeholders that report "not connected". |
 | Changes made to the live Airtable base | **None.** |
@@ -57,14 +60,15 @@ Everything is currently exercised in **demo mode**: an in-memory store with fict
 
 ```
 Browser ── Next.js App Router (React 19, server components) ── Route handlers /api/* ── Repository
-                                                                                          ├── AirtableRepository (live)
+                                                                                          ├── PostgresRepository (live, own database)
+                                                                                          ├── AirtableRepository (old base, changeover only)
                                                                                           └── MemoryRepository (demo/tests)
 ```
 
 **Stack**
 - Next.js 15.5, React 19.3, TypeScript strict (`noUncheckedIndexedAccess`).
 - Tailwind 3.4, zod 4, Vitest 5, Playwright.
-- About 9,500 lines of TypeScript, 31 API routes and 160 files.
+- About 9,700 lines of TypeScript, 37 API routes, 29 pages and 182 files.
 
 ### Server-only secrets
 
@@ -82,6 +86,9 @@ Browser ── Next.js App Router (React 19, server components) ── Route han
   - pagination, `returnFieldsByFieldId`, and `typecast:false`;
   - a 30-second read cache that is cleared on writes.
 - Records are never hard-deleted. They are excluded or archived instead.
+- Postgres store: one `atlas_records(entity, id, data jsonb)` table, tables created on first use, same write rules as the other stores. Also `atlas_audit` (permanent audit log), `atlas_users` (logins) and `atlas_imports` (import history).
+- Settings → Backup and import: download every record as JSON; import an ATLAS backup or an Airtable export, with a preview first. All-or-nothing, and safe to re-run.
+- Estimates: the Cost Library is searched as you type, from the first letter. New items can be saved to the library from an estimate line.
 
 ### Finance engine (`src/lib/finance/`)
 
@@ -102,13 +109,13 @@ Browser ── Next.js App Router (React 19, server components) ── Route han
   - every page (`requirePage`);
   - every API route, through the `route(perm, handler)` wrapper.
 - On each request the server also checks that the user still exists, is active, and has the same role and linked customer. Removing a user therefore signs them out right away.
-- Users currently come from the `ATLAS_USERS_JSON` environment variable. An additive Airtable table for users is proposed but not yet approved.
+- Logins come from the owner's host variables (`ATLAS_OWNER_EMAIL` / `ATLAS_OWNER_PASSWORD`), optional `ATLAS_USERS_JSON`, and people added in the app (Settings → People and logins, stored in Postgres). The owner can add people, change roles, reset passwords and switch logins off. Everyone added this way can change their own password.
 
 ### Write safety
 
 - **Cross-site requests:** non-GET requests whose Origin differs from the host are blocked.
 - **Body size:** request bodies over 256 KB are refused.
-- **Audit log:** every write is audit-logged with who made it, what changed, and the values before and after. The log is kept in memory and also written to stdout as JSON lines.
+- **Audit log:** every write is audit-logged with who made it, what changed, and the values before and after. In Postgres mode the log is stored permanently in the database; otherwise it is kept in memory. It is always written to stdout as JSON lines too.
 - **Confirmation:** actions that affect money or contracts require explicit confirmation in the UI. This covers approving a price, recording acceptance, marking a payment received, and approving a variation.
 
 ### Customer portal
@@ -221,8 +228,9 @@ The full audit is in `atlas/docs/AIRTABLE_AUDIT.md`.
 
 | Suite | Count | What it covers |
 |---|---|---|
-| Unit (`npm test`) | 121 | Finance engine (GST, markup, commission, schedules summing exactly, deposit warnings, reconciliation, variations), entity mapping against the live schema snapshot, memory repository, permissions, CRM rules, estimates, inspections, project financials, AI tool permissions and loop (fake client), session revocation |
-| End-to-end (`npm run e2e`, Playwright on the production build) | 22 | Login and redirects; Today; search by phone; customer duplicate warning, create and edit with audit; pipeline flow; tasks; inspection and measurements; full estimate flow (build, check, approve, quote, send, accept → project and payments); sales can't approve; locked estimate rejects edits; project costs, variations and schedule; finance raise and receive; portal acceptance; worker sees no money; customer confined to portal; mobile navigation and no horizontal scroll on 8 pages; cross-site writes blocked; assistant not-configured state; raw-payload leak checks; oversized request refused |
+| Unit (`npm test`) | 136 (+6 Postgres) | Cost Library search and import file reader; Postgres store (create, merge updates, write rules, re-runnable import, rollback, audit, logins); finance engine (GST, markup, commission, schedules summing exactly, deposit warnings, reconciliation, variations), entity mapping against the live schema snapshot, memory repository, permissions, CRM rules, estimates, inspections, project financials, AI tool permissions and loop (fake client), session revocation, owner login from host variables |
+| End-to-end (`npm run e2e`, Playwright on the production build) | 23 | Cost Library type-ahead and save-to-library; login and redirects; Today; search by phone; customer duplicate warning, create and edit with audit; pipeline flow; tasks; inspection and measurements; full estimate flow (build, check, approve, quote, send, accept → project and payments); sales can't approve; locked estimate rejects edits; project costs, variations and schedule; finance raise and receive; portal acceptance; worker sees no money; customer confined to portal; mobile navigation and no horizontal scroll on 8 pages; cross-site writes blocked; assistant not-configured state; raw-payload leak checks; oversized request refused |
+| End-to-end logins (`npm run e2e:people`, needs a Postgres-backed server) | 6 | Owner adds a worker on a phone; duplicate emails refused; no password hashes sent; worker changes password; role change signs them out; switching off blocks them; customer logins must link to a real customer; audit entries |
 
 **How to run the tests:**
 
@@ -241,14 +249,17 @@ BASE_URL=http://localhost:3000 npm run e2e    # needs a fresh server each run
 ## 8. Known limitations and open decisions
 
 **Waiting on the owner**
-1. An Airtable personal access token, so the app can be tested live.
-2. A decision on turning off the four legacy payment automations.
-3. Approval for additive tables (Atlas Users, Atlas Audit Log, Atlas Settings).
-4. Confirmation of whether component revenue in Airtable is ex GST (assumed) or inc GST.
-5. Clean-up of DEMO / QA records in the live base. This needs a backup and approval, and nothing has been deleted.
+1. Deploying to Render, then importing the price library file from the Backup and import screen.
+2. Which Airtable records to carry over. Nearly all customers and every project in Airtable are DEMO/QA test records; only four customers look real.
+3. Confirmation of whether component revenue in Airtable is ex GST (assumed) or inc GST.
+4. An Anthropic API key, if the assistant should be switched on.
+5. The legacy Airtable payment automations only matter if ATLAS is run directly on Airtable, which is no longer the plan.
 
 **Technical limitations**
-- **Single server process.** Login throttling, the assistant rate limit, the Audit page and the cache all live in memory. Run one always-on instance; serverless isn't suitable yet.
+- **Single server process.** Login throttling and the assistant rate limit live in memory. Run one always-on instance.
+- **Formula values from Airtable** are imported as a fixed snapshot and are not recalculated.
+- **Backups don't include logins.** After restoring into a new database, add people again.
+- **Customers can't change their own password yet.** The owner resets it for them.
 - **List performance.** Lists load whole tables. That's fine at the current scale (hundreds of rows) but needs paging above several thousand rows per table.
 - **Linting** is not configured. `next lint` needs interactive setup. TypeScript strict and the tests run instead.
 - **Dependency advisory.** `npm audit` still reports a PostCSS advisory. It's build-time only, inside Next.js, and is fixed by Next 16.
@@ -268,11 +279,11 @@ BASE_URL=http://localhost:3000 npm run e2e    # needs a fresh server each run
 |---|---|
 | `atlas/src/lib/finance/` | Pricing, GST, commission, schedules, labour, reconciliation, estimate checks |
 | `atlas/src/lib/domain/` | CRM, estimates, inspections, projects, today list |
-| `atlas/src/lib/data/` | Entity map, mapper, Airtable client, memory store and fixtures |
+| `atlas/src/lib/data/` | Entity map, Repository interface, Postgres store, Airtable client and mapper, memory store and fixtures, import file reader |
 | `atlas/src/lib/auth/` | Roles, sessions, passwords, users |
-| `atlas/src/lib/server/` | API wrapper, context, audit, search, portal allow-list, estimate acceptance |
+| `atlas/src/lib/server/` | API wrapper, context, audit, search, portal allow-list, estimate acceptance, people/logins, backup and import |
 | `atlas/src/lib/ai/` | Assistant tools, loop, client |
 | `atlas/src/app/` | Pages (`(staff)/…`, `portal/…`) and API routes (`api/…`) |
 | `atlas/tests/` | Unit tests and the Playwright end-to-end script |
-| `atlas/docs/` | Airtable audit, financial rules, deployment guide, admin guide, known limitations, schema snapshots |
-| `render.yaml` | Demo deployment blueprint for Render (not yet deployed) |
+| `atlas/docs/` | **ARCHITECTURE.md (how it's built)**, Airtable audit, financial rules, deployment guide, admin guide, known limitations, schema snapshots |
+| `render.yaml` | Render blueprint: web service plus private Postgres database (not yet deployed) |
