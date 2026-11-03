@@ -62,6 +62,7 @@ export default async function SettingsPage() {
           <dl>
             <Row k="Data source" v={source === "postgres" ? "ATLAS database (live)" : source === "airtable" ? "Airtable (live)" : "Demo data (fictional)"} />
             <Row k="Timezone" v={st.business.timezone} />
+            <Row k="Version" v={(process.env.RENDER_GIT_COMMIT ?? process.env.ATLAS_VERSION ?? "local").slice(0, 7)} note="Code version running on the server" />
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
             <Row k="AI assistant" v={process.env.ANTHROPIC_API_KEY ? "API key present, not yet tested" : "Not configured"} />
           </dl>

@@ -113,7 +113,7 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
                 </table>
               </div>
             )}
-            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} gstRate={settings.gstRate} measurements={measurements} onDone={() => { setEditing(null); router.refresh(); }} />}
+            {editable && <LineForm key={editing?.id ?? "new"} estimateId={e.id} line={editing} costItems={costItems} gstRate={settings.gstRate} owner={perms.owner} measurements={measurements} onDone={() => { setEditing(null); router.refresh(); }} />}
           </section>
 
           <ScopeEditor e={e} editable={editable} onSave={patch} busy={busy} />
@@ -215,7 +215,7 @@ function ScopeEditor({ e, editable, onSave, busy }: { e: Est; editable: boolean;
   );
 }
 
-function LineForm({ estimateId, line, costItems, gstRate, measurements, onDone }: { estimateId: string; line: Line | null; costItems: CostOption[]; gstRate: number; measurements: Props["measurements"]; onDone: () => void }) {
+function LineForm({ estimateId, line, costItems, gstRate, owner, measurements, onDone }: { estimateId: string; line: Line | null; costItems: CostOption[]; gstRate: number; owner: boolean; measurements: Props["measurements"]; onDone: () => void }) {
   const [measurementId, setMeasurementId] = useState(line?.measurementId ?? "");
   const [qty, setQty] = useState(line ? String(line.quantity) : "");
   const [type, setType] = useState(line?.costType ?? "Material");
@@ -311,9 +311,11 @@ function LineForm({ estimateId, line, costItems, gstRate, measurements, onDone }
             onKeyDown={onDescKey}
             placeholder={labour ? "e.g. Lay pavers (2 people × 5 days × 8 h)" : "Start typing, e.g. sa for sandstone"}
           />
-          {!costItemId && <p id={`${listId}-hint`} className="mt-1 text-xs text-stone-500">Start typing to search your Cost Library ({library.length} items).</p>}
+          {!costItemId && (library.length > 0
+            ? <p id={`${listId}-hint`} className="mt-1 text-xs text-stone-500">Start typing to search your Cost Library ({library.length} items).</p>
+            : <p id={`${listId}-hint`} className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">Your Cost Library is empty, so there&apos;s nothing to suggest yet. {owner ? <>Import it in <Link href="/settings/data" className="underline">Settings → Backup and import</Link>, or tick “Save to Cost Library” below as you go.</> : "Ask the owner to import it, or tick “Save to Cost Library” below as you go."}</p>)}
           {costItemId && <p className="mt-1 text-xs text-emerald-700">From your Cost Library. Edit the price below for this quote only, if needed.</p>}
-          {showList && (
+          {showList && library.length > 0 && (
             <ul id={`${listId}-list`} role="listbox" aria-label="Cost Library matches" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-stone-200 bg-white shadow-lg">
               {matches.length === 0 && <li className="px-3 py-2 text-stone-500">No match in the Cost Library. Fill in the line and tick “Save to Cost Library” to add it.</li>}
               {matches.map((c, i) => (
