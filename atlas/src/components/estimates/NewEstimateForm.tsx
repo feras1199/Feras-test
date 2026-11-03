@@ -27,17 +27,18 @@ export function NewEstimateForm({ customers, enquiries, customerId, enquiryId }:
     <form onSubmit={submit} className="card space-y-4 p-5">
       <div>
         <label htmlFor="customer" className="label">Customer *</label>
-        <select id="customer" required value={cust} onChange={(e) => { setCust(e.target.value); setEnq(""); }} className="input">
+        <select id="customer" required value={cust} onChange={(e) => { const c = e.target.value; setCust(c); const open = enquiries.filter((x) => x.customerId === c); setEnq(open.length === 1 ? open[0]!.id : ""); if (open.length === 1 && !title) setTitle(open[0]!.service.slice(0, 80)); }} className="input">
           <option value="" disabled>Choose a customer</option>
           {customers.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
       </div>
       <div>
-        <label htmlFor="enquiry" className="label">Enquiry</label>
+        <label htmlFor="enquiry" className="label">Which enquiry is this for?</label>
         <select id="enquiry" value={enq} onChange={(e) => { setEnq(e.target.value); const f = enquiries.find((x) => x.id === e.target.value); if (f && !title) setTitle(f.service.slice(0, 80)); }} className="input" disabled={!cust}>
-          <option value="">{options.length ? "Not linked" : "No open enquiries for this customer"}</option>
+          <option value="">{options.length ? "None, don't link it" : "No open enquiries for this customer"}</option>
           {options.map((e) => <option key={e.id} value={e.id}>{e.label}</option>)}
         </select>
+        <p className="mt-1 text-xs text-stone-500">An enquiry is the customer&apos;s request on the Pipeline. Linking moves it along by itself: to Estimate Preparing now, Proposal Sent when you mark the quote sent, and Won when they accept.</p>
       </div>
       <div>
         <label htmlFor="title" className="label">Job title *</label>
