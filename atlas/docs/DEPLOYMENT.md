@@ -42,8 +42,8 @@ Once the additive "Atlas Audit Log" table is approved in Airtable, the audit log
 | `DATABASE_URL` | with postgres | Postgres connection string. Render fills it in from the blueprint. |
 | `DATABASE_POOL_MAX` | no | Database connections per server, default 5. |
 | `ATLAS_OWNER_EMAIL` / `ATLAS_OWNER_PASSWORD` | no | The owner's login without making a password hash (password 12+ characters). Other people still go in `ATLAS_USERS_JSON`. |
-| `AIRTABLE_TOKEN` | airtable mode only | Personal access token. Scopes: `data.records:read`, `data.records:write`, `schema.bases:read`. Access: only the Whispering Leaf base. |
-| `AIRTABLE_BASE_ID` | airtable mode only | `appygHLmJTH1ew5r6` |
+| `AIRTABLE_TOKEN` | no | Airtable personal access token. **Postgres mode:** optional, scope `data.records:read` only; if set and the Cost Library is empty when the server starts, ATLAS copies the Cost Library, Productivity Rates and Omission Rules from Airtable once (read only). The owner can do the same from Settings > Backup and import by pasting a token, which is used once and not stored. **Airtable mode:** required, scopes `data.records:read`, `data.records:write`, `schema.bases:read`. Access: only the Whispering Leaf base. |
+| `AIRTABLE_BASE_ID` | no | Defaults to `appygHLmJTH1ew5r6` (Whispering Leaf). |
 | `ATLAS_SESSION_SECRET` | yes | 32+ random bytes, e.g. `openssl rand -hex 32`. Changing it signs everyone out. |
 | `ATLAS_USERS_JSON` | yes, unless only the owner logs in | Staff and customer logins, see the admin guide. |
 | `ATLAS_SETTINGS_JSON` | no | Overrides for markup, GST, schedules, labour rate etc. Partial JSON merged over the defaults. |

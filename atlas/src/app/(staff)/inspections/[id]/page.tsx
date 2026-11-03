@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Chip, PageHeader } from "@/components/ui";
 import { InspectionEditor } from "@/components/inspections/InspectionEditor";
+import { SiteMedia } from "@/components/inspections/SiteMedia";
+import { fileStoreOf } from "@/lib/data/repository";
 import { measurementQuantity } from "@/lib/domain/inspections";
 import { can } from "@/lib/auth/roles";
 import { getRepo, requirePage } from "@/lib/server/context";
@@ -15,12 +17,17 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
   const insp = await repo.get("inspections", id);
   if (!insp) notFound();
   const measurements = await repo.list("measurements", { where: (m) => !!m.inspectionIds?.includes(id) });
+  const store = fileStoreOf(repo);
+  const files = store ? (await store.listFiles("inspections", id)).filter((f) => !f.archived) : [];
   return (
     <>
       <PageHeader title={insp.title ?? "Site inspection"} subtitle={insp.siteAddress ?? undefined} actions={<>
         {insp.complete && <Chip tone="green">Complete</Chip>}
         {can(s.role, "estimates.edit") && insp.customerIds?.[0] && <Link className="btn-primary" href={`/estimates/new?customer=${insp.customerIds[0]}${insp.enquiryIds?.[0] ? `&enquiry=${insp.enquiryIds[0]}` : ""}`}>Start estimate</Link>}
       </>} />
+      <div className="mb-6">
+        <SiteMedia inspectionId={insp.id} available={!!store} editable={can(s.role, "inspections.edit")} files={files.map((f) => ({ id: f.id, kind: f.kind, name: f.name, durationS: f.durationS, createdBy: f.createdBy, createdTime: f.createdTime }))} />
+      </div>
       <InspectionEditor
         editable={can(s.role, "inspections.edit")}
         inspection={{ id: insp.id, complete: !!insp.complete, scope: insp.scope ?? "", accessDifficulty: insp.accessDifficulty ?? "", accessWidthM: insp.accessWidthM ?? null, existingConditions: insp.existingConditions ?? "", slopeLevels: insp.slopeLevels ?? "", drainage: insp.drainage ?? "", services: insp.services ?? "", risks: insp.risks ?? "", priorities: insp.priorities ?? "", notes: insp.notes ?? "", budgetFit: insp.budgetFit ?? "" }}

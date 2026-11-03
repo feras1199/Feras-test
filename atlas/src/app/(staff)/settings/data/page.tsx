@@ -18,7 +18,7 @@ export default async function DataPage() {
   return (
     <>
       <PageHeader title="Backup and import" subtitle="Download everything ATLAS holds, or bring data in from Airtable or an earlier backup." />
-      <DataAdmin source={source} counts={counts} />
+      <DataAdmin source={source} counts={counts} serverToken={!!process.env.AIRTABLE_TOKEN} libraryCount={(await repo.list("costItems")).length} />
     </>
   );
 }

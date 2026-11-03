@@ -50,3 +50,40 @@ export function newRecordId(): string {
   const bytes = randomBytes(14);
   return "rec" + Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
 }
+
+/** A photo or voice note attached to a record (only site inspections for now). */
+export type FileKind = "photo" | "voice";
+export interface StoredFile {
+  id: string;
+  entity: EntityName;
+  recordId: string;
+  kind: FileKind;
+  mime: string;
+  name: string;
+  size: number;
+  durationS?: number;
+  createdBy: string;
+  createdTime: string;
+  archived: boolean;
+}
+export type NewFile = Omit<StoredFile, "id" | "createdTime" | "archived">;
+
+/**
+ * Where ATLAS keeps photos and voice notes. The database and demo stores have
+ * one; Airtable mode does not. Files are never hard-deleted, only archived.
+ */
+export interface FileStore {
+  listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]>;
+  getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null>;
+  addFile(meta: NewFile, bytes: Buffer): Promise<StoredFile>;
+  setFileArchived(id: string, archived: boolean): Promise<StoredFile | null>;
+}
+
+export function fileStoreOf(repo: Repository): FileStore | null {
+  const r = repo as Partial<FileStore>;
+  return typeof r.listFiles === "function" && typeof r.addFile === "function" ? (repo as unknown as FileStore) : null;
+}
+
+export function newFileId(): string {
+  return "fil" + newRecordId().slice(3);
+}

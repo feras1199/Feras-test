@@ -7,7 +7,51 @@ type Result = { entity: string; added: number; replaced: number; skipped: number
 
 const SOURCE_LABEL = { postgres: "ATLAS database", airtable: "Airtable (old base, read and write)", memory: "Demo data (fictional, resets on restart)" } as const;
 
-export function DataAdmin({ source, counts }: { source: keyof typeof SOURCE_LABEL; counts: { label: string; n: number }[] }) {
+function AirtablePull({ serverToken, libraryCount }: { serverToken: boolean; libraryCount: number }) {
+  const router = useRouter();
+  const [token, setToken] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<Result[] | null>(null);
+
+  async function pull() {
+    setBusy(true); setError(null); setDone(null);
+    try {
+      const res = await fetch("/api/admin/airtable-pull", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: token.trim() || undefined, mode: "add-new", confirm: true }) }).catch(() => null);
+      const json = res ? await res.json().catch(() => ({})) : {};
+      if (!res?.ok) throw new Error(json.issues?.[0]?.message ?? json.error ?? "Couldn't reach the server");
+      setDone(json.results); setToken("");
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const label: Record<string, string> = { costItems: "Cost Library items", productivity: "productivity rates", omissionRules: "omission rules" };
+  return (
+    <section className="card p-5 lg:col-span-2" aria-label="Price lists from Airtable">
+      <h2 className="mb-1 font-semibold">Get your price lists from Airtable</h2>
+      <p className="mb-3 text-sm text-stone-700">
+        {libraryCount > 0 ? `Your Cost Library has ${libraryCount.toLocaleString("en-AU")} items. Run this again to add anything new from Airtable; items already in ATLAS are kept as they are.` : "Your Cost Library is empty. This copies your Cost Library, productivity rates and omission rules from Airtable in one go."} Airtable is only read, never changed.
+      </p>
+      {!serverToken && (
+        <ol className="mb-3 list-decimal space-y-1 pl-5 text-sm text-stone-700">
+          <li>Open <a className="text-forest-700 underline" href="https://airtable.com/create/tokens" target="_blank" rel="noreferrer">airtable.com/create/tokens</a> and tap <b>Create token</b>.</li>
+          <li>Name it ATLAS. Under scopes add <b>data.records:read</b>. Under access add the <b>Whispering Leaf</b> base. Tap Create, then copy the token.</li>
+          <li>Paste it below. ATLAS uses it once and doesn&apos;t keep it. You can delete the token in Airtable afterwards.</li>
+        </ol>
+      )}
+      {!serverToken && <label className="block text-sm"><span className="label">Airtable token</span><input className="input font-mono" value={token} onChange={(e) => setToken(e.target.value)} placeholder="pat…" autoComplete="off" autoCapitalize="off" spellCheck={false} /></label>}
+      <button className="btn-primary mt-3" disabled={busy || (!serverToken && token.trim().length < 20)} onClick={pull}>{busy ? "Copying from Airtable…" : "Copy price lists from Airtable"}</button>
+      {done && <p role="status" className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">Done: {done.map((r) => `${r.added} ${label[r.entity] ?? r.entity} added`).join(", ")}{done.some((r) => r.skipped) ? `; ${done.reduce((n, r) => n + r.skipped, 0)} were already here and kept` : ""}.</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+    </section>
+  );
+}
+
+export function DataAdmin({ source, counts, serverToken = false, libraryCount = 0 }: { source: keyof typeof SOURCE_LABEL; counts: { label: string; n: number }[]; serverToken?: boolean; libraryCount?: number }) {
   const router = useRouter();
   const [file, setFile] = useState<unknown>(null);
   const [fileName, setFileName] = useState("");
@@ -47,6 +91,7 @@ export function DataAdmin({ source, counts }: { source: keyof typeof SOURCE_LABE
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+      {canImport && <AirtablePull serverToken={serverToken} libraryCount={libraryCount} />}
       <section className="card p-5">
         <h2 className="mb-1 font-semibold">Where your data lives</h2>
         <p className="text-sm text-stone-700">{SOURCE_LABEL[source]} · {total.toLocaleString("en-AU")} records</p>
@@ -59,7 +104,7 @@ export function DataAdmin({ source, counts }: { source: keyof typeof SOURCE_LABE
 
       <section className="card p-5">
         <h2 className="mb-1 font-semibold">Download a backup</h2>
-        <p className="mb-3 text-sm text-stone-700">One file with every record ATLAS holds. Keep it somewhere safe, such as Google Drive. It can be imported back here. It includes customer details and internal costs, so don&apos;t share it.</p>
+        <p className="mb-3 text-sm text-stone-700">One file with every record ATLAS holds. Keep it somewhere safe, such as Google Drive. It can be imported back here. It includes customer details and internal costs, so don&apos;t share it. Photos and voice notes aren&apos;t in this file yet.</p>
         <a href="/api/admin/export" className="btn-primary inline-flex" download>Download backup (.json)</a>
       </section>
 

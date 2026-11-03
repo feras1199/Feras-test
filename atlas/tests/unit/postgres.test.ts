@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { PostgresRepository } from "@/lib/data/postgres/repository";
+import { pullLibrariesFromAirtable } from "@/lib/server/airtablePull";
+import { tableId } from "@/lib/data/mapper";
 
 // Runs against a real database only when TEST_DATABASE_URL is set (it drops and recreates the ATLAS tables there).
 const url = process.env.TEST_DATABASE_URL;
@@ -10,7 +12,7 @@ describe.skipIf(!url)("PostgresRepository", () => {
   let repo: PostgresRepository;
   beforeAll(async () => {
     pool = new Pool({ connectionString: url });
-    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users");
+    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files");
     repo = new PostgresRepository(pool);
   });
   afterAll(async () => { await pool.end(); });
@@ -73,5 +75,34 @@ describe.skipIf(!url)("PostgresRepository", () => {
     expect(c!.customerId).toBe("recDemoCust000001");
     expect(await repo.updateUser("usrNope", { name: "X" })).toBeNull();
     expect((await repo.listUsers()).map((x) => x.email)).toEqual(["Jo.Demo@example.com"]);
+  });
+
+  it("keeps photos and voice notes, and archives instead of deleting", async () => {
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    const f = await repo.addFile({ entity: "inspections", recordId: "recDemoInsp000001", kind: "photo", mime: "image/jpeg", name: "Photo", size: bytes.length, createdBy: "Test" }, bytes);
+    expect(f.id).toMatch(/^fil/);
+    const got = await repo.getFile(f.id);
+    expect(Buffer.compare(got!.bytes, bytes)).toBe(0);
+    expect(got!.meta).toMatchObject({ kind: "photo", recordId: "recDemoInsp000001", archived: false });
+    expect((await repo.setFileArchived(f.id, true))!.archived).toBe(true);
+    expect((await repo.listFiles("inspections", "recDemoInsp000001")).map((x) => x.archived)).toEqual([true]);
+    expect(await repo.getFile("filNope")).toBeNull();
+  });
+
+  it("pulls the price lists straight from Airtable, read only, and re-running adds nothing twice", async () => {
+    const methods: string[] = [];
+    const page = (id: string) => ({ records: [{ id, createdTime: "2025-01-01T00:00:00.000Z", fields: {} }] });
+    const fake = (async (url: string, init?: RequestInit) => {
+      methods.push(init?.method ?? "GET");
+      const body = url.includes(tableId("costItems")) ? page("recDemoPullCost001") : url.includes(tableId("productivity")) ? page("recDemoPullProd001") : page("recDemoPullOmit001");
+      return new Response(JSON.stringify(body), { status: 200 });
+    }) as unknown as typeof fetch;
+    const r1 = await pullLibrariesFromAirtable(repo, { token: "patTEST", by: "test", fetchImpl: fake });
+    expect(r1.map((r) => [r.entity, r.added])).toEqual([["costItems", 1], ["productivity", 1], ["omissionRules", 1]]);
+    const r2 = await pullLibrariesFromAirtable(repo, { token: "patTEST", by: "test", fetchImpl: fake });
+    expect(r2.every((r) => r.added === 0 && r.skipped === 1)).toBe(true);
+    expect(new Set(methods)).toEqual(new Set(["GET"]));
+    const denied = (async () => new Response(JSON.stringify({ error: { type: "INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND" } }), { status: 403 })) as unknown as typeof fetch;
+    await expect(pullLibrariesFromAirtable(repo, { token: "patTEST", by: "test", fetchImpl: denied })).rejects.toThrow(/data.records:read/);
   });
 });

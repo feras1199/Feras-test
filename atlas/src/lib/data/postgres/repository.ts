@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import { ENTITIES, type EntityName, type Rec } from "../entities";
-import { applyListOptions, newRecordId, validateWrite, type ListOptions, type Repository } from "../repository";
+import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
 
 /**
  * ATLAS's own database. One table holds every record as JSON, keyed by entity
@@ -44,6 +44,21 @@ CREATE TABLE IF NOT EXISTS atlas_imports (
   mode        text        NOT NULL,
   summary     jsonb       NOT NULL
 );
+CREATE TABLE IF NOT EXISTS atlas_files (
+  id           text        PRIMARY KEY,
+  entity       text        NOT NULL,
+  record_id    text        NOT NULL,
+  kind         text        NOT NULL,
+  mime         text        NOT NULL,
+  name         text        NOT NULL,
+  size         integer     NOT NULL,
+  duration_s   real,
+  created_by   text        NOT NULL,
+  created_time timestamptz NOT NULL DEFAULT now(),
+  archived     boolean     NOT NULL DEFAULT false,
+  bytes        bytea       NOT NULL
+);
+CREATE INDEX IF NOT EXISTS atlas_files_record ON atlas_files (entity, record_id);
 `;
 
 type Row = { id: string; created_time: Date; data: Record<string, unknown> };
@@ -67,10 +82,14 @@ export interface DbUser { id: string; email: string; name: string; role: string;
 type UserRow = { id: string; email: string; name: string; role: string; customer_id: string | null; password_hash: string; active: boolean };
 const toUser = (r: UserRow): DbUser => ({ id: r.id, email: r.email, name: r.name, role: r.role, customerId: r.customer_id ?? undefined, passwordHash: r.password_hash, active: r.active });
 
+type FileRow = { id: string; entity: EntityName; record_id: string; kind: StoredFile["kind"]; mime: string; name: string; size: number; duration_s: number | null; created_by: string; created_time: Date; archived: boolean };
+const FILE_COLS = "id, entity, record_id, kind, mime, name, size, duration_s, created_by, created_time, archived";
+const toFile = (r: FileRow): StoredFile => ({ id: r.id, entity: r.entity, recordId: r.record_id, kind: r.kind, mime: r.mime, name: r.name, size: r.size, durationS: r.duration_s ?? undefined, createdBy: r.created_by, createdTime: r.created_time.toISOString(), archived: r.archived });
+
 export type ImportMode = "add-new" | "replace";
 export interface ImportResult { entity: EntityName; added: number; replaced: number; skipped: number }
 
-export class PostgresRepository implements Repository {
+export class PostgresRepository implements Repository, FileStore {
   readonly source = "postgres" as const;
   private ready: Promise<void> | null = null;
 
@@ -214,5 +233,32 @@ export class PostgresRepository implements Repository {
     if (!cols.length) return (await this.listUsers()).find((u) => u.id === id) ?? null;
     const { rows } = await this.pool.query<UserRow>(`UPDATE atlas_users SET ${cols.join(", ")}, updated_time = now() WHERE id = $1 RETURNING *`, vals);
     return rows[0] ? toUser(rows[0]) : null;
+  }
+
+  async listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files WHERE entity = $1 AND record_id = $2 ORDER BY created_time, id`, [entity, recordId]);
+    return rows.map(toFile);
+  }
+
+  async getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<FileRow & { bytes: Buffer }>(`SELECT ${FILE_COLS}, bytes FROM atlas_files WHERE id = $1`, [id]);
+    return rows[0] ? { meta: toFile(rows[0]), bytes: rows[0].bytes } : null;
+  }
+
+  async addFile(m: NewFile, bytes: Buffer): Promise<StoredFile> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<FileRow>(
+      `INSERT INTO atlas_files (id, entity, record_id, kind, mime, name, size, duration_s, created_by, bytes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING ${FILE_COLS}`,
+      [newFileId(), m.entity, m.recordId, m.kind, m.mime, m.name, m.size, m.durationS ?? null, m.createdBy, bytes],
+    );
+    return toFile(rows[0]!);
+  }
+
+  async setFileArchived(id: string, archived: boolean): Promise<StoredFile | null> {
+    await this.ensureSchema();
+    const { rows } = await this.pool.query<FileRow>(`UPDATE atlas_files SET archived = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, archived]);
+    return rows[0] ? toFile(rows[0]) : null;
   }
 }

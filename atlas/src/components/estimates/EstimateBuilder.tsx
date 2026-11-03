@@ -313,7 +313,7 @@ function LineForm({ estimateId, line, costItems, gstRate, owner, measurements, o
           />
           {!costItemId && (library.length > 0
             ? <p id={`${listId}-hint`} className="mt-1 text-xs text-stone-500">Start typing to search your Cost Library ({library.length} items).</p>
-            : <p id={`${listId}-hint`} className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">Your Cost Library is empty, so there&apos;s nothing to suggest yet. {owner ? <>Import it in <Link href="/settings/data" className="underline">Settings → Backup and import</Link>, or tick “Save to Cost Library” below as you go.</> : "Ask the owner to import it, or tick “Save to Cost Library” below as you go."}</p>)}
+            : <p id={`${listId}-hint`} className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">Your Cost Library is empty, so there&apos;s nothing to suggest yet. {owner ? <>Copy it from Airtable in <Link href="/settings/data" className="underline">Settings → Backup and import</Link>, or tick “Save to Cost Library” below as you go.</> : "Ask the owner to copy it from Airtable, or tick “Save to Cost Library” below as you go."}</p>)}
           {costItemId && <p className="mt-1 text-xs text-emerald-700">From your Cost Library. Edit the price below for this quote only, if needed.</p>}
           {showList && library.length > 0 && (
             <ul id={`${listId}-list`} role="listbox" aria-label="Cost Library matches" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-stone-200 bg-white shadow-lg">

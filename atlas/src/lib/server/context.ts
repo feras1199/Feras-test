@@ -39,6 +39,8 @@ export function getRepo(): Repository {
     setAuditStore({ write: (e) => repo.writeAudit(e), read: (n) => repo.readAudit(n) });
     setUserStore({ list: async () => (await repo.listUsers()) as AtlasUser[] });
     g.__atlasRepo = repo;
+    // Loaded lazily to keep context.ts free of import cycles.
+    void import("./airtablePull").then((m) => m.autoSeedLibraries(repo)).catch(() => undefined);
   } else if (dataSource() === "airtable") {
     g.__atlasRepo = new AirtableRepository(process.env.AIRTABLE_TOKEN ?? "", process.env.AIRTABLE_BASE_ID ?? "");
   } else {

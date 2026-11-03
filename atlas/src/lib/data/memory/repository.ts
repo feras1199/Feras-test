@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { EntityName, Rec } from "../entities";
-import { applyListOptions, newRecordId, validateWrite, type ListOptions, type Repository } from "../repository";
+import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
 import { buildFixtures } from "./fixtures";
 
 export { newRecordId };
@@ -13,9 +13,11 @@ type Store = { [E in EntityName]?: Rec<E>[] };
  * the end-to-end run. It applies the same read-only rules as Airtable so code
  * cannot rely on writing calculated fields. Optional JSON persistence for dev.
  */
-export class MemoryRepository implements Repository {
+export class MemoryRepository implements Repository, FileStore {
   readonly source = "memory" as const;
   private store: Store;
+  /** Photos and voice notes; kept in memory only, so they reset on restart like the rest of the demo. */
+  private files = new Map<string, { meta: StoredFile; bytes: Buffer }>();
 
   constructor(private persistPath?: string, seed: Store = buildFixtures()) {
     if (persistPath && fs.existsSync(persistPath)) {
@@ -62,5 +64,27 @@ export class MemoryRepository implements Repository {
     rows[i] = { ...rows[i]!, ...rest } as Rec<E>;
     this.save();
     return structuredClone(rows[i]!);
+  }
+
+  async listFiles(entity: EntityName, recordId: string): Promise<StoredFile[]> {
+    return [...this.files.values()].filter((f) => f.meta.entity === entity && f.meta.recordId === recordId).map((f) => ({ ...f.meta }));
+  }
+
+  async getFile(id: string) {
+    const f = this.files.get(id);
+    return f ? { meta: { ...f.meta }, bytes: f.bytes } : null;
+  }
+
+  async addFile(m: NewFile, bytes: Buffer): Promise<StoredFile> {
+    const meta: StoredFile = { ...m, id: newFileId(), createdTime: new Date().toISOString(), archived: false };
+    this.files.set(meta.id, { meta, bytes });
+    return { ...meta };
+  }
+
+  async setFileArchived(id: string, archived: boolean): Promise<StoredFile | null> {
+    const f = this.files.get(id);
+    if (!f) return null;
+    f.meta.archived = archived;
+    return { ...f.meta };
   }
 }

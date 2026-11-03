@@ -41,6 +41,11 @@ Anyone added this way can change their own password under **My account**. The ow
 - To remove someone, delete their entry or add `"active": false`, then restart. They are signed out on their next click, even if their cookie hasn't expired. Changing someone's role or linked customer also signs them out.
 - Sessions last 12 hours.
 
+## Price lists and site photos
+
+- **Price lists from Airtable.** Settings > Backup and import > *Get your price lists from Airtable*. Paste an Airtable token with the `data.records:read` scope on the Whispering Leaf base and tap *Copy price lists from Airtable*. It copies the Cost Library, Productivity Rates and Omission Rules. Airtable is only read; the token is used once and not stored. Running it again only adds items ATLAS doesn't have yet, so edits made in ATLAS are kept. Choosing the exported `.json` file under *Import data* does the same without a token.
+- **Photos and voice notes on site visits.** Open a site inspection. *Take or add photos* opens the camera or photo library; photos are shrunk on the phone (longest side 1600 px) before upload. *Record a voice note* records from the phone's microphone (the browser asks for permission the first time) until *Stop and save*, up to 15 minutes. They are stored in ATLAS's own database, only staff who can see inspections can open them, and *Remove* archives rather than deletes. They are not in the backup download yet, and voice notes are not transcribed yet.
+
 ## Business settings
 
 Defaults match what the Airtable base already uses: GST 10%, markup 30%, marketing commission 6% of the invoice inc GST (absorbed, not added to the price), margin band 15–45%, quotes valid 30 days, default payment schedule 10/30/30/20/10, deposit warning above 10%, payments due 7 days after raising, labour $45 per person-hour, 8-hour day.
