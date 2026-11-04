@@ -60,6 +60,11 @@ On a site inspection, every voice note can be turned into text and the AI fills 
 - The text of each voice note is under *What was said*. Every write-up is in the audit log.
 - Rough cost: transcription is about US$0.20–0.40 per hour of audio at published third-party price summaries (Nov 2026; check the provider's own pricing page). Each write-up is one Claude request of a few thousand tokens; check Anthropic's pricing page for the current rate.
 
+## Suggestions while typing
+
+- **Street address**: start typing (e.g. "135 Phil") and pick the address; the suburb fills in too. The typed text goes to Google (with `GOOGLE_MAPS_API_KEY`) or, without a key, to the free OpenStreetMap lookup. Nothing else about the customer is sent. Settings shows which one is in use. Google gives a monthly allowance of free lookups and then charges about US$2.83 per 1,000 (check Google's current price list); a small business typing a few addresses a day stays in or near the free allowance. To stop it, set `ATLAS_ADDRESS_LOOKUP=off`.
+- **Other boxes** suggest what's been typed before, most used first, plus a short starter list: suburb, "What do they want done?" (tap a job to add it), next action, measurement area, task, assigned to, and the Cost Library's unit, category and supplier. You can always type something new.
+
 ## Contact buttons
 
 Customer, inspection and project pages show **Call**, **WhatsApp**, **Email** and **Map** buttons. Australian numbers are converted for WhatsApp (0412… becomes +61 412…). They are hidden for customers marked do-not-contact, except Map.

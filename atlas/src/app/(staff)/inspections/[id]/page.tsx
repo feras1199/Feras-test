@@ -9,6 +9,7 @@ import { fileStoreOf } from "@/lib/data/repository";
 import { formatTime, measurementQuantity } from "@/lib/domain/inspections";
 import { formatDate } from "@/lib/dates";
 import { can } from "@/lib/auth/roles";
+import { loadSuggestions } from "@/lib/server/suggestions";
 import { getRepo, requirePage } from "@/lib/server/context";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
       </div>
       <InspectionEditor
         key={insp.aiFilledJson ?? "manual"}
+        areas={(await loadSuggestions(repo, ["areas"])).areas}
         editable={can(s.role, "inspections.edit")}
         inspection={{ id: insp.id, complete: !!insp.complete, scope: insp.scope ?? "", accessDifficulty: insp.accessDifficulty ?? "", accessWidthM: insp.accessWidthM ?? null, existingConditions: insp.existingConditions ?? "", slopeLevels: insp.slopeLevels ?? "", drainage: insp.drainage ?? "", services: insp.services ?? "", risks: insp.risks ?? "", priorities: insp.priorities ?? "", notes: insp.notes ?? "", budgetFit: insp.budgetFit ?? "" }}
         measurements={measurements.map((m) => ({ id: m.id, zone: m.zone ?? "", workType: m.workType ?? "Other", unit: m.unit ?? "m²", method: m.method ?? "Manual onsite", lengthM: m.lengthM ?? null, widthM: m.widthM ?? null, heightM: m.heightM ?? null, measuredQuantity: m.measuredQuantity ?? null, confidence: m.confidence ?? "Confirmed onsite", verified: !!m.verified, quantity: measurementQuantity(m) }))}

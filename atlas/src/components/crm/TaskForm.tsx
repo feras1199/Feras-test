@@ -1,10 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SuggestInput } from "@/components/ui/SuggestInput";
 
 const TYPES = ["Lead Follow-up", "Site Visit", "Estimate", "Quote Review", "Customer Call", "Material / Supplier", "Construction", "Payment", "Variation", "Customer Update", "Management", "Other"];
 
-export function TaskForm({ customers, customerId }: { customers: { id: string; label: string }[]; customerId?: string }) {
+export function TaskForm({ customers, customerId, suggest = { taskTitles: [], people: [] } }: { customers: { id: string; label: string }[]; customerId?: string; suggest?: { taskTitles: string[]; people: string[] } }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +24,12 @@ export function TaskForm({ customers, customerId }: { customers: { id: string; l
   }
   return (
     <form onSubmit={onSubmit} className="card space-y-4 p-5">
-      <div><label htmlFor="title" className="label">Task *</label><input id="title" name="title" required minLength={3} className="input" /></div>
+      <div><label htmlFor="title" className="label">Task *</label><SuggestInput id="title" name="title" required minLength={3} options={suggest.taskTitles} showOnFocus={false} /></div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div><label htmlFor="taskType" className="label">Type</label><select id="taskType" name="taskType" className="input">{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
         <div><label htmlFor="priority" className="label">Priority</label><select id="priority" name="priority" defaultValue="Normal" className="input">{["Critical", "High", "Normal", "Low"].map((t) => <option key={t}>{t}</option>)}</select></div>
         <div><label htmlFor="dueDate" className="label">Due</label><input id="dueDate" name="dueDate" type="date" className="input" /></div>
-        <div><label htmlFor="assignedTo" className="label">Assigned to</label><input id="assignedTo" name="assignedTo" placeholder="You" className="input" /></div>
+        <div><label htmlFor="assignedTo" className="label">Assigned to</label><SuggestInput id="assignedTo" name="assignedTo" placeholder="You" options={suggest.people} /></div>
         <div className="sm:col-span-2"><label htmlFor="customerId" className="label">Customer (optional)</label><select id="customerId" name="customerId" defaultValue={customerId ?? ""} className="input"><option value="">None</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
       </div>
       <div><label htmlFor="notes" className="label">Notes</label><textarea id="notes" name="notes" rows={3} className="input py-2" /></div>

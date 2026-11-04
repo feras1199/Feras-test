@@ -1,10 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PhraseChips, SuggestInput } from "@/components/ui/SuggestInput";
 
 const SOURCES = ["Word of Mouth", "Hi Pages", "Meta Advertising", "Website", "Google", "Referral", "Social Media", "Other"];
 
-export function EnquiryForm({ customers, customerId }: { customers: { id: string; label: string }[]; customerId?: string }) {
+export function EnquiryForm({ customers, customerId, suggest = { services: [], nextActions: [] } }: { customers: { id: string; label: string }[]; customerId?: string; suggest?: { services: string[]; nextActions: string[] } }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function EnquiryForm({ customers, customerId }: { customers: { id: string
       <div>
         <label htmlFor="serviceRequested" className="label">What do they want done? *</label>
         <textarea id="serviceRequested" name="serviceRequested" required minLength={3} rows={3} className="input py-2" />
+        <PhraseChips targetId="serviceRequested" phrases={suggest.services} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -61,7 +63,7 @@ export function EnquiryForm({ customers, customerId }: { customers: { id: string
         </div>
         <div>
           <label htmlFor="nextAction" className="label">Next action</label>
-          <input id="nextAction" name="nextAction" placeholder="First contact" className="input" />
+          <SuggestInput id="nextAction" name="nextAction" placeholder="First contact" options={suggest.nextActions} />
         </div>
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}

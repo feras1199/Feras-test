@@ -1,4 +1,5 @@
 "use client";
+import { SuggestInput } from "@/components/ui/SuggestInput";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,7 +18,7 @@ async function send(url: string, method: string, body: unknown) {
 }
 const num = (v: FormDataEntryValue | null) => (v === null || String(v).trim() === "" ? null : Number(v));
 
-export function InspectionEditor({ inspection: i, measurements, editable }: { inspection: Insp; measurements: M[]; editable: boolean }) {
+export function InspectionEditor({ inspection: i, measurements, editable, areas = [] }: { inspection: Insp; measurements: M[]; editable: boolean; areas?: string[] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,7 +92,7 @@ export function InspectionEditor({ inspection: i, measurements, editable }: { in
           }}>
             <p className="text-sm font-semibold">Add a measurement</p>
             <div className="grid gap-3 sm:grid-cols-3">
-              <label className="text-sm sm:col-span-2"><span className="label">Area *</span><input name="zone" required className="input" placeholder="e.g. Rear patio" /></label>
+              <label className="text-sm sm:col-span-2"><span className="label">Area *</span><SuggestInput id={`zone-${i.id}`} name="zone" required options={areas} placeholder="e.g. Rear patio" /></label>
               <label className="text-sm"><span className="label">Work</span><select name="workType" className="input">{WORK.map((w) => <option key={w}>{w}</option>)}</select></label>
               <label className="text-sm"><span className="label">Unit</span><select className="input" value={unit} onChange={(e) => setUnit(e.target.value)}>{UNITS.map((u) => <option key={u}>{u}</option>)}</select></label>
               <label className="text-sm"><span className="label">Length (m)</span><input name="lengthM" inputMode="decimal" className="input" /></label>

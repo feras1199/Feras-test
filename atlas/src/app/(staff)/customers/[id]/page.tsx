@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/dates";
 import { formatAud } from "@/lib/finance/money";
 import { can } from "@/lib/auth/roles";
 import { getRepo, requirePage } from "@/lib/server/context";
+import { loadSuggestions } from "@/lib/server/suggestions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     return (
       <>
         <PageHeader title={`Edit ${c.name}`} />
-        <CustomerForm id={c.id} initial={{ name: c.name ?? "", phone: c.phone ?? "", email: c.email ?? "", address: c.address ?? "", suburb: c.suburb ?? "", preferredContact: c.preferredContact ?? "", customerType: c.customerType ?? "", leadSource: c.leadSource ?? "", serviceRequested: c.serviceRequested ?? "" }} />
+        <CustomerForm id={c.id} initial={{ name: c.name ?? "", phone: c.phone ?? "", email: c.email ?? "", address: c.address ?? "", suburb: c.suburb ?? "", preferredContact: c.preferredContact ?? "", customerType: c.customerType ?? "", leadSource: c.leadSource ?? "", serviceRequested: c.serviceRequested ?? "" }} suggest={await loadSuggestions(repo, ["suburbs", "services"])} />
       </>
     );
   }

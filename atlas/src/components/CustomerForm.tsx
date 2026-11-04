@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AddressInput, PhraseChips, SuggestInput } from "@/components/ui/SuggestInput";
 
 type Dupe = { id: string; name: string; reasons: string[]; strength: "strong" | "possible" };
 type Values = Partial<Record<"name" | "phone" | "email" | "address" | "suburb" | "preferredContact" | "customerType" | "leadSource" | "serviceRequested", string>>;
@@ -9,7 +10,8 @@ const CONTACT = ["Phone", "Email", "SMS", "WhatsApp", "No Preference"];
 const TYPES = ["Residential", "Commercial", "Government", "Other", "Couple", "Family", "Single"];
 const SOURCES = ["Word of Mouth", "Hi Pages", "Meta Advertising", "Website", "Google", "Referral", "Social Media"];
 
-export function CustomerForm({ id, initial = {} }: { id?: string; initial?: Values }) {
+export function CustomerForm({ id, initial = {}, suggest = { suburbs: [], services: [] } }: { id?: string; initial?: Values; suggest?: { suburbs: string[]; services: string[] } }) {
+  const [suburb, setSuburb] = useState(initial.suburb ?? "");
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,14 +63,23 @@ export function CustomerForm({ id, initial = {} }: { id?: string; initial?: Valu
         {field("phone", "Phone", "tel")}
         {field("email", "Email", "email")}
         {select("preferredContact", "Preferred contact", CONTACT)}
-        {field("address", "Street address")}
-        {field("suburb", "Suburb")}
+        <div>
+          <label htmlFor="address" className="label">Street address</label>
+          <AddressInput id="address" name="address" defaultValue={initial.address ?? ""} aria-invalid={!!issues.address} onSuburb={setSuburb} />
+          {issues.address && <p className="mt-1 text-sm text-red-700">{issues.address}</p>}
+        </div>
+        <div>
+          <label htmlFor="suburb" className="label">Suburb</label>
+          <SuggestInput id="suburb" name="suburb" value={suburb} onValueChange={setSuburb} options={suggest.suburbs} showOnFocus={false} aria-invalid={!!issues.suburb} />
+          {issues.suburb && <p className="mt-1 text-sm text-red-700">{issues.suburb}</p>}
+        </div>
         {select("customerType", "Customer type", TYPES)}
         {select("leadSource", "Lead source", SOURCES)}
       </div>
       <div>
         <label htmlFor="serviceRequested" className="label">What do they want done?</label>
         <textarea id="serviceRequested" name="serviceRequested" defaultValue={initial.serviceRequested ?? ""} rows={3} className="input py-2" />
+        <PhraseChips targetId="serviceRequested" phrases={suggest.services} />
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
       {dupes && (

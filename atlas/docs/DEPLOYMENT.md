@@ -50,6 +50,8 @@ Once the additive "Atlas Audit Log" table is approved in Airtable, the audit log
 | `ATLAS_LEGACY_PAYMENT_AUTOMATIONS_OFF` | no | Set to `1` **only after** the old Airtable payment automations are turned off. Until then, accepting a quote in ATLAS is blocked in Airtable mode so payment stages are never created twice. |
 | `ANTHROPIC_API_KEY` | no | Turns on "Ask ATLAS" and the AI write-up of site visit voice notes. Without it those features say they are not set up. |
 | `DEEPGRAM_API_KEY` | no | Speech-to-text for voice notes (recommended: labels who is speaking). Model `nova-3` unless `ATLAS_DEEPGRAM_MODEL` is set. |
+| `GOOGLE_MAPS_API_KEY` | no | Address suggestions in the Street address box (Google Places API (New), Autocomplete). Restrict the key to the Places API (New). Without it ATLAS uses the free OpenStreetMap lookup (Photon), which is less complete for Australian house numbers. |
+| `ATLAS_ADDRESS_LOOKUP` | no | Set to `off` to stop sending typed addresses to any outside service. |
 | `OPENAI_API_KEY` | no | Alternative speech-to-text if there is no Deepgram key. Model `gpt-4o-mini-transcribe` unless `ATLAS_TRANSCRIBE_MODEL` is set. Used for transcription only. |
 | `ATLAS_AI_DEMO` | no | `1` turns on labelled stand-ins for transcription and the write-up, **only** in demo-data mode, so the flow can be tested without keys. Ignored with real data. |
 | `ATLAS_AI_MODEL` | no | Defaults to `claude-opus-5-5`. |
