@@ -1,5 +1,5 @@
 # ATLAS on Render with its own Postgres database (live business data).
-# Deploying this creates a paid database (plan 0.1c-256mb) and a free web
+# Deploying this creates a paid database (plan 0.1c-256mb, US$6/month) and an always-on web
 # service. You'll be asked for the owner email and password during setup.
 # After the first deploy: sign in, open Settings > Backup and import, and
 # import your Airtable export file.
@@ -8,7 +8,7 @@ services:
     name: atlas
     runtime: node
     rootDir: atlas
-    plan: free            # sleeps when idle; switch to starter to keep it awake
+    plan: starter         # always on (US$7/month); the free plan sleeps after 15 idle minutes
     region: singapore     # closest Render region to Sydney
     buildCommand: npm ci && npm run build
     startCommand: npm start

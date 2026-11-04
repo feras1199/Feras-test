@@ -14,7 +14,7 @@ ATLAS can keep all its data in its own Postgres database (`ATLAS_DATA_SOURCE=pos
 2. Settings → **Backup and import** → choose the Airtable export file → **Check the file** → **Import new records**.
 3. Download a backup from the same screen and keep it somewhere safe.
 
-**Cost and backups (checked Nov 2026, confirm on Render's pricing page):** a free Render Postgres is deleted 30 days after creation and has no backups, so the blueprint uses the smallest paid plan (`0.1c-256mb`). Render quoted about US$13/month for a Starter web service plus this database in July 2026. Whatever the plan includes, use the **Download backup** button regularly (weekly at least); the file can be imported back into a fresh database.
+**Cost and backups (checked 4 Nov 2026 on render.com/pricing):** the blueprint uses a Starter web service (US$7/month, always on; the free plan sleeps after 15 idle minutes and takes about a minute to wake) and the smallest paid database (`0.1c-256mb`, US$6/month, 1 GB included then US$0.30/GB). A free Render Postgres is deleted 30 days after creation and has no backups, so don't use it for real data. Paid databases get point-in-time recovery (the last 3 days on the Hobby workspace plan, 7 days on Pro). On top of that, use the **Download backup** button weekly; the file can be imported back into a fresh database. Logins are not in the file.
 
 **How data is stored.** One table, `atlas_records(entity, id, created_time, updated_time, data jsonb)`, holds every record; the field list stays in `src/lib/data/entities.ts`, so adding a field needs no database migration. `atlas_audit` keeps the audit log permanently and `atlas_imports` records each import. Tables are created automatically on first use.
 
