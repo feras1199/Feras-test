@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { addressProvider, demoSuggest, googleSuggest, lookupWorthy, parseGoogle, parsePhoton, photonSuggest } from "@/lib/domain/address";
+import { addressProvider, demoSuggest, googleSuggest, lookupWorthy, parseGoogle, parsePhoton, photonSuggest, splitAddress } from "@/lib/domain/address";
 import { firstPhrase, matchSuggestions, rankDistinct } from "@/lib/domain/suggestions";
 
 describe("suggestion lists", () => {
@@ -23,10 +23,11 @@ describe("suggestion lists", () => {
 });
 
 describe("address suggestions", () => {
-  it("uses Google with a key, the free lookup without one, demo addresses in demo mode, or nothing when switched off", () => {
+  it("uses Google with a key, the free lookup without one (demo site too), made-up addresses only for tests, or nothing when switched off", () => {
     expect(addressProvider({ GOOGLE_MAPS_API_KEY: "k", ATLAS_DATA_SOURCE: "postgres" } as never)).toBe("google");
     expect(addressProvider({ ATLAS_DATA_SOURCE: "postgres" } as never)).toBe("photon");
-    expect(addressProvider({} as never)).toBe("demo");
+    expect(addressProvider({} as never)).toBe("photon");
+    expect(addressProvider({ ATLAS_ADDRESS_DEMO: "1" } as never)).toBe("demo");
     expect(addressProvider({ GOOGLE_MAPS_API_KEY: "k", ATLAS_ADDRESS_LOOKUP: "off" } as never)).toBe("off");
   });
 
@@ -58,17 +59,45 @@ describe("address suggestions", () => {
     await expect(googleSuggest("135 phil", "BAD", fetchImpl as never)).rejects.toThrow(/key was rejected/);
   });
 
-  it("reads OpenStreetMap results, keeps Australia only and drops repeats", async () => {
-    const f = (p: Record<string, string>) => ({ properties: p });
-    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ features: [
-      f({ countrycode: "AU", housenumber: "135", street: "Phillip Street", locality: "Waterloo", city: "Sydney", state: "New South Wales", postcode: "2017" }),
-      f({ countrycode: "AU", housenumber: "135", street: "Phillip Street", locality: "Waterloo", city: "Sydney", state: "New South Wales", postcode: "2017" }),
-      f({ countrycode: "NZ", housenumber: "135", street: "Phillip Street", city: "Auckland" }),
-    ] })));
-    const out = await photonSuggest("135 phillip", fetchImpl as never);
-    expect(out).toEqual([{ label: "135 Phillip Street, Waterloo NSW 2017", street: "135 Phillip Street", suburb: "Waterloo", state: "NSW", postcode: "2017" }]);
-    expect(String((fetchImpl.mock.calls[0] as unknown as [string])[0])).toMatch(/^https:\/\/photon\.komoot\.io\/api\/\?q=135%20phillip/);
-    expect(parsePhoton(f({ countrycode: "AU" }))).toBeNull();
+  it("splits off the house number and spells out road abbreviations", () => {
+    expect(splitAddress("135 Phillip St, Waterloo")).toEqual({ number: "135", rest: "Phillip Street Waterloo" });
+    expect(splitAddress("2/14a sample rd")).toEqual({ number: "2/14A", rest: "sample Road" });
+    expect(splitAddress("Phillip")).toEqual({ number: "", rest: "Phillip" });
+    expect(splitAddress("13")).toEqual({ number: "13", rest: "" });
+  });
+
+  // Shapes copied from live photon.komoot.io answers for "Phillip St Waterl" (4 Nov 2026).
+  const f = (p: Record<string, string>) => ({ properties: { countrycode: "AU", state: "New South Wales", city: "Sydney", ...p } });
+  const LIVE = [
+    f({ osm_key: "highway", type: "house", name: "Elizabeth St at Phillip St", street: "Elizabeth Street", district: "Waterloo", postcode: "2017" }),
+    f({ osm_key: "highway", type: "street", name: "Phillip Street", district: "Waterloo", postcode: "2017" }),
+    f({ osm_key: "highway", type: "street", name: "Phillip Street", district: "Waterloo", postcode: "2017" }),
+    f({ osm_key: "highway", type: "street", name: "Phillip Street", locality: "Wynyard", district: "Sydney", postcode: "2000" }),
+    f({ osm_key: "building", type: "house", housenumber: "12", street: "Macquarie Street", locality: "Cromer Heights", district: "Cromer", postcode: "2099" }),
+    { properties: { countrycode: "CA", type: "house", housenumber: "135", street: "Phil Chris Way", city: "Winnipeg" } },
+  ];
+
+  it("searches the street without the number, keeps NSW addresses and streets, drops bus stops and repeats, and puts the typed number back", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ features: LIVE })));
+    const out = await photonSuggest("135 Phillip St Waterl", fetchImpl as never);
+    expect(out.map((o) => o.label)).toEqual(["135 Phillip Street, Waterloo NSW 2017", "135 Phillip Street, Sydney NSW 2000"]);
+    expect(out[0]).toMatchObject({ street: "135 Phillip Street", suburb: "Waterloo", state: "NSW", postcode: "2017" });
+    const url = String((fetchImpl.mock.calls[0] as unknown as [string])[0]);
+    expect(url).toMatch(/^https:\/\/photon\.komoot\.io\/api\/\?q=Phillip%20Street%20Waterl&/);
+    expect(url).toContain("bbox=140.9,-37.6,153.7,-28.1");
+  });
+
+  it("uses a real house when the numbers match, and its suburb", () => {
+    expect(parsePhoton(LIVE[4]!, "12")).toMatchObject({ street: "12 Macquarie Street", suburb: "Cromer", postcode: "2099" });
+    expect(parsePhoton(LIVE[4]!, "14")).toBeNull();
+    expect(parsePhoton(LIVE[0]!)).toBeNull();
+    expect(parsePhoton(LIVE[5]! as never)).toBeNull();
+  });
+
+  it("doesn't look anything up for a house number alone", async () => {
+    const fetchImpl = vi.fn();
+    expect(await photonSuggest("135", fetchImpl as never)).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it("demo addresses keep the typed house number", () => {

@@ -74,7 +74,7 @@ export default async function SettingsPage() {
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />
             <Row k="AI assistant and write-ups" v={process.env.ANTHROPIC_API_KEY ? "Anthropic key present" : "Not configured"} note="ANTHROPIC_API_KEY: Ask ATLAS and voice-note write-ups" />
             <Row k="Voice notes to text" v={stt === "deepgram" ? "Deepgram key present" : stt === "openai" ? "OpenAI key present" : "Not configured"} note="DEEPGRAM_API_KEY or OPENAI_API_KEY" />
-            <Row k="Address suggestions" v={ap === "google" ? "Google key present" : ap === "photon" ? "Free OpenStreetMap lookup (no key)" : ap === "demo" ? "Demo addresses" : "Switched off"} note="GOOGLE_MAPS_API_KEY for the most accurate Australian addresses; without it ATLAS uses the free OpenStreetMap lookup, which misses some house numbers" />
+            <Row k="Address suggestions" v={ap === "google" ? "Google key present" : ap === "photon" ? "Free OpenStreetMap lookup (no key)" : ap === "demo" ? "Made-up test addresses (ATLAS_ADDRESS_DEMO)" : "Switched off"} note="GOOGLE_MAPS_API_KEY for the most accurate Australian addresses; without it ATLAS uses the free OpenStreetMap lookup, which misses some house numbers" />
           </dl>
           <div className="mt-3 flex flex-wrap gap-2">
             {can(s.role, "users.manage") && <Link href="/settings/people" className="btn-secondary inline-flex">People and logins</Link>}

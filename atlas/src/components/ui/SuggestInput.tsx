@@ -15,7 +15,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaul
   /** Fixed options, filtered as the person types. */
   options?: readonly string[];
   /** Or options fetched for what's typed (addresses). */
-  fetchOptions?: (typed: string) => Promise<SuggestOption[]>;
+  fetchOptions?: (typed: string) => Promise<SuggestOption[] | { options: SuggestOption[]; note?: string }>;
   /** Controlled use: the current value and a setter. */
   value?: string;
   onValueChange?: (v: string) => void;
@@ -58,7 +58,7 @@ export function SuggestInput({ id, defaultValue, options = [], fetchOptions, val
     const t = window.setTimeout(async () => {
       try {
         const got = await fetchOptions(value);
-        if (n === seq.current) { setFetched(got); setNote(""); }
+        if (n === seq.current) { setFetched(Array.isArray(got) ? got : got.options); setNote(Array.isArray(got) ? "" : got.note ?? ""); }
       } catch (e) {
         if (n === seq.current) { setFetched([]); setNote((e as Error).message); }
       }
@@ -163,15 +163,18 @@ export function PhraseChips({ targetId, phrases, label = "Common jobs" }: { targ
 export function AddressInput({ id, name, defaultValue, onSuburb, ...rest }: { id: string; name: string; defaultValue?: string | null; onSuburb?: (suburb: string) => void } & Omit<Props, "id" | "name" | "defaultValue" | "fetchOptions" | "options" | "onPick">) {
   const [footer, setFooter] = useState("");
   const fetchOptions = useMemo(
-    () => async (typed: string): Promise<SuggestOption[]> => {
+    () => async (typed: string) => {
       const t = typed.trim();
-      if (t.length < 4 || !/[a-z]{2}/i.test(t)) return [];
+      if (!t) return [];
+      // A house number alone can't be looked up yet.
+      if (t.length < 4 || !/[a-z]{2}/i.test(t)) return { options: [], note: "Keep typing the street name to see addresses." };
       const res = await fetch(`/api/address/suggest?q=${encodeURIComponent(t)}`).catch(() => null);
       if (!res) throw new Error("No connection. Type the address in full.");
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? "Address suggestions are unavailable. Type the address in full.");
       setFooter(json.attribution ?? "");
-      return (json.suggestions as { label: string; street: string; suburb: string }[]).map((s) => ({ value: s.street, label: s.label, suburb: s.suburb }) as SuggestOption & { suburb: string });
+      const options = (json.suggestions as { label: string; street: string; suburb: string }[]).map((s) => ({ value: s.street, label: s.label, suburb: s.suburb }) as SuggestOption & { suburb: string });
+      return options.length ? options : { options, note: "No matching address yet. Keep typing, or type it in full." };
     },
     [],
   );

@@ -19,8 +19,9 @@ export type AddressProvider = "google" | "photon" | "demo" | "off";
 export function addressProvider(env: NodeJS.ProcessEnv = process.env): AddressProvider {
   if (env.ATLAS_ADDRESS_LOOKUP === "off") return "off";
   if (env.GOOGLE_MAPS_API_KEY) return "google";
-  const memory = !env.ATLAS_DATA_SOURCE || (env.ATLAS_DATA_SOURCE !== "postgres" && env.ATLAS_DATA_SOURCE !== "airtable");
-  return memory ? "demo" : "photon";
+  // Made-up addresses only for automated tests; the demo site uses the real free lookup.
+  if (env.ATLAS_ADDRESS_DEMO === "1") return "demo";
+  return "photon";
 }
 
 export const ADDRESS_ATTRIBUTION: Record<AddressProvider, string> = {
@@ -71,28 +72,51 @@ export async function googleSuggest(q: string, key: string, fetchImpl: typeof fe
     .filter((x): x is AddressSuggestion => !!x);
 }
 
-type PhotonFeature = { properties?: { countrycode?: string; housenumber?: string; street?: string; name?: string; locality?: string; district?: string; city?: string; state?: string; postcode?: string } };
+type PhotonFeature = { properties?: { countrycode?: string; osm_key?: string; type?: string; housenumber?: string; street?: string; name?: string; locality?: string; district?: string; city?: string; state?: string; postcode?: string } };
 
 const STATE_ABBR: Record<string, string> = { "New South Wales": "NSW", Victoria: "VIC", Queensland: "QLD", "South Australia": "SA", "Western Australia": "WA", Tasmania: "TAS", "Australian Capital Territory": "ACT", "Northern Territory": "NT" };
+const ROAD_WORDS: Record<string, string> = { st: "Street", rd: "Road", ave: "Avenue", av: "Avenue", dr: "Drive", pl: "Place", cres: "Crescent", cr: "Crescent", ct: "Court", cl: "Close", pde: "Parade", hwy: "Highway", ln: "Lane", tce: "Terrace", cct: "Circuit", bvd: "Boulevard", blvd: "Boulevard", gr: "Grove", wy: "Way" };
 
-export function parsePhoton(f: PhotonFeature): AddressSuggestion | null {
+/** Splits "135 Phillip St, Waterloo" into the house number ("135", "2/14", "14A") and the rest, with road abbreviations spelled out. */
+export function splitAddress(q: string): { number: string; rest: string } {
+  const m = /^\s*((?:\d+[a-z]?\s*\/\s*)?\d+[a-z]?(?:-\d+[a-z]?)?)\b\s*(.*)$/i.exec(q);
+  const number = m ? m[1]!.replace(/\s+/g, "").toUpperCase() : "";
+  const rest = (m ? m[2]! : q).replace(/,/g, " ").split(/\s+/).filter(Boolean).map((w) => ROAD_WORDS[w.toLowerCase().replace(/\.$/, "")] ?? w).join(" ");
+  return { number, rest };
+}
+
+/**
+ * Reads one OpenStreetMap result. Keeps real addresses and streets; drops bus stops,
+ * shops and the like. A street with no house number takes the number that was typed.
+ */
+export function parsePhoton(f: PhotonFeature, typedNumber = ""): AddressSuggestion | null {
   const p = f.properties;
   if (!p || (p.countrycode ?? "").toUpperCase() !== "AU") return null;
-  const road = p.street ?? p.name ?? "";
-  if (!road) return null;
-  const street = [p.housenumber, road].filter(Boolean).join(" ");
-  const suburb = p.locality ?? p.district ?? p.city ?? "";
+  const isStreet = p.type === "street" && !!p.name;
+  const isHouse = p.type === "house" && !!p.housenumber && !!p.street && p.osm_key !== "highway";
+  if (!isStreet && !isHouse) return null;
+  if (isHouse && typedNumber && p.housenumber!.toUpperCase() !== typedNumber) return null;
+  const road = isHouse ? p.street! : p.name!;
+  const street = [isHouse ? p.housenumber : typedNumber, road].filter(Boolean).join(" ");
+  // In Australian OpenStreetMap data the suburb is usually the "district".
+  const suburb = p.district ?? p.locality ?? p.city ?? "";
   const state = STATE_ABBR[p.state ?? ""] ?? p.state ?? "";
   const postcode = p.postcode ?? "";
   return { label: [street, [suburb, state, postcode].filter(Boolean).join(" ")].filter(Boolean).join(", "), street, suburb, state, postcode };
 }
 
+/** NSW and the ACT, where the business works. */
+const PHOTON_BBOX = "140.9,-37.6,153.7,-28.1";
+
 export async function photonSuggest(q: string, fetchImpl: typeof fetch = fetch): Promise<AddressSuggestion[]> {
-  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en&lat=${NEAR.latitude}&lon=${NEAR.longitude}`;
+  // The free lookup can't match a house number it doesn't know, so search the street and add the number back.
+  const { number, rest } = splitAddress(q);
+  if (!/[a-z]{2}/i.test(rest)) return [];
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(rest)}&limit=20&lang=en&lat=${NEAR.latitude}&lon=${NEAR.longitude}&bbox=${PHOTON_BBOX}`;
   const res = await fetchImpl(url, { headers: { "User-Agent": "ATLAS business system (landscaping company, Sydney)" }, signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new AddressLookupError("Address suggestions are unavailable right now.");
   const json = (await res.json()) as { features?: PhotonFeature[] };
-  const out = (json.features ?? []).map(parsePhoton).filter((x): x is AddressSuggestion => !!x);
+  const out = (json.features ?? []).map((f) => parsePhoton(f, number)).filter((x): x is AddressSuggestion => !!x);
   return out.filter((s, i) => out.findIndex((o) => o.label === s.label) === i);
 }
 

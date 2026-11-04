@@ -1,6 +1,6 @@
 // Suggestions while typing, on a phone screen: the Street address box (demo
 // addresses in demo mode), and the boxes that suggest what's been typed before.
-// Server: demo data with ATLAS_ALLOW_DEMO_LOGINS=1
+// Server: demo data with ATLAS_ALLOW_DEMO_LOGINS=1 ATLAS_ADDRESS_DEMO=1 (made-up addresses, no outside lookups)
 // Usage: BASE_URL=http://localhost:3000 SHOTS_DIR=/tmp/shots node tests/e2e/suggestions.mjs
 import { createRequire } from "node:module";
 const { chromium } = createRequire(import.meta.url)("playwright");
@@ -33,7 +33,9 @@ let custId;
 await step("street address: type the start, pick it, and the suburb fills in", async () => {
   await p.goto(`${BASE}/customers/new`);
   await p.fill("#name", "Riley Sample");
-  await p.locator("#address").pressSequentially("135 exa", { delay: 40 });
+  await p.locator("#address").pressSequentially("13", { delay: 40 });
+  await p.getByText("Keep typing the street name to see addresses.").waitFor({ timeout: 10_000 });
+  await p.locator("#address").pressSequentially("5 exa", { delay: 40 });
   await option("135 Example Street, Waterloo NSW 2017").waitFor({ timeout: 10_000 });
   await p.getByText("Demo addresses (made up for testing)").waitFor();
   if (SHOTS) await p.screenshot({ path: `${SHOTS}/address-suggest.png` });
