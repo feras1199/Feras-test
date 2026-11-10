@@ -83,7 +83,14 @@ export const POST = route<{ id: string }>("estimates.edit", async ({ req, params
     }
 
     case "decline": {
-      const after = await repo.update("estimates", e.id, { status: "Declined", approvalStatus: "Declined", internalReviewNotes: `${e.internalReviewNotes ? e.internalReviewNotes + "\n" : ""}Declined ${today}: ${body.reason}` });
+      // Same queue as acceptance, so a decline can't slip in while an accept is being saved.
+      const after = await repo.atomic(`estimate:${e.id}`, async (tx) => {
+        const now = await tx.get("estimates", e.id);
+        if (!now) throw new HttpError(404, "Estimate not found");
+        if (now.status === "Accepted") throw new HttpError(409, "This quote has been accepted and has a project and payment stages. It can't be declined. Use a variation, or talk to the owner about cancelling the job.");
+        if (now.status === "Declined" || now.status === "Superseded") throw new HttpError(409, `This estimate is already ${now.status}`);
+        return tx.update("estimates", e.id, { status: "Declined", approvalStatus: "Declined", internalReviewNotes: `${now.internalReviewNotes ? now.internalReviewNotes + "\n" : ""}Declined ${today}: ${body.reason}` });
+      });
       audit(session, { action: "estimate.decline", entity: "estimates", recordId: e.id, summary: `${e.title} declined: ${body.reason}` });
       return { estimate: after };
     }

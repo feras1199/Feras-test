@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { stillAuthorised } from "@/lib/auth/users";
+import { passwordVersion, stillAuthorised } from "@/lib/auth/users";
 
 const H = "scrypt$16384$8$1$WDdsArAyy/zxs8GoQ9GFQQ==$2JrM3hcCwkfviQass3CUoiwsrAetNZSdkvBBfg5u6Yg=";
 const set = (users: unknown[]) => (process.env.ATLAS_USERS_JSON = JSON.stringify(users));
@@ -8,7 +8,12 @@ afterEach(() => delete process.env.ATLAS_USERS_JSON);
 describe("session revocation", () => {
   it("accepts a listed, active user with the same role", async () => {
     set([{ id: "u1", name: "A", email: "a@example.com", role: "manager", passwordHash: H }]);
-    expect(await stillAuthorised({ uid: "u1", role: "manager" })).toBe(true);
+    expect(await stillAuthorised({ uid: "u1", role: "manager", pv: passwordVersion({ passwordHash: H }) })).toBe(true);
+  });
+  it("ends sessions opened with an old password, and ones from before passwords were tracked", async () => {
+    set([{ id: "u1", name: "A", email: "a@example.com", role: "manager", passwordHash: H }]);
+    expect(await stillAuthorised({ uid: "u1", role: "manager", pv: passwordVersion({ passwordHash: "scrypt$16384$8$1$old$old" }) })).toBe(false);
+    expect(await stillAuthorised({ uid: "u1", role: "manager" })).toBe(false);
   });
   it("rejects removed, deactivated or re-roled users", async () => {
     set([{ id: "u1", name: "A", email: "a@example.com", role: "worker", passwordHash: H }, { id: "u2", name: "B", email: "b@example.com", role: "owner", passwordHash: H, active: false }]);

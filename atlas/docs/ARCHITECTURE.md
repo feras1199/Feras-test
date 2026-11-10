@@ -36,7 +36,7 @@ atlas/
       (staff)/…/page.tsx   staff screens (server components that load data, then render client components)
       portal/…             customer portal
       login/               sign-in page
-      api/…/route.ts       JSON API, one folder per resource (37 routes)
+      api/…/route.ts       JSON API, one folder per resource (49 routes)
     components/            client components: forms, builders, shell, UI kit
     lib/
       auth/                roles and permissions, signed sessions, password hashing, users
@@ -49,7 +49,8 @@ atlas/
   tests/
     unit/                  Vitest
     e2e/run.mjs            23-step browser journey (demo data)
-    e2e/people.mjs         logins managed in the database (needs Postgres)
+    e2e/all.mjs            runs every browser suite, each on a fresh server
+    e2e/safety.mjs         double accept, declined-after-accept, sessions, backups (needs Postgres)
   docs/                    this guide, deployment, admin guide, financial rules, limitations, Airtable audit
 ```
 
@@ -88,6 +89,8 @@ Every write in the app follows this same pattern: **wrapper → zod → domain r
   ```
 
   There is deliberately **no delete**. Records are archived by status instead, so history is never lost.
+
+  One more method, `atomic(key, fn)`, runs `fn` as a single unit of work: everything it writes is saved, or nothing is, and two calls with the same key never overlap. In Postgres it is a transaction plus an advisory lock. Anything that checks and then writes several records uses it: accepting a quote (project + payment stages + status), declining, and taking the next quote number. A unique index also makes a second copy of a payment stage impossible.
 - **`validateWrite()`** applies the same write rules in every store: only known fields, no writes to computed fields, cents must be integers, and dates must be YYYY-MM-DD.
 - **Record ids** look like Airtable's (`rec` plus 14 characters). Records imported from Airtable keep their ids, so links between them still work.
 
@@ -119,7 +122,7 @@ The full rules are in `docs/FINANCIAL_RULES.md`.
   - the middleware, which checks there is a session at all;
   - `requirePage(perm)` on every page;
   - `route(perm, …)` on every API.
-- **Sessions:** HMAC-signed cookies that are httpOnly and Secure, and last 12 hours. On every request the server also checks that the login still exists, is active and has the same role. That means switching someone off or changing their role takes effect on their next click.
+- **Sessions:** HMAC-signed cookies that are httpOnly and Secure, and last 12 hours. On every request the server also checks that the login still exists, is active and has the same role. That means switching someone off or changing their role takes effect on their next click. The session also carries a fingerprint of the password it signed in with, so changing or resetting a password ends every other session for that login.
 - **Logins** come from three places, in order of priority:
   1. the owner set in host variables (`ATLAS_OWNER_EMAIL`, `ATLAS_OWNER_PASSWORD`);
   2. the optional `ATLAS_USERS_JSON`;
@@ -183,6 +186,7 @@ npm run build
 ATLAS_ALLOW_DEMO_LOGINS=1 ATLAS_SESSION_SECRET=$(openssl rand -hex 32) npm start
 # demo logins: owner@example.com etc., password atlas-demo-2026
 BASE_URL=http://localhost:3000 npm run e2e
+npm run e2e:all                      # or: every browser suite, each on its own fresh server
 ```
 
 For live use with its own database, see `docs/DEPLOYMENT.md` (Render one-tap deploy).

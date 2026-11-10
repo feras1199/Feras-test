@@ -51,13 +51,14 @@ function AirtablePull({ serverToken, libraryCount }: { serverToken: boolean; lib
   );
 }
 
-export function DataAdmin({ source, counts, serverToken = false, libraryCount = 0 }: { source: keyof typeof SOURCE_LABEL; counts: { label: string; n: number }[]; serverToken?: boolean; libraryCount?: number }) {
+export function DataAdmin({ source, counts, serverToken = false, libraryCount = 0, files = null }: { source: keyof typeof SOURCE_LABEL; counts: { label: string; n: number }[]; serverToken?: boolean; libraryCount?: number; files?: { count: number; bytes: number } | null }) {
   const router = useRouter();
   const [file, setFile] = useState<unknown>(null);
   const [fileName, setFileName] = useState("");
   const [mode, setMode] = useState<"add-new" | "replace">("add-new");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [results, setResults] = useState<Result[] | null>(null);
+  const [logins, setLogins] = useState<{ added: number; skipped: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canImport = source === "postgres";
@@ -71,7 +72,7 @@ export function DataAdmin({ source, counts, serverToken = false, libraryCount = 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? "Couldn't reach the server");
       setPreview(json.preview);
-      if (json.results) { setResults(json.results); router.refresh(); }
+      if (json.results) { setResults(json.results); setLogins(json.logins ?? null); router.refresh(); }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -104,8 +105,16 @@ export function DataAdmin({ source, counts, serverToken = false, libraryCount = 
 
       <section className="card p-5">
         <h2 className="mb-1 font-semibold">Download a backup</h2>
-        <p className="mb-3 text-sm text-stone-700">One file with every record ATLAS holds. Keep it somewhere safe, such as Google Drive. It can be imported back here. It includes customer details and internal costs, so don&apos;t share it. Photos and voice notes aren&apos;t in this file yet.</p>
-        <a href="/api/admin/export" className="btn-primary inline-flex" download>Download backup (.json)</a>
+        <p className="mb-3 text-sm text-stone-700">A full backup is two downloads. Keep both somewhere safe, such as Google Drive. They include customer details, internal costs and (scrambled) passwords, so don&apos;t share them.</p>
+        <p className="mb-2 text-sm text-stone-700"><b>1. Records.</b> Every record, login and audit entry in one file. It can be imported back here.</p>
+        <a href="/api/admin/export" className="btn-primary inline-flex" download>Download records (.json)</a>
+        {files && (
+          <>
+            <p className="mb-2 mt-4 text-sm text-stone-700"><b>2. Photos and recordings.</b> {files.count === 0 ? "None stored yet." : `${files.count.toLocaleString("en-AU")} files, ${(files.bytes / 1024 / 1024).toFixed(files.bytes < 10 * 1024 * 1024 ? 1 : 0)} MB. Use Wi-Fi for this one.`} Putting these back into a new database is a job for your developer (see the deployment guide).</p>
+            {files.count > 0 && <a href="/api/admin/export-files" className="btn-secondary inline-flex" download>Download photos and recordings (.tar)</a>}
+            <p className="mt-3 text-xs text-stone-500">Photos and recordings are kept in the database, which includes 1 GB on the current plan. {files.bytes > 700 * 1024 * 1024 ? "You are close to that. Tell your developer." : `You have used about ${Math.round((files.bytes / (1024 * 1024 * 1024)) * 100)}% of it with files.`}</p>
+          </>
+        )}
       </section>
 
       <section className="card p-5 lg:col-span-2">
@@ -137,7 +146,7 @@ export function DataAdmin({ source, counts, serverToken = false, libraryCount = 
         )}
         {results && (
           <p role="status" className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Done: {results.reduce((n, r) => n + r.added, 0)} added, {results.reduce((n, r) => n + r.replaced, 0)} replaced, {results.reduce((n, r) => n + r.skipped, 0)} already there and kept.
+            Done: {results.reduce((n, r) => n + r.added, 0)} added, {results.reduce((n, r) => n + r.replaced, 0)} replaced, {results.reduce((n, r) => n + r.skipped, 0)} already there and kept.{logins ? ` Logins: ${logins.added} added, ${logins.skipped} already here and kept.` : ""}
           </p>
         )}
         {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}

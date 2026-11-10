@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { authenticate } from "@/lib/auth/users";
+import { authenticate, passwordVersion } from "@/lib/auth/users";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, signSession } from "@/lib/auth/session";
 import { sessionSecret } from "@/lib/server/context";
 import { audit } from "@/lib/server/audit";
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email or password is incorrect" }, { status: 401 });
   }
   failures.delete(key);
-  const token = await signSession({ uid: user.id, name: user.name, role: user.role, customerId: user.customerId }, sessionSecret());
+  const token = await signSession({ uid: user.id, name: user.name, role: user.role, customerId: user.customerId, pv: passwordVersion(user) }, sessionSecret());
   audit({ uid: user.id, name: user.name, role: user.role }, { action: "login.success", summary: `${user.name} signed in` });
   const res = NextResponse.json({ ok: true, redirect: user.role === "customer" ? "/portal" : "/" });
   res.cookies.set(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: SESSION_TTL_SECONDS });
