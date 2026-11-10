@@ -4,7 +4,7 @@ import { audit } from "@/lib/server/audit";
 import { buildExport } from "@/lib/server/dataAdmin";
 import { todayIn } from "@/lib/dates";
 
-/** Owner-only full backup as a JSON download. It can be imported back with the same screen. */
+/** Owner-only backup of every record, login and audit entry as a JSON download. It can be imported back with the same screen. */
 export const GET = route("settings.edit", async ({ session }) => {
   const data = await buildExport(getRepo());
   const total = Object.values(data.entities).reduce((n, rows) => n + (rows?.length ?? 0), 0);

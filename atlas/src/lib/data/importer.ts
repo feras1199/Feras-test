@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ROLES } from "../auth/roles";
 import { AIRTABLE_SCHEMA } from "./airtable/schema.generated";
 import { ENTITIES, type EntityName, type Rec } from "./entities";
 import { decodeRecord } from "./mapper";
@@ -26,7 +27,9 @@ const AirtableRecord = z.object({
 export const ImportFile = z.discriminatedUnion("format", [
   z.object({
     format: z.literal("atlas-export"),
-    version: z.literal(1),
+    version: z.union([z.literal(1), z.literal(2)]),
+    /** Version 2 backups also carry the logins added in the app (with their password hashes). */
+    logins: z.array(z.object({ id: z.string().min(1).max(40), email: z.string().email(), name: z.string().min(1), role: z.string().min(1), customerId: z.string().optional(), passwordHash: z.string().startsWith("scrypt$"), active: z.boolean() })).optional(),
     entities: z.record(z.string(), z.array(z.object({ id: z.string().regex(RECORD_ID), createdTime: z.string().optional() }).passthrough())),
   }),
   z.object({
@@ -60,6 +63,8 @@ export interface ParsedImport {
   batches: { entity: EntityName; records: Rec<EntityName>[] }[];
   /** Tables in the file that ATLAS doesn't use, so the owner can see what was left out. */
   ignored: string[];
+  /** Logins found in an ATLAS backup. */
+  logins?: { id: string; email: string; name: string; role: string; customerId?: string; passwordHash: string; active: boolean }[];
 }
 
 export function parseImport(raw: unknown): ParsedImport {
@@ -72,7 +77,7 @@ export function parseImport(raw: unknown): ParsedImport {
       if (!(key in ENTITIES)) { ignored.push(key); continue; }
       batches.push({ entity: key as EntityName, records: records as unknown as Rec<EntityName>[] });
     }
-    return { source: "ATLAS backup file", batches, ignored };
+    return { source: "ATLAS backup file", batches, ignored, logins: file.logins?.filter((u) => (ROLES as readonly string[]).includes(u.role)) };
   }
 
   for (const [key, records] of Object.entries(file.tables)) {

@@ -33,7 +33,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader title="Settings" subtitle="Business rules ATLAS uses for every calculation." />
       <p className="mb-4 rounded-xl bg-stone-100 p-3 text-sm text-stone-700">
-        These values are set in the server configuration (ATLAS_SETTINGS_JSON). Editing them here needs the additive “Atlas Settings” table in Airtable, which is waiting on your approval.
+        These values are set in the server configuration (ATLAS_SETTINGS_JSON). They can't be edited on this screen yet; ask your developer to change them.
       </p>
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5">

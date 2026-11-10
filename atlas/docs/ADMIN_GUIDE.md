@@ -23,7 +23,7 @@ Permissions are checked on the server for every page and every API call. Hiding 
 - Reset a password, or switch a login off. Switching off signs them out straight away, and their records stay.
 - Link a customer login to that customer's record.
 
-Anyone added this way can change their own password under **My account**. The owner's first login comes from `ATLAS_OWNER_EMAIL` / `ATLAS_OWNER_PASSWORD` on the host, and can only be changed there. Logins are not included in the backup download; after restoring into a new database, add people again.
+Anyone added this way can change their own password under **My account**. The owner's first login comes from `ATLAS_OWNER_EMAIL` / `ATLAS_OWNER_PASSWORD` on the host, and can only be changed there. Logins added in the app are in the records backup (passwords are stored scrambled, never readable) and come back when that file is imported into a new database. Changing or resetting a password signs that person out everywhere else they were signed in.
 
 **Without the database (Airtable or demo mode)**, logins live in the `ATLAS_USERS_JSON` server variable:
 
@@ -44,7 +44,7 @@ Anyone added this way can change their own password under **My account**. The ow
 ## Price lists and site photos
 
 - **Price lists from Airtable.** Settings > Backup and import > *Get your price lists from Airtable*. Paste an Airtable token with the `data.records:read` scope on the Whispering Leaf base and tap *Copy price lists from Airtable*. It copies the Cost Library, Productivity Rates and Omission Rules. Airtable is only read; the token is used once and not stored. Running it again only adds items ATLAS doesn't have yet, so edits made in ATLAS are kept. Choosing the exported `.json` file under *Import data* does the same without a token.
-- **Photos and voice notes on site visits.** Open a site inspection. *Take or add photos* opens the camera or photo library; photos are shrunk on the phone (longest side 1600 px) before upload. *Record a voice note* records from the phone's microphone (the browser asks for permission the first time) until *Stop and save*, up to 15 minutes. They are stored in ATLAS's own database, only staff who can see inspections can open them, and *Remove* archives rather than deletes. They are not in the backup download yet, and voice notes are not transcribed yet.
+- **Photos and voice notes on site visits.** Open a site inspection. *Take or add photos* opens the camera or photo library; photos are shrunk on the phone (longest side 1600 px) before upload. *Record a voice note* records from the phone's microphone (the browser asks for permission the first time) until *Stop and save*, up to 15 minutes. They are stored in ATLAS's own database, only staff who can see inspections can open them, and *Remove* archives rather than deletes. To back them up use the second download on Settings > Backup and import (*Download photos and recordings*).
 
 ## Cost Library
 

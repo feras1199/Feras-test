@@ -19,6 +19,26 @@ export interface Repository {
   get<E extends EntityName>(entity: E, id: string): Promise<Rec<E> | null>;
   create<E extends EntityName>(entity: E, data: Partial<Rec<E>>): Promise<Rec<E>>;
   update<E extends EntityName>(entity: E, id: string, data: Partial<Rec<E>>): Promise<Rec<E>>;
+  /**
+   * Runs fn as one unit of work: every write it makes through the repository it is
+   * given is saved, or none are. Calls with the same key run one after another, so
+   * a step that checks then writes (accepting a quote, taking the next quote number)
+   * can't be run twice at once. Airtable has no transactions: there it only queues.
+   */
+  atomic<T>(key: string, fn: (repo: Repository) => Promise<T>): Promise<T>;
+}
+
+/** Runs tasks with the same key one at a time, in the order they arrive. */
+export class KeyedQueue {
+  private tails = new Map<string, Promise<unknown>>();
+  run<T>(key: string, task: () => Promise<T>): Promise<T> {
+    const prev = this.tails.get(key) ?? Promise.resolve();
+    const next = prev.then(task, task);
+    const tail = next.catch(() => undefined);
+    this.tails.set(key, tail);
+    void tail.then(() => { if (this.tails.get(key) === tail) this.tails.delete(key); });
+    return next;
+  }
 }
 
 export function applyListOptions<E extends EntityName>(rows: Rec<E>[], opts?: ListOptions<E>): Rec<E>[] {
@@ -80,7 +100,11 @@ export type NewFile = Omit<StoredFile, "id" | "createdTime" | "archived" | "tran
  */
 export interface FileStore {
   listFiles(entity: FileOwner, recordId: string): Promise<StoredFile[]>;
-  getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null>;
+  /** The file's details and bytes. With a range, only those bytes are read (end is inclusive). */
+  getFile(id: string, range?: { start: number; end: number }): Promise<{ meta: StoredFile; bytes: Buffer } | null>;
+  getFileMeta(id: string): Promise<StoredFile | null>;
+  /** Every file's details (no bytes), oldest first. For backups. */
+  listAllFiles(): Promise<StoredFile[]>;
   addFile(meta: NewFile, bytes: Buffer): Promise<StoredFile>;
   setFileArchived(id: string, archived: boolean): Promise<StoredFile | null>;
   setFileTranscript(id: string, transcript: string): Promise<StoredFile | null>;

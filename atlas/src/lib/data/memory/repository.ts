@@ -1,7 +1,8 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import fs from "node:fs";
 import path from "node:path";
 import type { EntityName, Rec } from "../entities";
-import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
+import { applyListOptions, KeyedQueue, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
 import { buildFixtures } from "./fixtures";
 
 export { newRecordId };
@@ -70,9 +71,36 @@ export class MemoryRepository implements Repository, FileStore {
     return [...this.files.values()].filter((f) => f.meta.entity === entity && f.meta.recordId === recordId).map((f) => ({ ...f.meta }));
   }
 
-  async getFile(id: string) {
+  async getFile(id: string, range?: { start: number; end: number }) {
     const f = this.files.get(id);
-    return f ? { meta: { ...f.meta }, bytes: f.bytes } : null;
+    return f ? { meta: { ...f.meta }, bytes: range ? f.bytes.subarray(range.start, range.end + 1) : f.bytes } : null;
+  }
+
+  async getFileMeta(id: string) {
+    const f = this.files.get(id);
+    return f ? { ...f.meta } : null;
+  }
+
+  async listAllFiles() {
+    return [...this.files.values()].map((f) => ({ ...f.meta }));
+  }
+
+  private queue = new KeyedQueue();
+  /** Set while code is running inside atomic(), so a nested call joins it instead of waiting on itself. */
+  private inside = new AsyncLocalStorage<true>();
+  /** One unit of work at a time; if it fails, the store goes back to how it was. */
+  async atomic<T>(_key: string, fn: (repo: Repository) => Promise<T>): Promise<T> {
+    if (this.inside.getStore()) return fn(this);
+    return this.queue.run("all", async () => {
+      const before = structuredClone(this.store);
+      try {
+        return await this.inside.run(true, () => fn(this));
+      } catch (e) {
+        this.store = before;
+        this.save();
+        throw e;
+      }
+    });
   }
 
   async addFile(m: NewFile, bytes: Buffer): Promise<StoredFile> {

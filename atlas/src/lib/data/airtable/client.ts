@@ -1,7 +1,7 @@
 import "server-only";
 import { ENTITIES, type EntityName, type Rec } from "../entities";
 import { decodeRecord, encodeFields, tableId } from "../mapper";
-import { applyListOptions, type ListOptions, type Repository } from "../repository";
+import { applyListOptions, KeyedQueue, type ListOptions, type Repository } from "../repository";
 
 const API = "https://api.airtable.com/v0";
 const MIN_INTERVAL_MS = 220; // Airtable allows 5 requests/second per base
@@ -28,6 +28,12 @@ export class AirtableRepository implements Repository {
   private queue: Promise<unknown> = Promise.resolve();
   private last = 0;
   private cache = new Map<string, { at: number; rows: AirtableRecord[] }>();
+  private units = new KeyedQueue();
+
+  /** Airtable has no transactions, so this only stops two runs with the same key overlapping in this server. */
+  atomic<T>(key: string, fn: (repo: Repository) => Promise<T>): Promise<T> {
+    return this.units.run(key, () => fn(this));
+  }
 
   constructor(private token: string, private baseId: string, private fetchImpl: typeof fetch = fetch) {
     if (!token || !baseId) throw new Error("AIRTABLE_TOKEN and AIRTABLE_BASE_ID are required");

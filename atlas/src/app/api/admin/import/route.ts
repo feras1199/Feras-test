@@ -29,9 +29,9 @@ export const POST = route("settings.edit", async ({ req, session }) => {
   const preview = await previewImport(repo, parsed);
   if (b.preview) return { preview };
   if (!b.confirm) throw new HttpError(400, "Confirm the import first");
-  const results = await runImport(repo, parsed, b.mode, session.name);
+  const { results, logins } = await runImport(repo, parsed, b.mode, session.name);
   const added = results.reduce((n, r) => n + r.added, 0);
   const replaced = results.reduce((n, r) => n + r.replaced, 0);
-  audit(session, { action: "data.import", summary: `Imported ${parsed.source}: ${added} added, ${replaced} replaced (${b.mode})`, after: results });
-  return { preview, results };
+  audit(session, { action: "data.import", summary: `Imported ${parsed.source}: ${added} added, ${replaced} replaced (${b.mode})${logins ? `; ${logins.added} logins added` : ""}`, after: { results, logins } });
+  return { preview, results, logins };
 }, { maxBodyBytes: 25 * 1024 * 1024 });

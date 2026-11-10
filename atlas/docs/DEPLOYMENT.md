@@ -14,7 +14,12 @@ ATLAS can keep all its data in its own Postgres database (`ATLAS_DATA_SOURCE=pos
 2. Settings → **Backup and import** → choose the Airtable export file → **Check the file** → **Import new records**.
 3. Download a backup from the same screen and keep it somewhere safe.
 
-**Cost and backups (checked 4 Nov 2026 on render.com/pricing):** the blueprint uses a Starter web service (US$7/month, always on; the free plan sleeps after 15 idle minutes and takes about a minute to wake) and the smallest paid database (`0.1c-256mb`, US$6/month, 1 GB included then US$0.30/GB). A free Render Postgres is deleted 30 days after creation and has no backups, so don't use it for real data. Paid databases get point-in-time recovery (the last 3 days on the Hobby workspace plan, 7 days on Pro). On top of that, use the **Download backup** button weekly; the file can be imported back into a fresh database. Logins are not in the file.
+**Cost and backups (checked 4 Nov 2026 on render.com/pricing):** the blueprint uses a Starter web service (US$7/month, always on; the free plan sleeps after 15 idle minutes and takes about a minute to wake) and the smallest paid database (`0.1c-256mb`, US$6/month, 1 GB included then US$0.30/GB). A free Render Postgres is deleted 30 days after creation and has no backups, so don't use it for real data. Paid databases get point-in-time recovery (the last 3 days on the Hobby workspace plan, 7 days on Pro). On top of that, take both downloads on Settings → Backup and import weekly:
+
+- **Download records (.json)**: every record, the logins added in the app (with scrambled passwords) and the audit log. Import it on the same screen of a fresh database to get all of that back.
+- **Download photos and recordings (.tar)**: every stored file plus a `manifest.json` saying which record each belongs to. To put them back, import the records file first, then run `DATABASE_URL=… npm run restore-files -- atlas-files-YYYY-MM-DD.tar` from the `atlas` folder. Files already in the database are left alone.
+
+Photos and recordings live in the database, so they count towards its 1 GB. The Backup and import screen shows how much is used.
 
 **How data is stored.** One table, `atlas_records(entity, id, created_time, updated_time, data jsonb)`, holds every record; the field list stays in `src/lib/data/entities.ts`, so adding a field needs no database migration. `atlas_audit` keeps the audit log permanently and `atlas_imports` records each import. Tables are created automatically on first use.
 
@@ -74,16 +79,22 @@ Put the app behind HTTPS (all the hosts above do this). Session cookies are mark
 
 ## 4. Go-live checklist
 
-1. Back up the Airtable base (Airtable snapshot, plus a CSV export of Customers, Enquiries, Estimates, Estimate Items, Projects, Payments).
-2. Set the variables above. Leave `ATLAS_LEGACY_PAYMENT_AUTOMATIONS_OFF` unset.
-3. Sign in as the owner and walk through: Today, a customer, an estimate (read only), a project, Finance. Check the figures against Airtable.
-4. Decide on the payment automations. When they are off in Airtable, set `ATLAS_LEGACY_PAYMENT_AUTOMATIONS_OFF=1` and restart.
-5. Add staff logins, then customer logins (each linked to their Airtable customer record).
-6. Optional: add `ANTHROPIC_API_KEY` and try a few questions on Ask ATLAS.
+1. Deploy with the blueprint (section 0) and check `https://<your site>/api/health` answers `{"ok":true}`. That address is what Render watches; it fails if ATLAS can't reach its database.
+2. Sign in as the owner and import the price lists (Settings → Backup and import).
+3. Add staff under Settings → People and logins.
+4. Run one made-up job end to end: customer, site visit, estimate, approve, send, accept, mark the deposit paid. Check the figures by hand.
+5. Take both backup downloads and keep them somewhere safe.
+6. Optional: add `ANTHROPIC_API_KEY` and a transcription key, then try Ask ATLAS and one voice note. These have not run against the real services before, so check the results closely.
 
 ## 5. Rolling back
 
-ATLAS never hard-deletes Airtable records (removed lines are excluded, payments archived). To roll back, stop the ATLAS server; the base keeps working as before. Anything ATLAS changed is listed in the audit log with before and after values.
+- **A bad code change:** in Render, redeploy the previous commit. Data is untouched.
+- **Bad data:** Render's point-in-time recovery restores the database to a moment in the last 3 days (Hobby) or 7 days (Pro). For anything older, import the latest records backup into a fresh database and run `restore-files`.
+- Nothing in ATLAS is hard-deleted, and the audit log lists every change with before and after values, so a single wrong edit can usually be put right by hand.
+
+## 5a. Automatic checks
+
+Every pull request that touches `atlas/` runs the type check, the unit tests (with a real Postgres database), the production build and every browser test suite (`.github/workflows/atlas.yml`). Run the same locally with `npm run typecheck && npm test && npm run build && npm run e2e:all`; set `TEST_DATABASE_URL` and `E2E_DATABASE_URL` to a throwaway database to include the database tests.
 
 ## 6. Schema changes in Airtable
 
