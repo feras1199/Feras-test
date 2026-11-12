@@ -27,6 +27,20 @@ const NAV: { group: string; items: { page: Page; label: string; icon: typeof Lea
   { group: 'Library', items: [{ page: 'materials', label: 'Materials Library', icon: Boxes }, { page: 'settings', label: 'Settings', icon: Cog }] },
 ];
 
+function Login() {
+  const login = useStore(s => s.login);
+  const [name, setName] = useState(''), [pw, setPw] = useState(''), [err, setErr] = useState<string | null>(null);
+  return <div style={{ display: 'grid', placeItems: 'center', minHeight: '100%', padding: 16 }}>
+    <form className="card" style={{ width: 'min(360px, 100%)' }} onSubmit={async e => { e.preventDefault(); setErr(await login(name, pw)); }}>
+      <h1>Sign in</h1>
+      <label className="field"><span>Name</span><input autoComplete="username" value={name} onChange={e => setName(e.target.value)} /></label>
+      <label className="field" style={{ marginTop: 10 }}><span>Password</span><input type="password" autoComplete="current-password" value={pw} onChange={e => setPw(e.target.value)} /></label>
+      {err && <div className="banner danger" style={{ marginTop: 10 }}>{err}</div>}
+      <button className="btn primary" style={{ marginTop: 12, width: '100%' }} type="submit">Sign in</button>
+    </form>
+  </div>;
+}
+
 export function App() {
   const s = useStore();
   const d = useDerived();
@@ -35,6 +49,7 @@ export function App() {
   useEffect(() => { document.title = s.settings.appName; }, [s.settings.appName]);
 
   if (!s.ready) return <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}><div className="row"><Loader2 className="spin" size={18} /> Loading…</div></div>;
+  if (s.needLogin) return <Login />;
   if (s.error) return <div className="content"><div className="banner danger">Could not start: {s.error}. Reload the page. If this persists, your browser may be blocking storage (private browsing).</div></div>;
 
   const p = s.project;

@@ -12,7 +12,8 @@ import { guidedMeasurements, validateProject } from '../core/validation.ts';
 export type Page = 'dashboard' | 'customers' | 'project' | 'capture' | 'drawing' | 'design' | 'details' | 'materials' | 'estimate' | 'procurement' | 'documents' | 'performance' | 'settings';
 
 interface State {
-  ready: boolean; error: string | null;
+  ready: boolean; error: string | null; needLogin: boolean;
+  login(name: string, password: string): Promise<string | null>;
   storage: Storage | null;
   projects: ProjectSummary[];
   project: Project | null;
@@ -46,13 +47,14 @@ function readHash(): { page: Page; id?: string } {
 }
 
 export const useStore = create<State>((set, get) => ({
-  ready: false, error: null, storage: null, projects: [], project: null,
+  ready: false, error: null, needLogin: false, storage: null, projects: [], project: null,
   materials: [], suppliers: [], settings: DEFAULT_SETTINGS, page: 'dashboard', selectedId: null,
   past: [], future: [], saveState: 'saved', saveError: null, toast: null,
 
   async init() {
     try {
       const storage = await connect();
+      if (storage.health.auth.required && !storage.health.auth.user) { set({ storage, needLogin: true, ready: true }); return; }
       const [projects, cat, settings] = await Promise.all([storage.listProjects(), storage.getCatalogue(), storage.getSettings()]);
       set({ storage, projects, materials: cat.materials, suppliers: cat.suppliers, settings: { ...DEFAULT_SETTINGS, ...settings }, ready: true });
       const h = readHash();
@@ -63,6 +65,12 @@ export const useStore = create<State>((set, get) => ({
     } catch (e: any) { set({ error: e?.message ?? String(e), ready: true }); }
   },
 
+  async login(name, password) {
+    const r = await fetch('/api/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, password }) }).catch(() => null);
+    if (!r) return 'Cannot reach the server.';
+    if (!r.ok) return (await r.json().catch(() => ({}))).error ?? 'Sign-in failed';
+    set({ needLogin: false, ready: false }); await get().init(); return null;
+  },
   go(page) { const p = get().project; set({ page }); const want = `#/${page}${p && !['dashboard', 'customers'].includes(page) ? '/' + p.id : ''}`; if (location.hash !== want) history.replaceState(null, '', want); window.scrollTo(0, 0); },
   select(id) { set({ selectedId: id }); },
 

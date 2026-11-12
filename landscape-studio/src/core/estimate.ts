@@ -39,6 +39,7 @@ export interface CostLine {
   key: string; group: 'Materials' | 'Labour' | 'Equipment' | 'Subcontractors' | 'Disposal' | 'Delivery' | 'Other';
   desc: string; supplier?: string; qty: number | null; unit: string; rateEx: number | null; costEx: number;
   status: 'verified' | 'placeholder' | 'quote-required' | 'outdated' | 'assumption' | 'unknown-qty';
+  materialId?: string;
   objectIds?: string[]; note?: string;
 }
 
@@ -50,6 +51,8 @@ export interface Estimate {
   profit: number; priceEx: number; gst: number; priceInc: number;
   markupPct: number; marginPct: number;
   flags: string[];
+  /** Items priced from a project-level assumption rather than a supplier price. */
+  assumed: string[];
   complete: boolean;
 }
 
@@ -57,6 +60,7 @@ export function computeEstimate(project: Project, lines: QtyLine[], materials: M
   const s = project.estimate;
   const out: CostLine[] = [];
   const flags: string[] = [];
+  const assumed: string[] = [];
   const sup = new Map(suppliers.map(x => [x.id, x]));
 
   // Materials: priced on the consolidated purchase quantity (after pack rounding), ex GST.
@@ -64,24 +68,27 @@ export function computeEstimate(project: Project, lines: QtyLine[], materials: M
   const usedSuppliers = new Set<string>();
   for (const r of sched) {
     const m = r.material;
-    const rateEx = m.price == null ? null : exGst(m.price, m.gstInclusive, s.gstPct);
+    const pa = m.price == null ? project.priceAssumptions?.[m.id] : undefined;
+    const rateEx = m.price != null ? exGst(m.price, m.gstInclusive, s.gstPct) : pa ? exGst(pa.price, true, s.gstPct) : null;
     const qty = r.purchaseQty;
     const cost = rateEx != null && qty != null ? rateEx * qty : 0;
-    let status: CostLine['status'] = m.priceStatus;
+    let status: CostLine['status'] = pa ? 'assumption' : m.priceStatus;
     if (qty == null || r.incomplete) status = 'unknown-qty';
-    if (m.price == null) flags.push(`No price for "${m.name}": excluded from the total until priced.`);
+    if (pa) assumed.push(`Assumed price $${pa.price.toFixed(2)} per ${m.unit} inc GST for "${m.name}"${pa.note ? ` (${pa.note})` : ''}`);
+    else if (m.price == null) flags.push(`No price for "${m.name}": excluded from the total until priced.`);
     else if (m.priceStatus === 'placeholder') flags.push(`Placeholder price used for "${m.name}".`);
     else if (m.priceStatus === 'outdated') flags.push(`Price for "${m.name}" is outdated (last verified ${m.verifiedDate ?? 'unknown'}).`);
-    if (r.incomplete) flags.push(`Quantity incomplete for "${m.name}" (missing input: ${r.note || 'see quantities'}).`);
+    if (r.incomplete) flags.push(`Quantity incomplete for "${m.name}": a required dimension is missing (see Quantities).`);
     if (qty && qty > 0) usedSuppliers.add(m.supplierId);
-    out.push({ key: `mat:${r.key}`, group: 'Materials', desc: m.name, supplier: sup.get(m.supplierId)?.name, qty, unit: r.purchaseUnit, rateEx, costEx: cost, status, note: r.note });
+    out.push({ key: `mat:${r.key}`, materialId: m.id, group: 'Materials', desc: m.name, supplier: sup.get(m.supplierId)?.name, qty, unit: r.purchaseUnit, rateEx, costEx: cost, status, note: r.note });
   }
 
   // Delivery: one allowance per supplier actually used, only when the fee is known.
+  const deliveryAllowance = s.extras.some(e => e.category === 'delivery');
   for (const id of usedSuppliers) {
     const x = sup.get(id);
     if (!x || id === 'internal') continue;
-    if (x.deliveryFee == null) flags.push(`Delivery cost for ${x.name} not known: add a delivery line or set the supplier fee.`);
+    if (x.deliveryFee == null) { if (!deliveryAllowance) flags.push(`Delivery cost for ${x.name} not known: add a delivery line or set the supplier fee.`); }
     else if (x.deliveryFee > 0) out.push({ key: `del:${id}`, group: 'Delivery', desc: `Delivery: ${x.name}`, qty: 1, unit: 'order', rateEx: exGst(x.deliveryFee, true, s.gstPct), costEx: exGst(x.deliveryFee, true, s.gstPct), status: x.deliveryStatus === 'verified' ? 'verified' : 'assumption' });
   }
 
@@ -118,7 +125,7 @@ export function computeEstimate(project: Project, lines: QtyLine[], materials: M
   return {
     lines: out, totals, labourHours: hours, direct, overhead, contingency, cost, profit, priceEx, gst, priceInc: priceEx + gst,
     markupPct: s.markupPct, marginPct: priceEx > 0 ? (profit / priceEx) * 100 : 0,
-    flags: [...new Set(flags)], complete: flags.length === 0,
+    flags: [...new Set(flags)], assumed, complete: flags.length === 0,
   };
 }
 
@@ -135,8 +142,9 @@ export function objectDirectCost(project: Project, objectId: string, lines: QtyL
     else if (l.kind === 'earthworks' && l.unit === 'm3') { if (l.gross != null) cost += l.gross * (s.productivity.excavation ?? 0) * s.accessFactor * blended; }
     else if (l.kind === 'material' && l.materialId) {
       const m = mats.get(l.materialId);
-      if (!m || m.price == null || l.purchaseQty == null) { incomplete = true; missing.push(l.component); continue; }
-      cost += exGst(m.price, m.gstInclusive, s.gstPct) * l.purchaseQty;
+      const pa = m && m.price == null ? project.priceAssumptions?.[m.id] : undefined;
+      if (!m || (m.price == null && !pa) || l.purchaseQty == null) { incomplete = true; missing.push(l.component); continue; }
+      cost += (m.price != null ? exGst(m.price, m.gstInclusive, s.gstPct) : exGst(pa!.price, true, s.gstPct)) * l.purchaseQty;
     }
   }
   return { cost, incomplete, missing: missing.sort().join('|') };

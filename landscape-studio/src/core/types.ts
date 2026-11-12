@@ -196,6 +196,8 @@ export interface Project {
   overrides: Override[];
   approvals: Approval[];
   procurement: PoLine[];
+  /** Project-level price allowances for items with no catalogue price ($ per unit of sale, inc GST). Always shown as assumptions. */
+  priceAssumptions?: Record<string, { price: number; note: string }>;
   actuals: ActualLine[];
   progress: { date: string; note: string; by: string }[];
   audit: AuditEntry[];

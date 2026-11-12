@@ -246,3 +246,17 @@ describe('validation, guidance, compliance, assistant', () => {
     expect(a[0].estimate.priceInc).toBeLessThan(a[2].estimate.priceInc);
   });
 });
+
+describe('price assumptions', () => {
+  it('project allowances are included, labelled, and never written to the catalogue', () => {
+    const p = demoProject();
+    const e = computeEstimate(p, takeoff(p, M), M, S);
+    expect(e.assumed.length).toBeGreaterThan(0);
+    expect(e.lines.find(l => l.desc.startsWith('Washed river sand'))!.status).toBe('assumption');
+    expect(M.find(m => m.id === 'sand-bedding')!.price).toBeNull();
+    delete p.priceAssumptions!['sand-bedding'];
+    const e2 = computeEstimate(p, takeoff(p, M), M, S);
+    expect(e2.priceInc).toBeLessThan(e.priceInc);
+    expect(e2.flags.some(f => /Washed river sand/.test(f))).toBe(true);
+  });
+});

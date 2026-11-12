@@ -19,17 +19,23 @@ export function demoProject(): Project {
   p.estimate.extras = [
     { id: 'x1', category: 'equipment', desc: 'Mini excavator hire, dry (ASSUMPTION)', qty: 1, unit: 'day', rate: 400, assumption: true },
     { id: 'x2', category: 'disposal', desc: 'Spoil cart-away and tipping (ASSUMPTION rate)', qty: 9, unit: 'm3', rate: 90, assumption: true },
+    { id: 'x4', category: 'delivery', desc: 'Delivery allowance, 3 suppliers (ASSUMPTION)', qty: 3, unit: 'order', rate: 120, assumption: true },
     { id: 'x3', category: 'subcontract', desc: 'Licensed electrician: lighting connection (ASSUMPTION allowance)', qty: 1, unit: 'item', rate: 600, assumption: true },
   ];
   const o = (type: SiteObject['type'], name: string, layer: SiteObject['layer'], points: SiteObject['points'], extra: Partial<SiteObject> = {}, props: Record<string, any> = {}): SiteObject =>
     ({ id: `demo_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, type, name, layer, points, confidence: 'estimated', props: { ...defaultProps(type), ...props }, ...extra });
+  const A = (price: number) => ({ price, note: 'DEMO ASSUMPTION, not a supplier price' });
+  p.priceAssumptions = {
+    'sand-bedding': A(120), 'edge-restraint': A(12), 'mulch': A(110), 'plant-lomandra': A(9), 'pvc-100-stormwater': A(14),
+    'pit-450': A(95), 'light-cable': A(4), 'light-spike': A(85), 'post-h-tbc': A(85), 'sand-jointing': A(25),
+  };
   p.objects = [
     o('boundary', 'Site outline (rear yard)', 'existing', rectPoints(0, 0, 12, 9.5), { confidence: 'verified', locked: true }),
     o('building', 'House (rear wall)', 'existing', rectPoints(1.5, 0, 9, 1.2), { locked: true }),
     o('feature', 'Existing concrete patio', 'existing', rectPoints(3, 1.2, 6, 2), {}, { note: 'To be demolished' }),
     o('fence', 'Rear fence', 'existing', [{ x: 0, y: 9.5 }, { x: 12, y: 9.5 }]),
     o('tree', 'Existing tree', 'existing', [{ x: 10.6, y: 8.6 }], {}, { dbh: 0.3, retain: true, species: 'Not identified', spread: 4 }),
-    o('paving', 'New paving', 'proposed', rectPoints(2.5, 1.2, 7, 3), { materialId: 'pav-travertine-610', confidence: 'verified' }, { pattern: 'stretcher', fallPct: 1.5, fallTo: 'channel drain (to be confirmed)', cutFill: 0.1 }),
+    o('paving', 'New paving', 'proposed', rectPoints(2.5, 1.2, 7, 3), { materialId: 'pav-travertine-610', confidence: 'verified' }, { pattern: 'stretcher', fallPct: 1.5, fallTo: 'channel drain (to be confirmed)', cutFill: 0.1, jointCoverage: 5 }),
     o('turf', 'Lawn', 'proposed', rectPoints(1, 4.5, 10, 1.6), { materialId: 'turf-sirwalter' }),
     o('wall', 'Retaining wall', 'proposed', [{ x: 1, y: 6.3 }, { x: 11, y: 6.3 }], { materialId: 'slp-pioneer-2000-charcoal' }, { system: 'concrete-sleeper', exposedHeight: 0.6, retainedHeight: 0.6, surcharge: 'slope', distToBoundary: 1 }),
     o('garden', 'Raised garden bed', 'proposed', rectPoints(1, 6.5, 10, 2.8), { materialId: 'soil-garden-organic' }, { plantId: 'plant-lomandra', plantSpacing: 0.6 }),

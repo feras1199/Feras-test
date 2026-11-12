@@ -255,7 +255,7 @@ export function Drawing() {
     <div className="inspector">
       {sel ? <Inspector o={sel} onDelete={removeSel} onDuplicate={duplicate} /> : <>
         <h2>Drawing</h2>
-        <p className="muted" style={{ fontSize: '.84rem' }}>All geometry is in real metres. Pick a tool on the left, then draw. Select an object to edit its exact size and materials.</p>
+        <p className="muted" style={{ fontSize: '.84rem' }}>All geometry is in real metres. Pick a drawing tool, then draw on the plan. Select an object to edit its exact size and materials.</p>
         <h3>Layers</h3>
         {(['existing', 'proposed'] as const).map(l => <label key={l} className="row" style={{ padding: '3px 0' }}><input type="checkbox" checked={vis[l]} onChange={e => setVis({ ...vis, [l]: e.target.checked })} /> {l === 'existing' ? 'Existing site' : 'Proposed design'} <small>({p.objects.filter(o => o.layer === l).length})</small></label>)}
         {p.underlay && <>
@@ -292,11 +292,12 @@ function Shape({ o, S, z, selected, dims }: { o: SiteObject; S: (q: Pt) => [numb
   const dash = st.dash?.map(v => v * 2).join(' ');
   const edge = (i: number, j: number) => { const a = P[i], b = P[j]; if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 46) return null; const L = dist(o.points[i], o.points[j]); return <Label key={`${i}-${j}`} x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 5} text={`${est ? '~' : ''}${L.toFixed(est ? 2 : 3)} m`} color={selected ? '#1d5fa8' : '#374151'} size={10.5} />; };
   if (g === 'area') {
-    const c = S(centroid(o.points));
+    const c = S(centroid(o.points)), bb = bbox(o.points), roomW = bb.w * z, roomH = bb.h * z;
+    const showName = roomW > o.name.length * 6.5 && roomH > 18, showArea = showName && roomH > 34;
     return <g opacity={o.layer === 'existing' && o.type !== 'boundary' && o.type !== 'building' ? 0.8 : 1}>
       <polygon points={str} fill={st.fill ?? 'transparent'} fillOpacity={o.type === 'boundary' ? 0 : 0.85} stroke={stroke} strokeWidth={selected ? 2.5 : Math.max(1.2, st.w * 2.4)} strokeDasharray={dash} strokeLinejoin="round" />
-      {z > 14 && <Label x={c[0]} y={c[1] - 2} text={o.name} size={11.5} />}
-      {z > 14 && o.type !== 'boundary' && o.type !== 'building' && <Label x={c[0]} y={c[1] + 12} text={`${fmt(polygonArea(o.points), 2)} m²`} color="#5a6572" size={10.5} />}
+      {showName && o.type !== 'boundary' && <Label x={c[0]} y={c[1] - 2} text={o.name} size={11.5} />}
+      {showArea && o.type !== 'boundary' && o.type !== 'building' && <Label x={c[0]} y={c[1] + 12} text={`${fmt(polygonArea(o.points), 2)} m²`} color="#5a6572" size={10.5} />}
       {dims && o.points.map((_, i) => edge(i, (i + 1) % o.points.length))}
     </g>;
   }
@@ -306,14 +307,14 @@ function Shape({ o, S, z, selected, dims }: { o: SiteObject; S: (q: Pt) => [numb
       <polyline points={str} fill="none" stroke="transparent" strokeWidth="14" />
       <polyline points={str} fill="none" stroke={stroke} strokeWidth={o.type === 'wall' ? Math.max(4, 0.12 * z) : Math.max(1.5, st.w * 3)} strokeDasharray={dash} strokeLinejoin="round" strokeLinecap={o.type === 'wall' ? 'butt' : 'round'} />
       {o.type === 'dimension' && o.points.length === 2 ? <Label x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 6} text={`${dist(o.points[0], o.points[1]).toFixed(3)} m`} />
-        : <>{z > 18 && <Label x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 + (dims ? 16 : -8)} text={o.type === 'wall' ? `${o.name} · ${fmt(polylineLength(o.points), 2)} m × ${o.props.exposedHeight ?? '?'} m` : o.name} size={10.5} color="#374151" />}
+        : <>{polylineLength(o.points) * z > o.name.length * 9 && z > 18 && <Label x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 + (dims ? 16 : -8)} text={o.type === 'wall' ? `${o.name} · ${fmt(polylineLength(o.points), 2)} m × ${o.props.exposedHeight ?? '?'} m` : o.name} size={10.5} color="#374151" />}
           {dims && o.points.slice(0, -1).map((_, i) => edge(i, i + 1))}</>}
     </g>;
   }
   const [x, y] = P[0];
   if (o.type === 'tree') { const r = Math.max(8, ((Number(o.props.spread) || 3) / 2) * z); return <g><circle cx={x} cy={y} r={r} fill={st.fill} fillOpacity=".45" stroke={stroke} strokeWidth={selected ? 2.5 : 1.5} /><circle cx={x} cy={y} r="3.5" fill={stroke} />
-    {o.props.dbh && o.layer === 'existing' && <circle cx={x} cy={y} r={12 * Number(o.props.dbh) * z} fill="none" stroke="#22633a" strokeDasharray="5 4" />}<Label x={x} y={y - r - 4} text={o.name} size={10.5} /></g>; }
-  if (o.type === 'level') return <g><circle cx={x} cy={y} r="12" fill="transparent" /><path d={`M ${x - 7} ${y} H ${x + 7} M ${x} ${y - 7} V ${y + 7}`} stroke={stroke} strokeWidth="2" /><Label x={x + 34} y={y + 4} text={o.props.rl == null || o.props.rl === '' ? 'RL ?' : `RL ${Number(o.props.rl).toFixed(2)}${est ? ' ~' : ''}`} /></g>;
+    {o.props.dbh && o.layer === 'existing' && <circle cx={x} cy={y} r={12 * Number(o.props.dbh) * z} fill="none" stroke="#22633a" strokeDasharray="5 4" />}{z > 30 && <Label x={x} y={y - r - 4} text={o.name} size={10.5} />}</g>; }
+  if (o.type === 'level') return <g><circle cx={x} cy={y} r="12" fill="transparent" /><path d={`M ${x - 7} ${y} H ${x + 7} M ${x} ${y - 7} V ${y + 7}`} stroke={stroke} strokeWidth="2" />{z > 25 && <Label x={x + 34} y={y + 4} text={o.props.rl == null || o.props.rl === '' ? 'RL ?' : `RL ${Number(o.props.rl).toFixed(2)}${est ? ' ~' : ''}`} />}</g>;
   if (o.type === 'note') return <g><circle cx={x} cy={y} r="4" fill={stroke} /><text x={x + 8} y={y + 4} fontSize="12" fill={stroke} stroke="#fff" strokeWidth="3" paintOrder="stroke">{String(o.props.text ?? '')}</text></g>;
   return <g>{o.type === 'pit' ? <rect x={x - 8} y={y - 8} width="16" height="16" fill={st.fill} stroke={stroke} strokeWidth="2" /> : <circle cx={x} cy={y} r={o.type === 'plant' ? 9 : 7} fill={st.fill} stroke={stroke} strokeWidth="2" />}
     {z > 24 && <Label x={x} y={y - 12} text={o.type === 'plant' ? `${o.props.qty ?? 1} × ${o.name}` : o.name} size={10} color="#374151" />}</g>;
@@ -332,7 +333,7 @@ function Inspector({ o, onDelete, onDuplicate }: { o: SiteObject; onDelete: () =
   const cost = objectDirectCost(p, o.id, d.lines, s.materials);
   const L = g === 'line' ? polylineLength(o.points) : 0;
   const dis = !!o.locked;
-  const N = (label: string, k: string, o2: { unit?: string; min?: number; max?: number; nullable?: boolean; hint?: string } = {}) => <Field label={label} hint={o2.hint}><Num value={o.props[k] === '' ? null : o.props[k]} allowNull={o2.nullable} min={o2.min ?? 0} max={o2.max} unit={o2.unit} onChange={v => prop(k, v)} /></Field>;
+  const N = (label: string, k: string, o2: { unit?: string; min?: number; max?: number; nullable?: boolean; hint?: string; placeholder?: string } = {}) => <Field label={label} hint={o2.hint}><Num value={o.props[k] === '' ? null : o.props[k]} allowNull={o2.nullable} placeholder={o2.placeholder} min={o2.min ?? 0} max={o2.max} unit={o2.unit} onChange={v => prop(k, v)} /></Field>;
   return <div data-testid="inspector">
     <div className="row between"><h2 style={{ margin: 0 }}>{TYPE_LABEL[o.type]}</h2><button className="btn ghost icon" aria-label="Close properties" onClick={() => s.select(null)}><X size={16} /></button></div>
     <div className="row" style={{ margin: '8px 0' }}>
@@ -390,7 +391,7 @@ function Inspector({ o, onDelete, onDuplicate }: { o: SiteObject; onDelete: () =
       </>}
       {o.type === 'paving' && <><h3>Paving</h3>
         <Field label="Laying pattern" hint={`Default cutting waste ${PATTERN_WASTE[o.props.pattern] ?? 5}%`}><Select value={o.props.pattern ?? 'stretcher'} onChange={v => prop('pattern', v)} options={[['stack', 'Stack bond'], ['stretcher', 'Stretcher bond'], ['herringbone', 'Herringbone'], ['diagonal', '45° diagonal'], ['random', 'Random / French']]} /></Field>
-        <div className="grid g2">{N('Base course depth', 'baseDepth', { unit: 'mm', max: 600 })}{N('Bedding depth', 'beddingDepth', { unit: 'mm', max: 100 })}{N('Waste override', 'wastePct', { unit: '%', nullable: true, max: 50 })}{N('Edge restraint share', 'edgePct', { unit: '%', max: 100 })}
+        <div className="grid g2">{N('Base course depth', 'baseDepth', { unit: 'mm', max: 600 })}{N('Bedding depth', 'beddingDepth', { unit: 'mm', max: 100 })}{N('Waste override', 'wastePct', { unit: '%', nullable: true, max: 50, placeholder: 'default' })}{N('Edge restraint share', 'edgePct', { unit: '%', max: 100 })}
           {N('Fall', 'fallPct', { unit: '%', nullable: true, max: 20 })}{N('Cut / fill', 'cutFill', { unit: 'm', nullable: true, max: 5 })}{N('Jointing sand coverage', 'jointCoverage', { unit: 'm²/bag', nullable: true, min: 0.1, hint: 'From product datasheet' })}</div>
         <Field label="Falls towards"><Text value={o.props.fallTo ?? ''} onChange={v => prop('fallTo', v)} placeholder="e.g. lawn, channel drain, pit" /></Field></>}
       {o.type === 'garden' && <><h3>Garden bed</h3><div className="grid g2">{N('Soil depth', 'soilDepth', { unit: 'mm', max: 1500 })}{N('Mulch depth', 'mulchDepth', { unit: 'mm', max: 300 })}</div>

@@ -43,6 +43,7 @@ export function quotePdf(project: Project, e: Estimate, rows: QuoteRow[], s: Com
   line('Subtotal ex GST', 10, true); line(aud(e.priceEx), 10, true, [23, 32, 42], R, 'right'); y += 6;
   line(`GST ${project.estimate.gstPct}%`); line(aud(e.gst), 10, false, [23, 32, 42], R, 'right'); y += 6;
   line('Total inc GST', 12, true); line(aud(e.priceInc), 12, true, [23, 32, 42], R, 'right'); y += 10;
+  if (e.assumed.length) para(`${e.assumed.length} item(s) are priced from allowances rather than supplier quotations and may change.`, 9, [162, 90, 6]);
   if (e.flags.length) { line('This estimate is incomplete', 10, true, [179, 38, 30]); y += 5; para(`${e.flags.length} item(s) are not yet priced or measured and are excluded from the total. A firm quotation will follow once these are resolved.`, 9, [179, 38, 30]); }
   line('Basis of this estimate', 10, true); y += 5;
   for (const t of [

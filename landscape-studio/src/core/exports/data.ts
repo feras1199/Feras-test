@@ -29,6 +29,8 @@ export function estimateCsv(project: Project, e: Estimate): string {
   rows.push([], ['', 'Direct cost', '', '', '', '', e.direct.toFixed(2)], ['', `Overhead ${project.estimate.overheadPct}%`, '', '', '', '', e.overhead.toFixed(2)], ['', `Contingency ${project.estimate.contingencyPct}%`, '', '', '', '', e.contingency.toFixed(2)], ['', 'Total cost', '', '', '', '', e.cost.toFixed(2)],
     ['', `Markup ${e.markupPct}% on cost (= ${e.marginPct.toFixed(1)}% margin on price)`, '', '', '', '', e.profit.toFixed(2)], ['', 'Price ex GST', '', '', '', '', e.priceEx.toFixed(2)], ['', `GST ${project.estimate.gstPct}%`, '', '', '', '', e.gst.toFixed(2)], ['', 'Price inc GST', '', '', '', '', e.priceInc.toFixed(2)], [], ['Open items']);
   for (const f of e.flags) rows.push([f]);
+  if (e.assumed.length) rows.push([], ['Assumed prices']);
+  for (const f of e.assumed) rows.push([f]);
   return toCsv(rows);
 }
 

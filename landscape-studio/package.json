@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "server": "node server/index.ts",
-    "start": "npm run build && node server/index.ts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "start": "vite build && node server/index.ts",
+    "test": "vitest run tests",
+    "typecheck": "tsc --noEmit",
+    "e2e": "node e2e/run.mjs",
+    "user:add": "node server/admin.ts add"
   },
   "engines": {
     "node": ">=22.18"
