@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FileDown, FileSpreadsheet, FileCode2, Image, Package, RefreshCw } from 'lucide-react';
 import { useDerived, useStore } from '../../store/useStore.ts';
 import { buildSheets } from '../../core/exports/sheets.ts';
@@ -13,7 +13,22 @@ export function Documents() {
   const [size, setSize] = useState<'A3' | 'A4'>('A3');
   const [idx, setIdx] = useState(0);
   const [busy, setBusy] = useState(false);
-  const sheets = useMemo(() => buildSheets({ project: p, materials: s.materials, settings: s.settings, lines: d.lines, checks: d.checks, tasks: d.tasks, size }), [p, s.materials, s.settings, d, size]);
+  const [render, setRender] = useState<{ url: string; aspect: number } | null>(null);
+  const active = p.proposals?.find(x => x.id === p.activeProposalId) ?? p.proposals?.find(x => x.status === 'customer-selected');
+  const rid = active?.renders[active.renders.length - 1]?.mediaId;
+  useEffect(() => {
+    let live = true; setRender(null);
+    if (!rid) return;
+    s.storage!.getMedia(p.id, rid).then(async b => {
+      if (!b || !live) return;
+      const bmp = await createImageBitmap(b); const k = Math.min(1, 1400 / bmp.width);
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
+      if (live) setRender({ url: c.toDataURL('image/jpeg', 0.85), aspect: c.width / c.height });
+    }).catch(() => undefined);
+    return () => { live = false; };
+  }, [rid, p.id]); // eslint-disable-line
+  const sheets = useMemo(() => buildSheets({ project: p, materials: s.materials, settings: s.settings, lines: d.lines, checks: d.checks, tasks: d.tasks, size, renderDataUrl: render?.url, renderAspect: render?.aspect }), [p, s.materials, s.settings, d, size, render]);
   const n = safeName(p.name);
   const sheet = sheets[Math.min(idx, sheets.length - 1)];
   const pdf = () => { setBusy(true); setTimeout(() => { try { download(`${n}-drawings-${size}.pdf`, sheetsToPdf(sheets, p.name).output('arraybuffer'), 'application/pdf'); s.update(() => undefined, { audit: `Drawing pack exported (${size}, ${sheets.length} sheets, status ${STATUS_LABEL[p.status]})` }); } catch (e: any) { s.notify('error', `PDF failed: ${e.message}`); } setBusy(false); }, 20); };

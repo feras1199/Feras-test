@@ -16,7 +16,9 @@ export type Op =
   | { op: 'setProp'; objectId: string; prop: string; value: any }
   | { op: 'setLength'; objectId: string; length: number }
   | { op: 'setRect'; objectId: string; w: number; h: number }
-  | { op: 'setEstimate'; field: 'markupPct' | 'contingencyPct' | 'overheadPct'; value: number };
+  | { op: 'setEstimate'; field: 'markupPct' | 'contingencyPct' | 'overheadPct'; value: number }
+  | { op: 'addObject'; object: SiteObject }
+  | { op: 'removeObject'; objectId: string };
 
 export function describeOp(op: Op, project: Project, materials: Material[]): string {
   const name = (id: string) => project.objects.find(o => o.id === id)?.name ?? id;
@@ -28,6 +30,8 @@ export function describeOp(op: Op, project: Project, materials: Material[]): str
     case 'setLength': return `${name(op.objectId)}: set length to ${op.length} m`;
     case 'setRect': return `${name(op.objectId)}: resize to ${op.w} × ${op.h} m`;
     case 'setEstimate': return `Estimate: set ${op.field} to ${op.value}%`;
+    case 'addObject': return `Add ${op.object.name}`;
+    case 'removeObject': return `Remove ${name(op.objectId)}`;
   }
 }
 
@@ -36,6 +40,8 @@ export function applyOps(project: Project, ops: Op[]): Project {
   const find = (id: string) => p.objects.find(o => o.id === id);
   for (const op of ops) {
     if (op.op === 'setEstimate') { p.estimate[op.field] = op.value; continue; }
+    if (op.op === 'addObject') { if (!p.objects.some(o => o.id === op.object.id)) p.objects.push(structuredClone(op.object)); continue; }
+    if (op.op === 'removeObject') { const o = find(op.objectId); if (o && !o.locked) p.objects = p.objects.filter(x => x.id !== op.objectId); continue; }
     const o = find(op.objectId);
     if (!o || o.locked) continue;
     switch (op.op) {

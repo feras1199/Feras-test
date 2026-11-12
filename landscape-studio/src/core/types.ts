@@ -145,14 +145,54 @@ export interface Approval {
 }
 
 export type ProjectStatus =
-  | 'draft' | 'concept' | 'measurements-verified' | 'technical-review' | 'approved' | 'issued';
+  | 'draft' | 'concept' | 'customer-selected' | 'measurements-verified' | 'technical-review' | 'approved' | 'issued';
+
+/** An illustrative picture attached to a proposal. Never a source of geometry or measurements. */
+export interface RenderAsset {
+  id: string;
+  mediaId: string; // stored like any other upload
+  origin: 'ai-generated' | 'imported';
+  provider?: string; model?: string; prompt?: string; sourceMediaIds: string[];
+  createdAt: string; createdBy: string;
+  status: 'ok' | 'failed';
+  note?: string;
+}
+
+export interface ProposalBrief {
+  style: string;
+  inclusions: string[]; // 'paving' | 'wall' | 'turf' | 'garden' | 'lighting' | 'drainage' | 'deck'
+  budgetMax: number | null;
+  constraints: string;
+  sourceMediaIds: string[];
+}
+
+export interface DesignProposal {
+  id: string;
+  tier: 'economy' | 'balanced' | 'premium';
+  title: string;
+  summary: string;
+  status: 'draft' | 'customer-selected' | 'applied' | 'rejected';
+  createdAt: string;
+  brief: ProposalBrief;
+  /** Structured changes. These, not the picture, change the project when applied. */
+  changes: { id: string; text: string; op: import('./ops.ts').Op }[];
+  materials: string[];
+  pros: string[]; cons: string[]; maintenance: string;
+  costLow: number; costHigh: number; costComplete: boolean; excluded: string[];
+  assumptions: string[];
+  reviewFlags: string[];
+  renders: RenderAsset[];
+  selection?: { by: string; customerName: string; date: string; note?: string };
+  appliedVersionId?: string;
+  approvedChangeIds?: string[];
+}
 
 export interface ActualLine { category: string; estimated: number; actual: number; hoursEst?: number; hoursAct?: number; note?: string }
 
 export interface MediaRef {
   id: string;
   name: string;
-  kind: 'photo' | 'aerial' | 'plan' | 'scan' | 'document';
+  kind: 'photo' | 'aerial' | 'plan' | 'scan' | 'document' | 'render';
   mime: string;
   size: number;
   addedAt: string;
@@ -163,7 +203,7 @@ export interface MediaRef {
 
 export interface Underlay { mediaId: string; x: number; y: number; mPerPx: number; opacity: number; calibrated: boolean; w: number; h: number }
 
-export interface DesignVersion { id: string; name: string; date: string; note?: string; objects: SiteObject[] }
+export interface DesignVersion { id: string; name: string; date: string; note?: string; objects: SiteObject[]; proposalId?: string; renderIds?: string[]; materialIds?: string[] }
 
 export interface AuditEntry { at: string; by: string; action: string; detail?: string }
 
@@ -192,6 +232,9 @@ export interface Project {
   media: MediaRef[];
   underlay?: Underlay;
   versions: DesignVersion[];
+  proposals?: DesignProposal[];
+  /** id of the proposal currently applied to the geometry, if any */
+  activeProposalId?: string;
   estimate: EstimateSettings;
   overrides: Override[];
   approvals: Approval[];

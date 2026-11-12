@@ -6,11 +6,16 @@ import { scheduleCsv, toCsv } from '../../core/exports/data.ts';
 import { exGst, fmt, money, toPurchase, UNIT_LABEL } from '../../core/units.ts';
 import { Banner, download, Empty, PriceBadge, safeName } from '../kit.tsx';
 import type { PoLine } from '../../core/types.ts';
+import { stageByMaterial } from '../../core/sequence.ts';
+import { useState } from 'react';
 
 export function Procurement() {
   const s = useStore(), d = useDerived()!, p = s.project!;
   const sched = useMemo(() => purchaseSchedule(d.lines, s.materials), [d.lines, s.materials]);
   const sup = new Map(s.suppliers.map(x => [x.id, x]));
+  const stage = stageByMaterial(p, d.lines);
+  const [po, setPo] = useState<string | null>(null);
+  const missing = (r: typeof sched[number]) => [r.material.price == null ? (p.priceAssumptions?.[r.material.id] ? 'price is an allowance' : 'price required') : r.material.priceStatus === 'placeholder' ? 'placeholder price' : r.material.priceStatus === 'outdated' ? 'price outdated' : '', r.incomplete ? 'quantity incomplete' : '', 'stock not confirmed'].filter(Boolean);
   const status = (k: string) => p.procurement.find(l => l.key === k)?.status ?? 'to-order';
   const setStatus = (key: string, st: PoLine['status']) => s.update(x => { const l = x.procurement.find(z => z.key === key); if (l) l.status = st; else x.procurement.push({ key, status: st }); }, { audit: `Procurement ${key}: ${st}` });
   const bySup = new Map<string, typeof sched>();
@@ -26,13 +31,16 @@ export function Procurement() {
       const x = sup.get(sid);
       return <div className="card" key={sid}>
         <div className="row between"><div><h2 style={{ margin: 0 }}>{x?.name ?? sid}</h2><small>{x?.region} · delivery {x?.deliveryFee == null ? 'unknown, ask supplier' : money(x.deliveryFee)}</small></div>
-          <div className="row"><b>{money(total)} ex GST</b><button className="btn sm" onClick={() => order(sid)}><Download size={14} /> Order request CSV</button></div></div>
-        <div className="tablewrap" style={{ marginTop: 10 }}><table><thead><tr><th>Product</th><th className="num">Design qty</th><th className="num">Order</th><th className="num">Line ex GST</th><th>Price</th><th>Status</th></tr></thead><tbody>
+          <div className="row"><b>{money(total)} ex GST</b><button className="btn sm" onClick={() => setPo(po === sid ? null : sid)}>Purchase order draft</button><button className="btn sm" onClick={() => order(sid)}><Download size={14} /> Order request CSV</button></div></div>
+        {po === sid && <PoDraft text={[`PURCHASE ORDER DRAFT (not sent)`, `To: ${x?.name ?? sid}`, `From: ${s.settings.company || s.settings.appName}${s.settings.phone ? ', ' + s.settings.phone : ''}`, `Project: ${p.name}`, `Delivery: ${p.site.suburb || 'site address on confirmation'}; access ${p.site.access}`, '', ...rows.map(r => `- ${r.purchaseQty == null ? 'TBC' : fmt(r.purchaseQty)} ${UNIT_LABEL[r.purchaseUnit]}  ${r.material.name}${stage.get(r.material.id) ? `  (needed for: ${stage.get(r.material.id)})` : ''}`), '', 'Please confirm price, stock, delivery date and delivery cost before we place this order.'].join('\n')} />}
+        <div className="tablewrap" style={{ marginTop: 10 }}><table><thead><tr><th>Product</th><th className="num">Design qty</th><th className="num">Order</th><th className="num">Line ex GST</th><th>Price</th><th>Needed for</th><th>Missing info</th><th>Status</th></tr></thead><tbody>
           {rows.map(r => <tr key={r.key}><td>{r.material.name}<br /><small>{r.note}</small><Alternatives r={r} /></td>
             <td className="num">{r.designQty == null ? '?' : `${fmt(r.designQty)} ${UNIT_LABEL[r.designUnit]}`}</td>
             <td className="num"><b>{r.purchaseQty == null ? 'INCOMPLETE' : `${fmt(r.purchaseQty)} ${UNIT_LABEL[r.purchaseUnit]}`}</b></td>
             <td className="num">{r.material.price == null || r.purchaseQty == null ? '-' : money(exGst(r.material.price, r.material.gstInclusive) * r.purchaseQty)}</td>
-            <td><PriceBadge s={r.material.priceStatus} /></td>
+            <td><PriceBadge s={r.material.price == null && p.priceAssumptions?.[r.material.id] ? 'assumption' : r.material.priceStatus} /></td>
+            <td><small>{stage.get(r.material.id) ?? '-'}</small></td>
+            <td><small>{missing(r).join('; ')}</small></td>
             <td><select aria-label={`Order status for ${r.material.name}`} value={status(r.key)} onChange={e => setStatus(r.key, e.target.value as PoLine['status'])}><option value="to-order">To order</option><option value="ordered">Ordered</option><option value="delivered">Delivered</option></select></td></tr>)}
         </tbody></table></div></div>;
     })}
@@ -47,4 +55,12 @@ function Alternatives({ r }: { r: ReturnType<typeof purchaseSchedule>[number] })
   if (!rows.length) return null;
   const sup = new Map(s.suppliers.map(x => [x.id, x.name]));
   return <details className="explain"><summary>Compare {rows.length} other supplier option(s)</summary>{rows.map(x => <div key={x.m.id}>{sup.get(x.m.supplierId)}: {x.m.name}, {fmt(x.pq.qty)} {UNIT_LABEL[x.pq.unit]} = {money(x.cost)} ex GST, before delivery</div>)}<small>Different products may differ in specification. Delivery is not included.</small></details>;
+}
+
+function PoDraft({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return <div style={{ marginTop: 10 }}>
+    <pre data-testid="po-draft" style={{ whiteSpace: 'pre-wrap', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, padding: 10, fontSize: '.8rem', overflowX: 'auto' }}>{text}</pre>
+    <button className="btn sm" onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false))}>{copied ? 'Copied' : 'Copy text'}</button>
+  </div>;
 }

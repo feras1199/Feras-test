@@ -34,12 +34,12 @@ export function newObject(type: ObjType, points: Pt[], existing: SiteObject[], l
 }
 
 export const STATUS_LABEL: Record<Project['status'], string> = {
-  draft: 'Draft', concept: 'Concept', 'measurements-verified': 'Measurements verified', 'technical-review': 'Technical review required',
+  draft: 'Draft', concept: 'Concept generated', 'customer-selected': 'Customer selected concept', 'measurements-verified': 'Measurements verified', 'technical-review': 'Technical review required',
   approved: 'Approved by authorised reviewer', issued: 'Issued for construction',
 };
 
 export const STATUS_STAMP: Record<Project['status'], string> = {
-  draft: 'DRAFT - NOT FOR CONSTRUCTION', concept: 'CONCEPT - NOT FOR CONSTRUCTION', 'measurements-verified': 'PRELIMINARY - NOT FOR CONSTRUCTION',
+  draft: 'DRAFT - NOT FOR CONSTRUCTION', concept: 'CONCEPT - NOT FOR CONSTRUCTION', 'customer-selected': 'CUSTOMER SELECTED - NOT FOR CONSTRUCTION', 'measurements-verified': 'PRELIMINARY - NOT FOR CONSTRUCTION',
   'technical-review': 'TECHNICAL REVIEW REQUIRED - NOT FOR CONSTRUCTION', approved: 'APPROVED - PENDING ISSUE', issued: 'ISSUED FOR CONSTRUCTION',
 };
 
@@ -53,7 +53,9 @@ export function workflow(p: Project, priced: boolean): WorkflowStep[] {
     { key: 'capture', label: 'Capture', page: 'capture', done: p.media.length > 0, hint: 'Upload site photos or plans' },
     { key: 'measure', label: 'Measure', page: 'capture', done: p.measurements.some(m => m.confidence === 'verified'), hint: 'Record at least one verified measurement' },
     { key: 'draw', label: 'Draw', page: 'drawing', done: p.objects.length > 0, hint: 'Draw the site outline and existing features' },
-    { key: 'design', label: 'Design', page: 'drawing', done: proposed.length > 0, hint: 'Add proposed walls, paving, gardens' },
+    { key: 'concepts', label: 'Concepts', page: 'concepts', done: !!p.proposals?.length, hint: 'Generate Economy / Balanced / Premium concepts' },
+    { key: 'choose', label: 'Customer choice', page: 'concepts', done: !!p.proposals?.some(x => x.selection), hint: 'Record the concept the customer chose' },
+    { key: 'design', label: 'Design', page: 'drawing', done: proposed.length > 0, hint: 'Apply the chosen concept or draw the design' },
     { key: 'verify', label: 'Verify', page: 'details', done: p.approvals.some(a => a.kind === 'measurements'), hint: 'Sign off measurements and review flags' },
     { key: 'estimate', label: 'Estimate', page: 'estimate', done: proposed.length > 0 && priced, hint: 'Price all materials and review rates' },
     { key: 'approve', label: 'Approve', page: 'documents', done: p.status === 'approved' || p.status === 'issued', hint: 'Record approvals and set status' },

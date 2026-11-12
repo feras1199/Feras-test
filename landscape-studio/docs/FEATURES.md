@@ -2,6 +2,35 @@
 
 Legend: **Tested** = fully implemented and covered by automated or scripted tests. **Implemented** = built and used manually, not covered by a test. **Partial** = core works, listed parts missing. **Demo only** = shown with labelled sample behaviour. **Not implemented**.
 
+## v0.2: photo → concepts → customer choice → build
+
+| Requirement | Status | Evidence / notes |
+|---|---|---|
+| Site photos, plans, aerials, measurements as concept inputs | Tested | Upload incl. 40 MB limit and unsupported types (E2E). Photos feed pictures only; layout comes from the drawn site outline |
+| Three concepts (Economy / Balanced / Premium) as structured proposals | Tested | Distinct geometry and materials, ordered costs (unit + E2E) |
+| Concept content: title, summary, materials, changes, pros/cons, maintenance, cost range, assumptions, flags, illustrative label | Tested | E2E screenshot 02 |
+| Live AI "after" render from a site photo | **Implemented, not verified** | Server adapter (OpenAI image edits). No key available; see ENABLE-AI-IMAGES.md |
+| No-key state | Tested | "AI image generation is not configured"; attempt logged as `not-configured`; nothing fabricated |
+| Imported render, labelled | Tested | "Imported illustrative render" + illustrative label; logged in `render_log` |
+| Render provenance (provider, model, date, prompt, source images, status) | Tested (imported and not-configured paths); AI-success path untested | `render_log` table |
+| Render linked to proposal and design version | Tested | unit: version `renderIds` |
+| Customer selection record (who, when, customer name) | Tested | E2E |
+| Show changes, cost impact, affected quantities; approve/reject per change | Tested | E2E unticks one change; it is not applied |
+| New design version; previous recoverable | Tested | E2E restores both versions |
+| Linked editable 2D plan from the chosen concept | Tested | E2E edits paving to 6 × 4; estimate changes |
+| Linked 3D massing (same coordinates and materials, labelled) | Tested | unit: geometry and material change alter the scene; E2E screenshot 05 |
+| Trace from image with two-point scale; perspective-photo warning; Estimated / Unknown | Implemented (v0.1 calibration tested; warning text added) | |
+| Build layers per element with quantity, source, status, instruction, hold | Tested | Paving, turf, garden, wall. Deck, steps, gravel and drainage lines have no layer sheet yet (Partial) |
+| Exploded section diagram per assembly, marked concept | Tested | Screen and PDF |
+| No invented footings / reinforcement / drainage capacity | Tested | Footing shows "SIZE BY ENGINEER / MANUFACTURER" |
+| Material schedule from chosen design (waste, packs, minimum order, supplier, price status) | Tested | |
+| Procurement: needed-by stage, missing info, PO draft, substitutions | Tested | PO draft is text to copy; not sent anywhere |
+| Incomplete estimate cannot read as a final quote | Tested | quote PDF heading; unit test |
+| Approval path with customer-selected step | Tested | crew blocked; reviewer blocked by open items; reviewer action recorded |
+| Drawing pack: selected concept + render, massing, build layers, safety labels, no clipping | Tested | 16 sheets, clipping check (unit) and PDF page count (E2E) |
+| Photorealism quality of renders | Not verified | Depends on provider |
+| Concept layouts that follow the photo's actual yard shape | Not implemented | Layout is a rule-based arrangement inside the drawn outline |
+
 ## Priority A: foundation
 
 | Requirement | Status | Notes |
@@ -30,7 +59,7 @@ Legend: **Tested** = fully implemented and covered by automated or scripted test
 | Natural-language design editing | Partial | Built-in rule-based commands tested; free-form via live AI implemented but not verified; all ops validated and need approval |
 | Cost-aware substitutions | Tested | "Make it $X cheaper" compares installed cost per object |
 | Alternative designs (economy / balanced / premium) | Tested | Same layout, different materials; not different layouts |
-| AI visual concepts / photorealistic rendering | Not implemented | Stated in the app; 3D massing view instead |
+| AI visual concepts / photorealistic rendering | Implemented, not verified live | See v0.2 table |
 | Contextual construction guidance | Partial | Sequence, hold points and "why engineering" are rule-based, not AI |
 | Optimise for cost / speed / maintenance / premium | Partial | Ranks the three alternatives; maintenance ranking is qualitative |
 
@@ -48,7 +77,7 @@ Legend: **Tested** = fully implemented and covered by automated or scripted test
 | Lighting layout | Partial | Fittings and cable quantities; electrical flagged |
 | NSW compliance checks | Partial | Licence, contract/HBC, wall exempt + engineering triggers, paving, decks, trees, BYDA, electrical, drainage, boundary; **council-specific controls and full clause 2.30 not encoded**; council is chosen manually, not looked up from address |
 | Supplier comparison | Partial | Same-group products from other suppliers, before delivery |
-| 3D visualisation | Partial | Isometric massing from plan geometry; no terrain, no materials texture |
+| 3D visualisation | Partial (tested) | Isometric massing shared by screen and PDF, material colours; no terrain or textures |
 | Historical cost learning | Partial | Per-project actual vs estimate and productivity scaling; no cross-project rate library |
 | Procurement | Partial | Order lists, status, CSV order requests; no supplier ordering API |
 | Airtable integration | Implemented, **not verified live** | One-way customer + project sync with stored record ids to avoid duplicates; no inbound sync |

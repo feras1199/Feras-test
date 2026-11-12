@@ -7,13 +7,17 @@ import { buildSheets } from '../../core/exports/sheets.ts';
 import { sheetToSvg } from '../../core/exports/render.ts';
 import { Banner, Empty, Field, Text } from '../kit.tsx';
 import type { Project } from '../../core/types.ts';
+import { CUSTOMER_APPROVAL_MEANS, CUSTOMER_APPROVAL_NOT, STATUS_ORDER, statusChangeError } from '../../core/approval.ts';
+import { assemblies } from '../../core/layers.ts';
+import { Iso3D } from './Iso3D.tsx';
+import { BuildLayers } from './BuildLayers.tsx';
 
 const BADGE: Record<CStatus, string> = { verified: 'ok', potential: 'danger', insufficient: 'warn', na: '' };
-const ORDER: Project['status'][] = ['draft', 'concept', 'measurements-verified', 'technical-review', 'approved', 'issued'];
+const ORDER: Project['status'][] = STATUS_ORDER;
 
 export function Details() {
   const s = useStore(), d = useDerived()!, p = s.project!;
-  const [tab, setTab] = useState<'checks' | 'details' | 'approvals'>('checks');
+  const [tab, setTab] = useState<'checks' | 'layers' | 'details' | 'approvals'>('checks');
   const [filter, setFilter] = useState<CStatus | 'all'>('all');
   const [form, setForm] = useState({ scope: '', reviewer: '', credential: '', reference: '', note: '' });
   const walls = p.objects.filter(o => o.type === 'wall' && o.layer === 'proposed');
@@ -21,11 +25,9 @@ export function Details() {
   const sheets = useMemo(() => buildSheets({ project: p, materials: s.materials, settings: s.settings, lines: d.lines, checks: d.checks, tasks: d.tasks, size: 'A3' }).filter(x => /section|elevation/.test(x.title)), [p, s.materials, s.settings, d]);
   const counts = (st: CStatus) => d.checks.filter(c => c.status === st).length;
   const setStatus = (st: Project['status']) => {
-    if (st === 'approved' && !isReviewer) return s.notify('error', 'Only a user in the "Authorised reviewer" role can mark a project approved (Settings → Current user).');
-    if (st === 'approved' && d.blockers.length) return s.notify('error', 'Resolve the open items listed under "Before issue for construction" first.');
-    if (st === 'issued' && (p.status !== 'approved' || d.blockers.length)) return s.notify('error', 'A project can only be issued for construction after it is approved and all blockers are cleared.');
-    if (st === 'measurements-verified' && !p.approvals.some(a => a.kind === 'measurements')) return s.notify('error', 'Record a measurement sign-off first.');
-    s.update(x => { x.status = st; if (st === 'approved') x.approvals.push({ id: uid('apr'), scope: 'project', kind: 'issue', reviewer: s.settings.userName, role: s.settings.role, credential: '(see engineering approvals)', reference: `Status set to approved`, date: today() }); }, { audit: `Status changed to ${STATUS_LABEL[st]}` });
+    const why = statusChangeError(p, st, s.settings.role, d.blockers);
+    if (why) return s.notify('error', why);
+    s.update(x => { x.status = st; if (st === 'approved') x.approvals.push({ id: uid('apr'), scope: 'project', kind: 'issue', reviewer: s.settings.userName, role: s.settings.role, credential: '(see engineering approvals)', reference: `Status set to ${st}`, date: today() }); if (st === 'issued') x.approvals.push({ id: uid('apr'), scope: 'project', kind: 'issue', reviewer: s.settings.userName, role: s.settings.role, credential: '(see engineering approvals)', reference: 'Issued for construction', date: today() }); }, { audit: `Status changed to ${STATUS_LABEL[st]}` });
   };
   return <>
     <h1>Construction Details and Compliance</h1>
@@ -36,6 +38,7 @@ export function Details() {
     </div>
     <div className="tabs" role="tablist">
       <button role="tab" className={tab === 'checks' ? 'active' : ''} onClick={() => setTab('checks')}>NSW checks ({d.checks.length})</button>
+      <button role="tab" className={tab === 'layers' ? 'active' : ''} onClick={() => setTab('layers')}>Build layers ({assemblies(p, d.lines, s.materials).length})</button>
       <button role="tab" className={tab === 'details' ? 'active' : ''} onClick={() => setTab('details')}>Concept details ({sheets.length})</button>
       <button role="tab" className={tab === 'approvals' ? 'active' : ''} onClick={() => setTab('approvals')}>Approvals and status</button>
     </div>
@@ -50,6 +53,10 @@ export function Details() {
       </dl>
     </div>)}
 
+    {tab === 'layers' && <>
+      <div className="card"><h2>3D massing of the current design</h2><div style={{ height: 320, border: '1px solid var(--line)', borderRadius: 9, overflow: 'hidden' }}><Iso3D project={p} materials={s.materials} /></div></div>
+      <BuildLayers />
+    </>}
     {tab === 'details' && (sheets.length === 0 ? <Empty title="No walls or paving in the design"><p>Concept elevations and sections appear here once the design includes a retaining wall or paving.</p></Empty> : <>
       <Banner kind="warn">Concept details show the arrangement of components and the quantities they drive. They contain no structural design. Use the manufacturer's installation guide or an engineer's drawing for construction.</Banner>
       {sheets.map(sh => <div key={sh.number} style={{ marginBottom: 14 }}><div className="row between"><h3>{sh.number} {sh.title}</h3></div><div className="sheet-prev" dangerouslySetInnerHTML={{ __html: sheetToSvg(sh).replace(/width="[\d.]+mm" height="[\d.]+mm"/, '') }} /></div>)}
@@ -58,8 +65,9 @@ export function Details() {
     {tab === 'approvals' && <>
       <div className="card">
         <h2>Project status</h2>
-        <div className="row">{ORDER.map(st => <button key={st} className={`btn sm ${p.status === st ? 'active' : ''}`} aria-pressed={p.status === st} onClick={() => setStatus(st)}>{STATUS_LABEL[st]}</button>)}</div>
-        <small style={{ display: 'block', marginTop: 8 }}>Every drawing carries this status. "Approved" needs the Authorised reviewer role; "Issued for construction" needs approval and no open blockers.</small>
+        <div className="row">{ORDER.map(st => <button key={st} disabled={s.settings.role === 'crew'} className={`btn sm ${p.status === st ? 'active' : ''}`} aria-pressed={p.status === st} onClick={() => setStatus(st)}>{STATUS_LABEL[st]}</button>)}</div>
+        <Banner kind="info"><b>Customer selection</b> means: {CUSTOMER_APPROVAL_MEANS} It is <b>not</b> {CUSTOMER_APPROVAL_NOT.join(', ').toLowerCase()}.</Banner>
+        <small style={{ display: 'block', marginTop: 8 }}>Every drawing carries this status. "Approved" and "Issued for construction" need the Authorised reviewer role and no open technical blockers. The crew role cannot change status.</small>
         <h3 style={{ marginTop: 14 }}>Before issue for construction</h3>
         {d.blockers.length === 0 ? <Banner kind="ok">No open blockers recorded.</Banner> : <Banner kind="danger"><ul style={{ margin: 0, paddingLeft: 18 }}>{d.blockers.map((b, i) => <li key={i}>{b}</li>)}</ul></Banner>}
       </div>

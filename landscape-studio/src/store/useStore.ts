@@ -3,13 +3,13 @@ import { useMemo } from 'react';
 import type { CompanySettings, Material, Project, Supplier } from '../core/types.ts';
 import { connect, summarise, type ProjectSummary, type Storage } from './storage.ts';
 import { DEFAULT_SETTINGS, newProject } from '../core/project.ts';
-import { demoProject, DEMO_ID } from '../core/demo.ts';
+import { demoProject, demoSiteOnly, DEMO_ID, DEMO_SITE_ID } from '../core/demo.ts';
 import { takeoff } from '../core/assemblies.ts';
 import { computeEstimate } from '../core/estimate.ts';
 import { evaluateCompliance, issueBlockers } from '../core/compliance.ts';
 import { guidedMeasurements, validateProject } from '../core/validation.ts';
 
-export type Page = 'dashboard' | 'customers' | 'project' | 'capture' | 'drawing' | 'design' | 'details' | 'materials' | 'estimate' | 'procurement' | 'documents' | 'performance' | 'settings';
+export type Page = 'dashboard' | 'customers' | 'project' | 'capture' | 'drawing' | 'concepts' | 'design' | 'details' | 'materials' | 'estimate' | 'procurement' | 'documents' | 'performance' | 'settings';
 
 interface State {
   ready: boolean; error: string | null; needLogin: boolean;
@@ -28,7 +28,7 @@ interface State {
   open(id: string): Promise<void>;
   close(): void;
   create(name: string): Promise<void>;
-  loadDemo(): Promise<void>;
+  loadDemo(siteOnly?: boolean): Promise<void>;
   remove(id: string): Promise<void>;
   importProject(p: Project): Promise<void>;
   update(fn: (p: Project) => void, opts?: { undo?: boolean; audit?: string }): void;
@@ -93,11 +93,12 @@ export const useStore = create<State>((set, get) => ({
     set({ project: p, projects: [summarise(p), ...get().projects], past: [], future: [], saveState: 'saved' });
     get().go('project');
   },
-  async loadDemo() {
+  async loadDemo(siteOnly) {
     const s = get();
-    const existing = await s.storage!.getProject(DEMO_ID);
-    if (!existing) { const d = demoProject(); await s.storage!.saveProject(d); set({ projects: [summarise(d), ...s.projects.filter(x => x.id !== DEMO_ID)] }); }
-    await get().open(DEMO_ID);
+    const id = siteOnly ? DEMO_SITE_ID : DEMO_ID;
+    const existing = await s.storage!.getProject(id);
+    if (!existing) { const d = siteOnly ? demoSiteOnly() : demoProject(); await s.storage!.saveProject(d); set({ projects: [summarise(d), ...s.projects.filter(x => x.id !== id)] }); }
+    await get().open(id);
   },
   async remove(id) {
     const s = get();

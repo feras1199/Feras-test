@@ -2,12 +2,13 @@
 import express from 'express';
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { SEED_MATERIALS, SEED_SUPPLIERS } from '../src/core/catalogue.ts';
 import { DEFAULT_SETTINGS } from '../src/core/project.ts';
 import { analyzePhoto, assist, aiStatus } from './ai.ts';
 import { airtableStatus, syncProject } from './airtable.ts';
+import { buildPrompt, generateRender, imageStatus } from './image.ts';
 
 const PORT = Number(process.env.PORT ?? 8787);
 const DATA = resolve(process.env.LIS_DATA_DIR ?? 'data');
@@ -15,7 +16,13 @@ const AUTH = process.env.LIS_AUTH === 'on';
 mkdirSync(join(DATA, 'media'), { recursive: true });
 
 const db = new DatabaseSync(join(DATA, 'studio.db'));
-db.exec(readFileSync(new URL('./migrations/001_init.sql', import.meta.url), 'utf8'));
+// Run every migration file in order. All statements are idempotent (IF NOT EXISTS).
+const migDir = new URL('./migrations/', import.meta.url);
+for (const f of readdirSync(migDir).filter(f => f.endsWith('.sql')).sort()) {
+  db.exec(readFileSync(new URL(f, migDir), 'utf8'));
+  db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)`);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations(name, applied_at) VALUES(?, ?)').run(f, new Date().toISOString());
+}
 const ID = /^[A-Za-z0-9_-]{1,80}$/;
 
 const kvGet = (k: string) => { const r = db.prepare('SELECT value FROM kv WHERE key = ?').get(k) as { value: string } | undefined; return r ? JSON.parse(r.value) : null; };
@@ -44,7 +51,7 @@ app.post('/api/login', (req, res) => {
   res.setHeader('Set-Cookie', `lis_session=${t}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`);
   res.json({ name: u.name, role: u.role });
 });
-app.get('/api/health', (req, res) => res.json({ ok: true, ai: aiStatus(), airtable: airtableStatus(), auth: { required: AUTH, user: userOf(req) ?? undefined } }));
+app.get('/api/health', (req, res) => res.json({ ok: true, ai: aiStatus(), image: imageStatus(), airtable: airtableStatus(), auth: { required: AUTH, user: userOf(req) ?? undefined } }));
 app.use('/api', (req, res, next) => { if (!AUTH || userOf(req)) return next(); res.status(401).json({ error: 'Sign in required', code: 'AUTH' }); });
 const canWrite = (req: express.Request) => !AUTH || userOf(req)?.role !== 'crew';
 
@@ -103,6 +110,35 @@ app.post('/api/ai/assist', async (req, res) => {
   try { res.json(await assist(String(req.body?.text ?? '').slice(0, 2000), req.body?.context)); }
   catch (e: any) { res.status(e.status ?? 502).json({ error: e.message, code: e.code }); }
 });
+const logRender = (r: Record<string, unknown>) => db.prepare('INSERT INTO render_log(id, project_id, proposal_id, origin, provider, model, prompt, source_media, media_id, status, error, created_by, created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
+  .run(String(r.id), String(r.projectId), (r.proposalId as string) ?? null, String(r.origin), (r.provider as string) ?? null, (r.model as string) ?? null, (r.prompt as string) ?? null, JSON.stringify(r.sourceMediaIds ?? []), (r.mediaId as string) ?? null, String(r.status), (r.error as string) ?? null, (r.createdBy as string) ?? null, new Date().toISOString());
+
+// Generate an illustrative render from one site photo. Result is stored as media; nothing touches geometry.
+app.post('/api/ai/render', async (req, res) => {
+  const { projectId, proposalId, sourceMediaId, title, style, changes, materials } = req.body ?? {};
+  const f = mediaPath(String(projectId), String(sourceMediaId));
+  const id = 'rnd_' + randomBytes(8).toString('hex');
+  const by = userOf(req)?.name ?? 'single-user';
+  if (!f || !existsSync(f)) return res.status(404).json({ error: 'Source photo not found' });
+  const prompt = buildPrompt({ title: String(title ?? ''), style: String(style ?? ''), changes: Array.isArray(changes) ? changes.map(String) : [], materials: Array.isArray(materials) ? materials.map(String) : [] });
+  const st = imageStatus();
+  if (!st.configured) { logRender({ id, projectId, proposalId, origin: 'ai-generated', prompt, sourceMediaIds: [sourceMediaId], status: 'not-configured', createdBy: by }); return res.status(503).json({ error: 'AI image generation is not configured.', code: 'IMAGE_NOT_CONFIGURED' }); }
+  try {
+    const out = await generateRender(readFileSync(f), readFileSync(`${f}.type`, 'utf8'), prompt);
+    const mediaId = 'med_' + randomBytes(8).toString('hex');
+    mkdirSync(join(DATA, 'media', String(projectId)), { recursive: true });
+    writeFileSync(join(DATA, 'media', String(projectId), mediaId), out.png);
+    writeFileSync(join(DATA, 'media', String(projectId), `${mediaId}.type`), 'image/png');
+    logRender({ id, projectId, proposalId, origin: 'ai-generated', provider: out.provider, model: out.model, prompt, sourceMediaIds: [sourceMediaId], mediaId, status: 'ok', createdBy: by });
+    res.json({ id, mediaId, provider: out.provider, model: out.model, prompt, createdAt: new Date().toISOString(), createdBy: by });
+  } catch (e: any) {
+    logRender({ id, projectId, proposalId, origin: 'ai-generated', provider: st.provider, model: st.model, prompt, sourceMediaIds: [sourceMediaId], status: 'failed', error: String(e.message).slice(0, 500), createdBy: by });
+    res.status(e.status ?? 502).json({ error: e.message, code: e.code });
+  }
+});
+app.post('/api/renders/log', (req, res) => { const r = req.body ?? {}; logRender({ ...r, origin: 'imported', status: 'ok', createdBy: userOf(req)?.name ?? r.createdBy ?? 'single-user' }); res.status(204).end(); });
+app.get('/api/renders/:pid', (req, res) => res.json(db.prepare('SELECT * FROM render_log WHERE project_id = ? ORDER BY created_at DESC').all(req.params.pid)));
+
 app.post('/api/airtable/sync', async (req, res) => {
   const r = db.prepare('SELECT data FROM projects WHERE id = ?').get(String(req.body?.projectId)) as { data: string } | undefined;
   if (!r) return res.status(404).json({ ok: false, message: 'Project not found' });

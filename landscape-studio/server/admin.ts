@@ -7,6 +7,7 @@ const DATA = resolve(process.env.LIS_DATA_DIR ?? 'data');
 mkdirSync(DATA, { recursive: true });
 const db = new DatabaseSync(join(DATA, 'studio.db'));
 db.exec(readFileSync(new URL('./migrations/001_init.sql', import.meta.url), 'utf8'));
+db.exec(readFileSync(new URL('./migrations/002_renders.sql', import.meta.url), 'utf8'));
 const [cmd, name, role, pw] = process.argv.slice(2);
 if (cmd !== 'add' || !name || !role || !pw) { console.error('Usage: node server/admin.ts add <name> <owner|estimator|crew|reviewer> <password>'); process.exit(1); }
 const salt = randomBytes(16).toString('hex');

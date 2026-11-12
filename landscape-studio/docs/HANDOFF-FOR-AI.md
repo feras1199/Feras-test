@@ -32,6 +32,14 @@ Rules that keep the numbers honest. Tests depend on them:
 7. Measurement conflicts are reported, not auto-fixed. "Apply to drawing" is a user action.
 8. Estimated lengths display as `~10.0`, verified ones as `10.00`.
 
+## 2b. Concept workflow (v0.2)
+
+- `src/core/proposals.ts`: `generateProposals` returns three `DesignProposal`s whose `changes[]` hold `Op`s (`addObject`, `setMaterial`, `setWallSystem`, `setProp`). The layout comes from `yardOf()` (drawn site outline minus buildings), never from photos. `selectProposal` records the customer; `applyProposal` applies only approved change ids and saves before/after versions.
+- Pictures are `RenderAsset`s on the proposal, stored as media of kind `render`, logged in the `render_log` table. `server/image.ts` is the provider adapter (untested live).
+- `src/core/layers.ts` turns objects into build-ups whose quantities are read from the take-off lines. Do not add footing or reinforcement sizes there.
+- `src/core/iso.ts` is the single 3D massing function for screen and PDF.
+- `src/core/approval.ts` `statusChangeError` is the only place status rules live; the UI calls it.
+
 ## 3. How it was built (process that worked)
 
 1. **Research first, only what changes decisions.** Official NSW pages gave the licence and contract thresholds ($5k licence and written contract, $20k HBCF), exempt-development limits (600 mm cut/fill, deck limits), the AS 4678 800 mm bound and the AS 4970 12 × DBH root zone. Supplier pages gave real prices with URL and date. Anything not retrieved verbatim (the full text of Codes SEPP clause 2.30) was marked not encoded rather than invented. Note: Nuway turned out to be in Queensland, so it is kept only as a density reference.
@@ -50,7 +58,7 @@ Rules that keep the numbers honest. Tests depend on them:
 
 ## 5. Known gaps (ranked)
 
-1. Live AI photo analysis and free-form assistant never run with a real key.
+1. Live AI photo analysis, free-form assistant and AI image renders never run with a real key.
 2. Airtable sync never run live; it is outbound only.
 3. Council lookup from the address and the full Codes SEPP cl 2.30 and council LEP/DCP rules are missing.
 4. Downloads in the artifact preview: add the `downloads` capability (load the `artifact-capabilities` skill first).

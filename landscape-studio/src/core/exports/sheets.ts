@@ -6,6 +6,10 @@ import { STATUS_LABEL, STATUS_STAMP } from '../project.ts';
 import { purchaseSchedule, WALL_SYSTEMS, type WallSystem } from '../assemblies.ts';
 import { ceilInt, fmt, UNIT_LABEL } from '../units.ts';
 import { constructionSequence } from '../sequence.ts';
+import { isoScene, MASSING_LABEL } from '../iso.ts';
+import { assemblies, type Assembly } from '../layers.ts';
+import { ILLUSTRATIVE_LABEL } from '../proposals.ts';
+import type { DesignProposal } from '../types.ts';
 import type { Check } from '../compliance.ts';
 import { STATUS_LABEL as CL } from '../compliance.ts';
 import type { MeasureTask } from '../validation.ts';
@@ -17,13 +21,16 @@ export type Prim =
   | { t: 'line'; x1: number; y1: number; x2: number; y2: number; w: number; c: string; dash?: number[] }
   | { t: 'poly'; pts: [number, number][]; closed: boolean; w: number; c: string; fill?: string; dash?: number[] }
   | { t: 'circle'; x: number; y: number; r: number; w: number; c: string; fill?: string }
-  | { t: 'text'; x: number; y: number; s: string; size: number; a?: 'start' | 'middle' | 'end'; c?: string; bold?: boolean };
+  | { t: 'text'; x: number; y: number; s: string; size: number; a?: 'start' | 'middle' | 'end'; c?: string; bold?: boolean }
+  | { t: 'image'; x: number; y: number; w: number; h: number; data: string };
 
 export interface Sheet { number: string; title: string; w: number; h: number; scale: string; prims: Prim[] }
 
 export interface SheetInput {
   project: Project; materials: Material[]; settings: CompanySettings; lines: QtyLine[]; checks: Check[]; tasks: MeasureTask[];
   size: 'A3' | 'A4';
+  /** JPEG data URL of the selected concept's render, if one is attached and loaded. */
+  renderDataUrl?: string; renderAspect?: number;
 }
 
 const SIZES = { A3: { w: 420, h: 297 }, A4: { w: 297, h: 210 } };
@@ -432,6 +439,10 @@ export function buildSheets(inp: SheetInput): Sheet[] {
     inp.lines.filter(l => l.kind !== 'labour').map(l => [l.objectName, l.component, l.formula, Object.entries(l.inputs).map(([k, v]) => `${k}: ${v}`).join('; '), l.net == null ? 'unknown' : fmt(l.net), `${l.wastePct}%`, l.gross == null ? 'unknown' : `${fmt(l.gross)} ${UNIT_LABEL[l.unit]}${l.overridden ? ' (manual)' : ''}`]),
     ['Quantities are calculated from the drawing geometry. "unknown" means a required dimension has not been provided.']));
 
+  const active = p.proposals?.find(x => x.id === p.activeProposalId) ?? p.proposals?.find(x => x.status === 'customer-selected');
+  if (active) sheets.push(conceptSheet(inp, `L-${String(n++).padStart(2, '0')}`, active));
+  if (p.objects.some(o => o.layer === 'proposed')) sheets.push(massingSheet(inp, `L-${String(n++).padStart(2, '0')}`));
+  for (const a of assemblies(p, inp.lines, inp.materials)) sheets.push(layerSheet(inp, `L-${String(n++).padStart(2, '0')}`, a));
   const seq = constructionSequence(p);
   const rows: string[][] = seq.map(s => [String(s.n), s.title, s.items.join('  •  '), s.hold ?? '']);
   sheets.push(...tableSheets(inp, `L-${String(n++).padStart(2, '0')}`, 'Construction sequence and hold points', [{ title: '#', w: 4 }, { title: 'Stage', w: 22 }, { title: 'What to do', w: 80 }, { title: 'HOLD POINT', w: 44 }], rows));
@@ -445,3 +456,88 @@ export function buildSheets(inp: SheetInput): Sheet[] {
 }
 
 export { TYPE_LABEL };
+
+
+function conceptSheet(inp: SheetInput, number: string, prop: DesignProposal): Sheet {
+  const { sheet, area } = frame(inp, number, `Selected design concept: ${prop.title}`, 'not to scale');
+  const P = sheet.prims;
+  const half = area.w * 0.48;
+  let y = area.y + 6;
+  P.push(text(area.x, y, prop.title, 3.4, 'start', INK, true)); y += 6;
+  const sel = prop.selection;
+  P.push(text(area.x, y, sel ? `Selected by ${sel.customerName || 'customer'} on ${sel.date.slice(0, 10)} (recorded by ${sel.by})` : 'Not yet selected by the customer', 2.3, 'start', GREY)); y += 4.5;
+  P.push(text(area.x, y, 'Customer selection = design direction, materials and budget only. Not engineering, council, boundary,', 2.1, 'start', RED)); y += 3.4;
+  P.push(text(area.x, y, 'supplier, drainage or electrical approval.', 2.1, 'start', RED)); y += 6;
+  const block = (title: string, items: string[]) => { P.push(text(area.x, y, title, 2.5, 'start', INK, true)); y += 4.2; for (const it of items) for (const [i, l] of wrap(it, 2.2, half - 4).entries()) { if (y < area.y + area.h - 2) P.push(text(area.x + (i ? 3 : 0), y, (i ? '' : '• ') + l, 2.2)); y += 3.5; } y += 2; };
+  block('Summary', [prop.summary, `Preliminary installed cost ${'$' + prop.costLow.toLocaleString('en-AU')} to ${'$' + prop.costHigh.toLocaleString('en-AU')} inc GST${prop.costComplete ? '' : ' (INCOMPLETE: some items unpriced)'}`, `Maintenance: ${prop.maintenance}`]);
+  const applied = prop.approvedChangeIds ? prop.changes.filter(c => prop.approvedChangeIds!.includes(c.id)) : prop.changes;
+  block(`Changes ${prop.approvedChangeIds ? 'applied' : 'proposed'} (${applied.length})`, applied.map(c => c.text).slice(0, 18));
+  if (prop.reviewFlags.length) block('Review flags', prop.reviewFlags.slice(0, 6));
+  const rx = area.x + half + 6, rw = area.w - half - 6;
+  if (inp.renderDataUrl) {
+    const asp = inp.renderAspect ?? 4 / 3, h = Math.min(area.h - 20, rw / asp), w = h * asp;
+    P.push({ t: 'image', x: rx, y: area.y + 4, w, h, data: inp.renderDataUrl });
+    P.push(text(rx, area.y + h + 9, ILLUSTRATIVE_LABEL, 2.2, 'start', RED, true));
+    const r = prop.renders[prop.renders.length - 1];
+    if (r) P.push(text(rx, area.y + h + 13, r.origin === 'imported' ? `Imported illustrative render, added ${r.createdAt.slice(0, 10)} by ${r.createdBy}` : `AI-generated (${r.provider} ${r.model}) ${r.createdAt.slice(0, 10)}`, 2, 'start', GREY));
+  } else {
+    P.push(rect(rx, area.y + 4, rw, rw * 0.6, 0.3, GREY, '#f3f4f2', [2, 1.5]));
+    P.push(text(rx + rw / 2, area.y + 4 + rw * 0.3, prop.renders.length ? 'Render attached in the app (not embedded in this export)' : 'No illustrative render attached', 2.4, 'middle', GREY));
+    P.push(text(rx, area.y + rw * 0.6 + 10, ILLUSTRATIVE_LABEL, 2.2, 'start', RED, true));
+  }
+  return sheet;
+}
+
+function massingSheet(inp: SheetInput, number: string): Sheet {
+  const { sheet, area } = frame(inp, number, 'Conceptual 3D massing', 'not to scale');
+  const sc = isoScene(inp.project, inp.materials)!;
+  const P = sheet.prims;
+  const bw = sc.bounds.maxX - sc.bounds.minX, bh = sc.bounds.maxY - sc.bounds.minY;
+  const k = Math.min((area.w - 20) / bw, (area.h - 24) / bh);
+  const ox = area.x + (area.w - bw * k) / 2 - sc.bounds.minX * k, oy = area.y + 12 + (area.h - 24 - bh * k) / 2 - sc.bounds.minY * k;
+  const T = (q: [number, number]): [number, number] => [ox + q[0] * k, oy + q[1] * k];
+  for (const p of sc.prims) {
+    if (p.t === 'poly') P.push({ t: 'poly', pts: p.pts.map(T), closed: true, w: 0.2, c: p.stroke, fill: p.fill });
+    else if (p.t === 'line') { const a = T(p.a), b = T(p.b); P.push(line(a[0], a[1], b[0], b[1], p.w * 0.25, p.stroke, p.dash)); }
+    else { const c = T(p.c); P.push({ t: 'circle', x: c[0], y: c[1], r: p.r * k, w: 0.2, c: p.stroke, fill: p.fill }); }
+  }
+  P.push(text(area.x, area.y + 5, MASSING_LABEL, 2.6, 'start', RED, true));
+  P.push(text(area.x, area.y + area.h - 2, 'Generated from the same plan coordinates and selected materials as sheets L-01 to L-03. Building and fence heights are display assumptions.', 2.1, 'start', GREY));
+  return sheet;
+}
+
+function layerSheet(inp: SheetInput, number: string, a: Assembly): Sheet {
+  const { sheet, area } = frame(inp, number, `${a.title}: build layers`, 'diagram not to scale');
+  const P = sheet.prims;
+  let y = area.y + 5;
+  P.push(text(area.x, y, a.banner ?? (a.concept ? 'Concept build-up - NOT FOR CONSTRUCTION unless verified technical input is recorded' : 'Built from recorded engineer input'), 2.6, 'start', a.banner || a.concept ? RED : '#166534', true));
+  y += 6;
+  // exploded stack
+  const dx = area.x, dw = area.w * 0.22;
+  let sy = y + 2;
+  for (const l of a.layers.filter(l => l.fill !== 'none')) {
+    const h = Math.max(5, Math.min(16, (l.thicknessMm ?? 40) / 8));
+    P.push({ t: 'poly', pts: [[dx + 4, sy], [dx + dw, sy], [dx + dw - 4, sy + h], [dx, sy + h]], closed: true, w: 0.3, c: INK, fill: l.fill });
+    P.push(text(dx + dw / 2, sy + h / 2 + 0.9, l.thicknessMm ? `${l.name} ${Math.round(l.thicknessMm)} mm` : l.name, 2, 'middle'));
+    sy += h + 3;
+  }
+  // table
+  const tx = area.x + dw + 8, tw = area.x + area.w - tx;
+  const cols: [string, number][] = [['Layer', 0.13], ['Purpose', 0.13], ['Product', 0.2], ['Quantity', 0.15], ['Source / status', 0.17], ['Crew instruction / hold point', 0.22]];
+  let x = tx;
+  P.push(rect(tx, y - 4, tw, 6, 0.25, INK, '#eef0f3'));
+  for (const [c, f] of cols) { P.push(text(x + 1.2, y, c, 2.1, 'start', INK, true)); x += f * tw; }
+  y += 5.5;
+  for (const l of a.layers) {
+    const cells = [l.name, l.purpose, l.product, l.qty, `${l.source} [${l.status === 'verified' ? 'verified' : l.status === 'assumed' ? 'assumed' : 'REVIEW REQUIRED'}]`, l.instruction].map((t, i) => wrap(t, 2, cols[i][1] * tw - 2.5));
+    const holdFrom = cells[5].length;
+    if (l.hold) cells[5].push(...wrap(`HOLD: ${l.hold}`, 2, cols[5][1] * tw - 2.5));
+    const rh = Math.max(...cells.map(c => c.length)) * 3.2 + 1.5;
+    if (y + rh > area.y + area.h) break;
+    x = tx;
+    cells.forEach((ls, i) => { ls.forEach((t, j) => P.push(text(x + 1.2, y + j * 3.2, t, 2, 'start', i === 5 && j >= holdFrom ? RED : INK, i === 5 && j === holdFrom))); x += cols[i][1] * tw; });
+    y += rh;
+    P.push(line(tx, y - 2.4, tx + tw, y - 2.4, 0.1, '#d1d5db'));
+  }
+  return sheet;
+}

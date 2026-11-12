@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from '../core/project.ts';
 
 export interface ProjectSummary { id: string; name: string; customer: string; address: string; status: string; updatedAt: string; synthetic?: boolean }
 export interface Catalogue { materials: Material[]; suppliers: Supplier[] }
-export interface Health { ok: boolean; ai: { configured: boolean; model?: string }; airtable: { configured: boolean }; auth: { required: boolean; user?: { name: string; role: string } } }
+export interface Health { ok: boolean; ai: { configured: boolean; model?: string }; image?: { configured: boolean; provider?: string; model?: string }; airtable: { configured: boolean }; auth: { required: boolean; user?: { name: string; role: string } } }
 export interface AiFeature { label: string; type: string; x: number; y: number; note?: string }
 export interface AiAnalysis { live: boolean; model?: string; summary: string; features: AiFeature[]; measurements: string[] }
 
@@ -25,6 +25,8 @@ export interface Storage {
   analyzePhoto(projectId: string, mediaId: string): Promise<AiAnalysis>;
   assist(text: string, context: unknown): Promise<{ ops: unknown[]; answer: string; model: string }>;
   airtableSync(project: Project): Promise<{ ok: boolean; message: string }>;
+  generateRender(req: { projectId: string; proposalId: string; sourceMediaId: string; title: string; style: string; changes: string[]; materials: string[] }): Promise<{ id: string; mediaId: string; provider: string; model: string; prompt: string; createdAt: string; createdBy: string }>;
+  logImportedRender(r: { id: string; projectId: string; proposalId: string; mediaId: string; sourceMediaIds: string[]; createdBy: string }): Promise<void>;
 }
 
 export const summarise = (p: Project): ProjectSummary => ({ id: p.id, name: p.name, customer: p.customer.name, address: [p.site.address, p.site.suburb].filter(Boolean).join(', '), status: p.status, updatedAt: p.updatedAt, synthetic: p.synthetic });
@@ -57,6 +59,8 @@ class ServerStorage implements Storage {
   analyzePhoto(projectId: string, mediaId: string) { return api<AiAnalysis>('/ai/analyze-photo', { method: 'POST', body: JSON.stringify({ projectId, mediaId }) }); }
   assist(text: string, context: unknown) { return api<{ ops: unknown[]; answer: string; model: string }>('/ai/assist', { method: 'POST', body: JSON.stringify({ text, context }) }); }
   airtableSync(project: Project) { return api<{ ok: boolean; message: string }>('/airtable/sync', { method: 'POST', body: JSON.stringify({ projectId: project.id }) }); }
+  generateRender(req: Parameters<Storage['generateRender']>[0]) { return api<Awaited<ReturnType<Storage['generateRender']>>>('/ai/render', { method: 'POST', body: JSON.stringify(req) }); }
+  async logImportedRender(r: Parameters<Storage['logImportedRender']>[0]) { await api('/renders/log', { method: 'POST', body: JSON.stringify(r) }).catch(() => undefined); }
 }
 
 // ---- Browser-only storage (IndexedDB). Used when no server is reachable, e.g. a static preview. ----
@@ -113,6 +117,8 @@ class LocalStorage implements Storage {
   async analyzePhoto(): Promise<AiAnalysis> { throw new ApiError(503, 'AI analysis needs the server with an API key. This browser-only mode has no AI connection.', 'AI_NOT_CONFIGURED'); }
   async assist(): Promise<never> { throw new ApiError(503, 'AI assistant needs the server with an API key.', 'AI_NOT_CONFIGURED'); }
   async airtableSync() { return { ok: false, message: 'Airtable sync needs the server with AIRTABLE_TOKEN configured.' }; }
+  async generateRender(): Promise<never> { throw new ApiError(503, 'AI image generation is not configured.', 'IMAGE_NOT_CONFIGURED'); }
+  async logImportedRender() { /* provenance is kept on the proposal in browser-only mode */ }
 }
 
 export async function connect(): Promise<Storage> {

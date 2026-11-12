@@ -48,8 +48,8 @@ describe('21.7 document output', () => {
       // nothing drawn outside the sheet
       for (const s of sheets) for (const p of s.prims) {
         const tw = p.t === 'text' ? p.s.length * p.size * 0.6 : 0; // generous Helvetica width estimate
-        const xs = p.t === 'line' ? [p.x1, p.x2] : p.t === 'poly' ? p.pts.map(q => q[0]) : p.t === 'circle' ? [p.x - p.r, p.x + p.r] : p.a === 'middle' ? [p.x - tw / 2, p.x + tw / 2] : p.a === 'end' ? [p.x - tw, p.x] : [p.x, p.x + tw];
-        const ys = p.t === 'line' ? [p.y1, p.y2] : p.t === 'poly' ? p.pts.map(q => q[1]) : p.t === 'circle' ? [p.y - p.r, p.y + p.r] : [p.y];
+        const xs = p.t === 'line' ? [p.x1, p.x2] : p.t === 'poly' ? p.pts.map(q => q[0]) : p.t === 'circle' ? [p.x - p.r, p.x + p.r] : p.t === 'image' ? [p.x, p.x + p.w] : p.a === 'middle' ? [p.x - tw / 2, p.x + tw / 2] : p.a === 'end' ? [p.x - tw, p.x] : [p.x, p.x + tw];
+        const ys = p.t === 'line' ? [p.y1, p.y2] : p.t === 'poly' ? p.pts.map(q => q[1]) : p.t === 'circle' ? [p.y - p.r, p.y + p.r] : p.t === 'image' ? [p.y, p.y + p.h] : [p.y];
         const what = `${s.number} ${p.t} ${p.t === 'text' ? p.s : ''}`;
         expect(Math.min(...xs), what).toBeGreaterThanOrEqual(8);
         expect(Math.max(...xs), what).toBeLessThanOrEqual(s.w - 8);

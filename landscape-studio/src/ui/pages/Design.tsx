@@ -97,6 +97,7 @@ export function Design() {
         <Banner kind="info">Photorealistic AI rendering is not built into this version. The plan, 3D massing view and drawings are generated from the real geometry; an illustrative render would need an image-generation service and would always carry an "illustrative only" label.</Banner>
       </div>
 
+    </>}
       <div className="card">
         <div className="row between"><h2 style={{ margin: 0 }}><History size={17} style={{ verticalAlign: -3 }} /> Design versions</h2><button className="btn sm" onClick={() => saveVersion(`Revision ${p.versions.length + 1}`)}>Save current as a version</button></div>
         {p.versions.length === 0 ? <p className="muted" style={{ marginTop: 8 }}>No saved versions. A version is saved automatically before each assistant change or applied alternative.</p> :
@@ -105,7 +106,6 @@ export function Design() {
               <td className="num"><button className="btn sm" onClick={() => { s.update(x => { x.objects = structuredClone(v.objects); }, { undo: true, audit: `Restored design version: ${v.name}` }); s.notify('ok', `Restored "${v.name}".`); }}>Restore</button></td></tr>)}
           </tbody></table></div>}
       </div>
-    </>}
     <span hidden><Sparkles /></span>
   </>;
 }

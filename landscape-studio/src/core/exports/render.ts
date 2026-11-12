@@ -9,6 +9,7 @@ export function sheetToSvg(sheet: Sheet): string {
     const dash = 'dash' in p && p.dash ? ` stroke-dasharray="${p.dash.join(' ')}"` : '';
     if (p.t === 'line') out.push(`<line x1="${r(p.x1)}" y1="${r(p.y1)}" x2="${r(p.x2)}" y2="${r(p.y2)}" stroke="${p.c}" stroke-width="${p.w}"${dash}/>`);
     else if (p.t === 'poly') out.push(`<${p.closed ? 'polygon' : 'polyline'} points="${p.pts.map(q => `${r(q[0])},${r(q[1])}`).join(' ')}" fill="${p.fill ?? 'none'}" stroke="${p.c}" stroke-width="${p.w}" stroke-linejoin="round"${dash}/>`);
+    else if (p.t === 'image') out.push(`<image href="${p.data}" x="${r(p.x)}" y="${r(p.y)}" width="${r(p.w)}" height="${r(p.h)}" preserveAspectRatio="xMidYMid meet"/>`);
     else if (p.t === 'circle') out.push(`<circle cx="${r(p.x)}" cy="${r(p.y)}" r="${r(p.r)}" fill="${p.fill ?? 'none'}" stroke="${p.c}" stroke-width="${p.w}"/>`);
     else out.push(`<text x="${r(p.x)}" y="${r(p.y)}" font-size="${p.size * 1.38}" text-anchor="${p.a ?? 'start'}" fill="${p.c ?? '#111827'}"${p.bold ? ' font-weight="bold"' : ''}>${esc(p.s)}</text>`);
   }
@@ -23,6 +24,7 @@ const rgb = (hex: string): [number, number, number] => { const h = hex.replace('
 const pdfSafe = (s: string) => s.replace(/⌈/g, 'ceil(').replace(/⌉/g, ')').replace(/[≤]/g, '<=').replace(/[≥]/g, '>=').replace(/→/g, '->').replace(/π/g, 'pi').replace(/…/g, '...').replace(/[^\x00-\xff•]/g, '?');
 
 function drawPrim(doc: jsPDF, p: Prim) {
+  if (p.t === 'image') { try { doc.addImage(p.data, 'JPEG', p.x, p.y, p.w, p.h); } catch { /* unreadable image: skip, label still printed */ } return; }
   if (p.t === 'text') {
     doc.setFont('helvetica', p.bold ? 'bold' : 'normal');
     doc.setFontSize((p.size * 1.38) / 0.3528);

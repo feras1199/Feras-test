@@ -40,3 +40,30 @@ Unit = `tests/*.test.ts` (Vitest, 25 tests). E2E = `e2e/run.mjs` (Playwright dri
 Totals: unit 25/25, E2E 16/16, manual auth script 4/4.
 
 Not verified anywhere: live AI responses, live Airtable sync (no credentials), real-device mobile use, printing at scale on paper, opening the DXF in AutoCAD/QCAD.
+
+
+## v0.2 additions (run 12 Nov 2026)
+
+Totals: unit **38/38**, browser **25/25** (fresh database each run; the E2E script resets both demo projects first). Screenshots: `docs/screenshots/`. Concept drawing pack: `docs/samples/concept-drawing-pack-A3.pdf`.
+
+| Area | Test | Result | Evidence |
+|---|---|---|---|
+| 8.1 Uploads | JPEG accepted; 41 MB file rejected ("larger than 40 MB"); .dwg rejected; interrupted upload (v0.1 test) | PASS | E2E; screenshot 01 |
+| 8.1/8.2 Missing AI config | "Generate AI render" without key: message, no image, `render_log` row `not-configured` | PASS | E2E |
+| 8.2 Live AI render | Not run: no credentials | NOT RUN | |
+| 8.2 Labels | Imported render shows "Imported illustrative render" and the illustrative label | PASS | E2E; screenshot 02 |
+| 8.2 Linkage | Render ids stored on the "Customer choice" version | PASS | unit |
+| 8.3 Proposals distinct | Different paving products and areas; economy $24,236 < balanced $30,115 < premium $42,033 inc GST (low end, demo site) | PASS | unit + E2E |
+| 8.3 Selection gate | Applying without customer selection throws | PASS | unit |
+| 8.3 Apply / reject per change | 13 of 14 changes applied; unticked "garden light 6" absent | PASS | E2E |
+| 8.3 Restore | "Before" version restores the empty site; "Customer choice" restores the design | PASS | E2E + unit |
+| 8.4 Geometry | Applied paving resized to 6 × 4 = 24 m²; pavers net 24 m²; price $29,865 → $29,261 | PASS | unit + E2E |
+| 8.5 Wall | 10 m × 0.6 m = 6 m²; 12 m = 7.2 m² (v0.1 tests still pass) | PASS | unit + E2E |
+| 8.6 Materials and cost | Aggregation before pack rounding, minimum order, missing price blocks final quote, markup ≠ margin, GST | PASS | unit |
+| 8.7 Documents | Concept sheet with embedded render; massing sheet; 4 build-layer sheets; all primitives inside margins; PDF valid, page count = sheet count | PASS | unit + E2E; screenshot 10 |
+| 8.7 Same model | Massing changes when paving is resized or its material changes; build-layer quantity equals take-off | PASS | unit |
+| 8.8 Approval | Crew status buttons disabled and rejected by rule; reviewer blocked by open technical items; issue needs approved; reviewer actions stored as approvals | PASS | unit + E2E; screenshot 11 |
+| Regression | All 16 v0.1 browser checks | PASS | E2E |
+| Console errors | None across the run | PASS | E2E |
+
+Note on the demo site estimate: before any design, it already shows about $3,600 inc GST. That is the demo's labelled assumption lines (mini excavator day, spoil disposal, electrician allowance, delivery allowance), not a bug.

@@ -20,3 +20,20 @@ export function constructionSequence(p: Project): Step[] {
   steps.push({ title: 'Completion', items: ['Clean site', 'Record actual quantities, hours and variations in Project Performance', 'Walk through with the customer'] });
   return steps.map((s, i) => ({ n: i + 1, ...s }));
 }
+
+const STAGE_BY_TYPE: Record<string, string> = { wall: 'Retaining wall', drain: 'Drainage', pit: 'Drainage', cable: 'Lighting first-fix', light: 'Lighting fit-off', paving: 'Paving', steps: 'Paving', deck: 'Deck', garden: 'Garden beds and planting', plant: 'Garden beds and planting', tree: 'Garden beds and planting', edging: 'Garden beds and planting', gravel: 'Garden beds and planting', turf: 'Turf' };
+
+/** Earliest construction stage that needs each material, keyed by material id. */
+export function stageByMaterial(p: Project, lines: { objectId: string; materialId?: string; kind: string }[]): Map<string, string> {
+  const order = constructionSequence(p).map(s => s.title);
+  const out = new Map<string, string>();
+  for (const l of lines) {
+    if (l.kind !== 'material' || !l.materialId) continue;
+    const o = p.objects.find(x => x.id === l.objectId);
+    const st = o ? STAGE_BY_TYPE[o.type] : undefined;
+    if (!st) continue;
+    const cur = out.get(l.materialId);
+    if (!cur || order.indexOf(st) < order.indexOf(cur)) out.set(l.materialId, st);
+  }
+  return out;
+}

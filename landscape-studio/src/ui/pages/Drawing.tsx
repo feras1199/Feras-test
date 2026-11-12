@@ -201,7 +201,7 @@ export function Drawing() {
         {types.map(t => <button key={t} className={`tool ${tool === t ? 'active' : ''}`} data-tool={t} onClick={() => pick(t)}><span className="sw" style={{ background: STYLE[t].fill ?? 'transparent', borderColor: STYLE[t].stroke, borderRadius: GEOM[t] === 'point' ? '50%' : 3, height: GEOM[t] === 'line' ? 4 : 14 }} />{short(t)}</button>)}</div>)}
     </div>
     <div className="canvas-wrap" ref={wrapRef}>
-      {three ? <Iso3D project={p} /> :
+      {three ? <Iso3D project={p} materials={s.materials} /> :
         <svg ref={svgRef} className="plan" role="application" aria-label="Scaled site drawing" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onDoubleClick={() => finish()}
           style={{ cursor: tool === 'select' ? 'default' : tool === 'pan' ? 'grab' : 'crosshair' }}>
           <defs>
@@ -255,6 +255,7 @@ export function Drawing() {
     <div className="inspector">
       {sel ? <Inspector o={sel} onDelete={removeSel} onDuplicate={duplicate} /> : <>
         <h2>Drawing</h2>
+        {p.activeProposalId && <Banner kind="info">Linked to the customer's chosen concept: <b>{p.proposals?.find(x => x.id === p.activeProposalId)?.title}</b>. Edits here update its quantities, estimate, 3D view, drawings and purchase list.</Banner>}
         <p className="muted" style={{ fontSize: '.84rem' }}>All geometry is in real metres. Pick a drawing tool, then draw on the plan. Select an object to edit its exact size and materials.</p>
         <h3>Layers</h3>
         {(['existing', 'proposed'] as const).map(l => <label key={l} className="row" style={{ padding: '3px 0' }}><input type="checkbox" checked={vis[l]} onChange={e => setVis({ ...vis, [l]: e.target.checked })} /> {l === 'existing' ? 'Existing site' : 'Proposed design'} <small>({p.objects.filter(o => o.layer === l).length})</small></label>)}
@@ -263,7 +264,7 @@ export function Drawing() {
           <div className="row" style={{ margin: '6px 0' }}><button className="btn sm" onClick={() => { cancel(); setTool('calibrate'); setCalib({ pts: [], value: null }); }}><Crosshair size={14} /> Calibrate scale</button>
             <button className="btn sm danger" onClick={() => s.update(x => { delete x.underlay; }, { audit: 'Reference image removed from drawing' })}>Remove</button></div>
           <Field label="Opacity"><input type="range" min="0.1" max="1" step="0.05" value={p.underlay.opacity} onChange={e => s.update(x => { x.underlay!.opacity = Number(e.target.value); })} /></Field>
-          <small>Aerial and satellite images are not accurate enough for construction, and map boundary lines are not a survey. Use them to sketch, then measure.</small>
+          <small>Aerial and satellite images are not accurate enough for construction, and map boundary lines are not a survey. An ordinary perspective photo cannot give reliable dimensions at all: scale changes with distance. Trace to sketch, mark the result Estimated or Unknown, then measure.</small>
         </>}
         {!p.underlay && <small>To trace over an aerial screenshot or plan: Site Capture → open the image → "Use as drawing reference".</small>}
         <h3 style={{ marginTop: 14 }}>Checks ({d.issues.length})</h3>

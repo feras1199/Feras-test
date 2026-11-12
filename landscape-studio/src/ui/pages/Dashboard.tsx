@@ -28,10 +28,11 @@ export function Dashboard() {
         <input className="grow" style={{ minWidth: 180 }} aria-label="New project name" placeholder="Project name, e.g. Smith backyard, Manly" value={name} onChange={e => setName(e.target.value)} />
         <button className="btn primary" type="submit"><Plus size={16} /> New site</button>
         <button className="btn" type="button" onClick={() => void s.loadDemo()}><FlaskConical size={16} /> Open demo project</button>
+        <button className="btn" type="button" onClick={() => void s.loadDemo(true)}><FlaskConical size={16} /> Open demo site (no design yet)</button>
         <button className="btn" type="button" onClick={() => file.current?.click()}><Upload size={16} /> Import project file</button>
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) void importJson(f); e.target.value = ''; }} />
       </form>
-      <small>The demo project is synthetic and labelled as such everywhere it appears.</small>
+      <small>Both demos are synthetic and labelled as such everywhere. Use "demo site" to try the photo → concepts → customer choice workflow.</small>
     </div>
     <h2 style={{ marginTop: 22 }}>Projects</h2>
     {s.projects.length === 0 ? <Empty title="No projects yet"><p>Create a new site above, or open the demo project to see a complete worked example.</p></Empty> :

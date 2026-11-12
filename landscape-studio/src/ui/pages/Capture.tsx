@@ -79,7 +79,7 @@ function Thumb({ m, onOpen }: { m: MediaRef; onOpen: () => void }) {
   return <button className="photo" onClick={onOpen} aria-label={`Open ${m.name}`}>
     {m.mime.startsWith('image/') ? (url ? <img src={url} alt={m.name} /> : <div style={{ color: '#fff', display: 'grid', placeItems: 'center', height: '100%', fontSize: '.8rem' }}>{missing ? 'File missing' : 'Loading…'}</div>)
       : <div style={{ color: '#fff', display: 'grid', placeItems: 'center', height: '100%' }}><FileText size={30} /></div>}
-    <span className="cap">{m.kind === 'aerial' ? 'Aerial · ' : m.kind === 'scan' ? 'Scan · ' : m.kind === 'plan' ? 'Plan · ' : ''}{m.name}{m.tags?.length ? ` · ${m.tags.length} tags` : ''}</span>
+    <span className="cap">{m.kind === 'render' ? 'Illustrative render · ' : m.kind === 'aerial' ? 'Aerial · ' : m.kind === 'scan' ? 'Scan · ' : m.kind === 'plan' ? 'Plan · ' : ''}{m.name}{m.tags?.length ? ` · ${m.tags.length} tags` : ''}</span>
   </button>;
 }
 

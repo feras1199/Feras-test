@@ -22,6 +22,7 @@ export function quoteRows(project: Project, e: Estimate, lines: QtyLine[], mater
 const aud = (v: number) => v.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
 
 export function quotePdf(project: Project, e: Estimate, rows: QuoteRow[], s: CompanySettings): jsPDF {
+  const active = project.proposals?.find(x => x.id === project.activeProposalId);
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = 210, L = 18, R = W - 18;
   let y = 20;
@@ -29,12 +30,14 @@ export function quotePdf(project: Project, e: Estimate, rows: QuoteRow[], s: Com
   const para = (t: string, size = 9, color: [number, number, number] = [90, 101, 114]) => { doc.setFont('helvetica', 'normal'); doc.setFontSize(size); doc.setTextColor(...color); for (const l of doc.splitTextToSize(t, R - L) as string[]) { if (y > 280) { doc.addPage(); y = 20; } doc.text(l, L, y); y += size * 0.45; } y += 1.5; };
   line(s.company || s.appName, 16, true); y += 6;
   line([s.licence ? `Contractor licence ${s.licence}` : 'Contractor licence: not recorded', s.abn ? `ABN ${s.abn}` : '', s.phone, s.email].filter(Boolean).join('  |  '), 8.5, false, [90, 101, 114]); y += 9;
-  line('PRELIMINARY ESTIMATE', 13, true, [44, 106, 59]); line(new Date().toLocaleDateString('en-AU', { dateStyle: 'long' }), 10, false, [23, 32, 42], R, 'right'); y += 6;
+  const incomplete = e.flags.some(f => /No price|Quantity incomplete/.test(f));
+  line(incomplete ? 'PRELIMINARY ESTIMATE - INCOMPLETE, NOT A FINAL QUOTATION' : 'PRELIMINARY ESTIMATE', incomplete ? 11 : 13, true, incomplete ? [179, 38, 30] : [44, 106, 59]); line(new Date().toLocaleDateString('en-AU', { dateStyle: 'long' }), 10, false, [23, 32, 42], R, 'right'); y += 6;
   if (project.synthetic) { line('SYNTHETIC DEMONSTRATION DATA - NOT A REAL QUOTATION', 9, true, [179, 38, 30]); y += 6; }
   line(`Project: ${project.name}`.slice(0, 95), 10, true); y += 5;
   line(`Customer: ${project.customer.name || 'not recorded'}`); y += 5;
   line(`Site: ${[project.site.address, project.site.suburb].filter(Boolean).join(', ') || 'not recorded'}`); y += 5;
   line(`Reference: ${project.id}   Design revision: ${project.versions.length}`, 9, false, [90, 101, 114]); y += 8;
+  if (active) para(`Design: ${active.title}${active.selection ? `, selected by ${active.selection.customerName} on ${active.selection.date.slice(0, 10)}` : ''}. Selection confirms the design direction and materials only.`, 9.5, [23, 32, 42]);
   if (project.brief.scope) para(`Scope: ${project.brief.scope}`, 9.5, [23, 32, 42]);
   y += 2; doc.setDrawColor(195, 203, 196); doc.line(L, y, R, y); y += 6;
   line('Item', 9, true, [90, 101, 114]); line('Price ex GST', 9, true, [90, 101, 114], R, 'right'); y += 6;
@@ -42,7 +45,7 @@ export function quotePdf(project: Project, e: Estimate, rows: QuoteRow[], s: Com
   doc.line(L, y - 2, R, y - 2); y += 4;
   line('Subtotal ex GST', 10, true); line(aud(e.priceEx), 10, true, [23, 32, 42], R, 'right'); y += 6;
   line(`GST ${project.estimate.gstPct}%`); line(aud(e.gst), 10, false, [23, 32, 42], R, 'right'); y += 6;
-  line('Total inc GST', 12, true); line(aud(e.priceInc), 12, true, [23, 32, 42], R, 'right'); y += 10;
+  line(incomplete ? 'Total inc GST (excludes unpriced items)' : 'Total inc GST', 12, true); line(aud(e.priceInc), 12, true, [23, 32, 42], R, 'right'); y += 10;
   if (e.assumed.length) para(`${e.assumed.length} item(s) are priced from allowances rather than supplier quotations and may change.`, 9, [162, 90, 6]);
   if (e.flags.length) { line('This estimate is incomplete', 10, true, [179, 38, 30]); y += 5; para(`${e.flags.length} item(s) are not yet priced or measured and are excluded from the total. A firm quotation will follow once these are resolved.`, 9, [179, 38, 30]); }
   line('Basis of this estimate', 10, true); y += 5;

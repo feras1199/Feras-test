@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Users, FolderKanban, Camera, PencilRuler, Sparkles, HardHat, Boxes, Calculator, Truck, FileText, LineChart, Settings as Cog, Menu, Check, CloudOff, Loader2, Save, Leaf, X } from 'lucide-react';
+import { Images, LayoutDashboard, Users, FolderKanban, Camera, PencilRuler, Sparkles, HardHat, Boxes, Calculator, Truck, FileText, LineChart, Settings as Cog, Menu, Check, CloudOff, Loader2, Save, Leaf, X } from 'lucide-react';
 import { useDerived, useStore, type Page } from '../store/useStore.ts';
 import { STATUS_LABEL, workflow } from '../core/project.ts';
 import { Dashboard, Customers } from './pages/Dashboard.tsx';
@@ -7,6 +7,7 @@ import { ProjectPage } from './pages/ProjectPage.tsx';
 import { Capture } from './pages/Capture.tsx';
 import { Drawing } from './pages/Drawing.tsx';
 import { Design } from './pages/Design.tsx';
+import { Concepts } from './pages/Concepts.tsx';
 import { Details } from './pages/Details.tsx';
 import { Materials } from './pages/Materials.tsx';
 import { EstimatePage } from './pages/Estimate.tsx';
@@ -19,7 +20,7 @@ const NAV: { group: string; items: { page: Page; label: string; icon: typeof Lea
   { group: 'Business', items: [{ page: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { page: 'customers', label: 'Customers', icon: Users }] },
   { group: 'Project', items: [
     { page: 'project', label: 'Project', icon: FolderKanban, needsProject: true }, { page: 'capture', label: 'Site Capture', icon: Camera, needsProject: true },
-    { page: 'drawing', label: 'Site Drawing', icon: PencilRuler, needsProject: true }, { page: 'design', label: 'Design Studio', icon: Sparkles, needsProject: true },
+    { page: 'drawing', label: 'Site Drawing', icon: PencilRuler, needsProject: true }, { page: 'concepts', label: 'Visual Concepts', icon: Images, needsProject: true }, { page: 'design', label: 'Design Studio', icon: Sparkles, needsProject: true },
     { page: 'details', label: 'Construction Details', icon: HardHat, needsProject: true }, { page: 'estimate', label: 'Cost Estimator', icon: Calculator, needsProject: true },
     { page: 'procurement', label: 'Procurement', icon: Truck, needsProject: true }, { page: 'documents', label: 'Documents', icon: FileText, needsProject: true },
     { page: 'performance', label: 'Project Performance', icon: LineChart, needsProject: true },
@@ -95,6 +96,7 @@ export function App() {
           {page === 'project' && <ProjectPage />}
           {page === 'capture' && <Capture />}
           {page === 'drawing' && <Drawing />}
+          {page === 'concepts' && <Concepts />}
           {page === 'design' && <Design />}
           {page === 'details' && <Details />}
           {page === 'estimate' && <EstimatePage />}

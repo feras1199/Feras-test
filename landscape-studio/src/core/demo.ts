@@ -59,3 +59,17 @@ export function demoProject(): Project {
   p.audit.push({ at: new Date().toISOString(), by: 'system', action: 'Synthetic demonstration data loaded' });
   return p;
 }
+
+export const DEMO_SITE_ID = 'prj_demo_site';
+
+/** Same synthetic site with only the existing conditions: the starting point for the concept workflow. */
+export function demoSiteOnly(): Project {
+  const p = demoProject();
+  p.id = DEMO_SITE_ID;
+  p.name = 'DEMO (synthetic): Backyard site, no design yet';
+  p.status = 'draft';
+  p.objects = p.objects.filter(o => o.layer === 'existing');
+  p.measurements = p.measurements.filter(m => !m.link || p.objects.some(o => o.id === m.link!.objectId));
+  p.audit = [{ at: new Date().toISOString(), by: 'system', action: 'Synthetic demo site (existing conditions only) loaded' }];
+  return p;
+}
