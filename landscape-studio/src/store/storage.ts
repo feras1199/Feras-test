@@ -68,8 +68,16 @@ function openDb(): Promise<IDBDatabase> {
     r.onerror = () => reject(r.error);
   });
 }
+const mem = { kv: new Map<IDBValidKey, unknown>(), media: new Map<IDBValidKey, unknown>() };
+let useMem = false;
 async function idb<T>(store: 'kv' | 'media', mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest): Promise<T> {
-  const db = await openDb();
+  if (useMem) {
+    const m = mem[store];
+    const fake: any = { get: (k: any) => ({ result: m.get(k) }), put: (v: any, k: any) => { m.set(k, v); return {}; }, delete: (k: any) => { m.delete(k); return {}; }, getAllKeys: () => ({ result: [...m.keys()] }) };
+    return fn(fake).result as T;
+  }
+  let db: IDBDatabase;
+  try { db = await openDb(); } catch { useMem = true; return idb(store, mode, fn); }
   return new Promise((resolve, reject) => {
     const tx = db.transaction(store, mode);
     const req = fn(tx.objectStore(store));
