@@ -5,3 +5,8 @@
 .hyperframes/render-outputs.json
 .hyperframes/video-state.json
 node_modules/
+
+# Narrator voice recordings (personal, not published)
+assets/myvoice/
+assets/me*.wav
+renders/detention-basin-myvoice.mp4
