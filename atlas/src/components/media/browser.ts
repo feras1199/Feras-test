@@ -29,3 +29,20 @@ export function recorderType(): string {
 }
 
 export const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+/** Reads how long an audio file is, from its own metadata. Undefined if the browser can't tell. */
+export function audioDuration(file: Blob): Promise<number | undefined> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const a = new Audio();
+    const done = (v?: number) => { URL.revokeObjectURL(url); resolve(v && Number.isFinite(v) && v > 0 ? v : undefined); };
+    const timer = window.setTimeout(() => done(), 5000);
+    a.preload = "metadata";
+    a.onloadedmetadata = () => { clearTimeout(timer); done(a.duration); };
+    a.onerror = () => { clearTimeout(timer); done(); };
+    a.src = url;
+  });
+}
+
+/** Friendly size limit check before a long upload starts. */
+export const mb = (bytes: number) => `${Math.round(bytes / (1024 * 1024))} MB`;

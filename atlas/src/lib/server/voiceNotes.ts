@@ -5,6 +5,10 @@ import { fileStoreOf } from "../data/repository";
 import { aiClient, aiConfigured, aiModel } from "../ai/client";
 import { aiDemoMode, demoClient, demoTranscript } from "../ai/demo";
 import { NOTE_FIELDS, NOTE_KEYS, draftSiteNotes, planFill, type NoteField } from "../ai/siteNotes";
+import { can } from "../auth/roles";
+import { CUSTOMER_FIELD_LABELS, planCustomerFill } from "../domain/aiFill";
+import { findDuplicates } from "../domain/customers";
+import { MeasurementInput } from "../domain/inspections";
 import { transcribe, transcriptionProvider, TranscriptionError } from "../ai/transcribe";
 import { HttpError } from "./api";
 import { audit } from "./audit";
@@ -81,11 +85,57 @@ export async function fillFromVoiceNotes(inspectionId: string, session: SessionP
     transcript: transcripts.map((t) => `${t.name}\n${t.text}`).join("\n\n"),
     transcriptReviewed: false,
   };
-  if (draft.accessDifficulty && !insp.accessDifficulty) update.accessDifficulty = draft.accessDifficulty;
-  if (draft.accessWidthM !== undefined && (insp.accessWidthM === null || insp.accessWidthM === undefined)) update.accessWidthM = draft.accessWidthM;
+  const label = (k: NoteField) => NOTE_FIELDS[k];
+  const filled: string[] = plan.filled.map(label);
+  const kept: string[] = plan.kept.map(label);
+  if (draft.accessDifficulty && !insp.accessDifficulty) { update.accessDifficulty = draft.accessDifficulty; filled.push("Access difficulty"); }
+  if (draft.accessWidthM !== undefined && (insp.accessWidthM === null || insp.accessWidthM === undefined)) { update.accessWidthM = draft.accessWidthM; filled.push("Access width"); }
+  if (draft.budgetDollars !== undefined && (insp.budget === null || insp.budget === undefined)) { update.budget = draft.budgetDollars * 100; filled.push("Budget"); }
   await repo.update("inspections", inspectionId, update as never);
 
-  const label = (k: NoteField) => NOTE_FIELDS[k];
-  audit(session, { action: "inspection.ai_fill", entity: "inspections", recordId: inspectionId, summary: `${insp.title ?? "Inspection"}: AI wrote up ${transcripts.length} voice note(s)${status.demo ? " (demo stand-in)" : ""}; filled ${plan.filled.map(label).join(", ") || "nothing new"}${plan.kept.length ? `; kept your edits in ${plan.kept.map(label).join(", ")}` : ""}` });
-  return { transcribed, filled: plan.filled.map(label), kept: plan.kept.map(label), summary: draft.summary, demo: status.demo };
+  // Customer contact details: empty boxes only, and only for people allowed to edit customers.
+  const notSaved: string[] = [];
+  if (customer && draft.customer) {
+    const { updates, differs } = planCustomerFill(customer, draft.customer);
+    const keys = Object.keys(updates) as (keyof typeof updates)[];
+    if (keys.length && !can(session.role, "crm.edit")) {
+      notSaved.push(...keys.map((k) => `customer ${CUSTOMER_FIELD_LABELS[k].toLowerCase()} (you can't edit customers)`));
+    } else if (keys.length) {
+      const dupes = findDuplicates({ ...customer, ...updates }, await repo.list("customers"), customer.id).filter((d) => d.strength === "strong");
+      if (dupes.length) notSaved.push(`customer details (another customer, ${dupes[0]!.name}, already has them)`);
+      else {
+        await repo.update("customers", customer.id, updates);
+        filled.push(...keys.map((k) => `Customer ${CUSTOMER_FIELD_LABELS[k].toLowerCase()}`));
+        audit(session, { action: "customer.ai_fill", entity: "customers", recordId: customer.id, summary: `Filled ${keys.map((k) => CUSTOMER_FIELD_LABELS[k]).join(", ")} on ${customer.name} from a site visit recording`, before: Object.fromEntries(keys.map((k) => [k, null])), after: updates });
+      }
+    }
+    kept.push(...differs.map((d) => `customer ${CUSTOMER_FIELD_LABELS[d.field].toLowerCase()} (recording says ${d.inFile})`));
+  }
+
+  // Sizes that were said out loud become measurements marked "AI-assisted, Low / Verify", never ticked as verified.
+  let measurementsAdded = 0;
+  if (draft.measurements?.length) {
+    const existing = new Set((await repo.list("measurements")).filter((m) => m.inspectionIds?.includes(inspectionId)).map((m) => (m.title ?? "").toLowerCase()));
+    for (const m of draft.measurements) {
+      const parsed = MeasurementInput.safeParse({ zone: m.zone, workType: m.workType, unit: m.unit, lengthM: m.lengthM ?? null, widthM: m.widthM ?? null, heightM: m.heightM ?? null, measuredQuantity: m.quantity ?? null, method: "AI-assisted", confidence: "Low / Verify", estimatorNotes: `From the recording: ${m.note || "size mentioned"}. Check on site.`.slice(0, 1000), verified: false });
+      if (!parsed.success) continue;
+      const title = `${parsed.data.zone} – ${parsed.data.workType}`;
+      if (existing.has(title.toLowerCase())) continue;
+      existing.add(title.toLowerCase());
+      await repo.create("measurements", { ...parsed.data, title, inspectionIds: [insp.id], projectIds: insp.projectIds ?? [] });
+      measurementsAdded++;
+    }
+    if (measurementsAdded) filled.push(`${measurementsAdded} measurement${measurementsAdded === 1 ? "" : "s"} (marked Low / Verify)`);
+  }
+
+  // What the recording didn't cover, so the person knows what to fill in by hand.
+  const after = { ...insp, ...update } as Record<string, unknown>;
+  const blank: string[] = NOTE_KEYS.filter((k) => !String(after[k] ?? "").trim()).map(label);
+  if (customer) {
+    const c = { ...customer, ...(await repo.get("customers", customer.id)) } as Record<string, unknown>;
+    for (const k of ["phone", "email", "address", "suburb"] as const) if (!String(c[k] ?? "").trim()) blank.push(`Customer ${CUSTOMER_FIELD_LABELS[k].toLowerCase()}`);
+  }
+
+  audit(session, { action: "inspection.ai_fill", entity: "inspections", recordId: inspectionId, summary: `${insp.title ?? "Inspection"}: AI wrote up ${transcripts.length} voice note(s)${status.demo ? " (demo stand-in)" : ""}; filled ${filled.join(", ") || "nothing new"}${kept.length ? `; kept saved values in ${kept.join(", ")}` : ""}` });
+  return { transcribed, filled, kept, notSaved, blank, measurementsAdded, summary: draft.summary, demo: status.demo };
 }

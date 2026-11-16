@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { clock, recorderType, shrinkPhoto } from "@/components/media/browser";
+import { audioDuration, clock, mb, recorderType, shrinkPhoto } from "@/components/media/browser";
+import { AUDIO_ACCEPT, MAX_RECORDING_SECONDS, MAX_VOICE_BYTES } from "@/lib/domain/media";
 
 interface Proposal { id: string; kind: string; summary: string; details?: string[]; endpoint: string; method: "POST" | "PATCH"; body: Record<string, unknown> }
 interface Shared { id: string; kind: "photo" | "voice" | "document"; name: string; transcript?: string }
@@ -16,7 +17,7 @@ const TOOL_LABELS: Record<string, string> = {
 };
 const MAX_FILES_PER_MESSAGE = 4;
 const MAX_FILES_PER_CHAT = 6;
-const MAX_SECONDS = 15 * 60;
+const MAX_SECONDS = MAX_RECORDING_SECONDS;
 const ICON = { photo: "🖼", voice: "🎙", document: "📄" } as const;
 
 async function share(blob: Blob, name: string, extra: Record<string, string> = {}): Promise<Shared> {
@@ -78,10 +79,13 @@ export function AssistantChat({ suggestions, canShare = true }: { suggestions: s
     const files = Array.from(list).slice(0, Math.max(0, roomFor));
     if (files.length < list.length) setError(roomFor <= 0 ? "That's the most files for one chat. Start a new chat for more." : `Only ${roomFor} more file(s) fit in this message.`);
     for (const f of files) {
-      setUploading(`Sending ${f.name}…`);
+      if (f.size > MAX_VOICE_BYTES) { setError(`${f.name} is ${mb(f.size)}. ATLAS takes files up to ${mb(MAX_VOICE_BYTES)}. On iPhone, set Voice Memos > Audio Quality to Compressed, or split the recording.`); continue; }
+      const isAudio = f.type.startsWith("audio/") || /\.(m4a|mp3|aac|wav|ogg|opus|oga)$/i.test(f.name);
+      setUploading(isAudio ? `Listening to ${f.name}. A long recording can take a minute…` : `Sending ${f.name}…`);
       try {
         const blob = f.type.startsWith("image/") ? await shrinkPhoto(f) : f;
-        const saved = await share(blob, f.name);
+        const durationS = isAudio ? await audioDuration(f) : undefined;
+        const saved = await share(blob, f.name, durationS ? { durationS: durationS.toFixed(1) } : {});
         setPending((p) => [...p, saved]);
       } catch (e) {
         setError(`${f.name}: ${(e as Error).message}`);
@@ -175,7 +179,7 @@ export function AssistantChat({ suggestions, canShare = true }: { suggestions: s
       <div className="flex-1 space-y-4 p-4 sm:p-5" aria-live="polite">
         {turns.length === 0 && (
           <div>
-            <p className="muted mb-3">Try one of these, or ask your own question.{canShare && " You can also share a PDF, photo or voice note and say which job it's for, and ATLAS will suggest what to fill in."}</p>
+            <p className="muted mb-3">Try one of these, or ask your own question.{canShare && " You can also tap 📎 File to share a PDF, photo or a recording from your phone (a call or meeting from Voice Memos or WhatsApp). Say which job it's for, or that it's a new customer, and ATLAS will suggest what to fill in. Anything not in the file is left blank."}</p>
             <div className="flex flex-wrap gap-2">{suggestions.map((s) => <button key={s} type="button" className="btn-secondary text-sm" onClick={() => ask(s)}>{s}</button>)}</div>
           </div>
         )}
@@ -246,8 +250,8 @@ export function AssistantChat({ suggestions, canShare = true }: { suggestions: s
           <div className="flex gap-2">
             {canShare && (
               <>
-                <input ref={picker} id="assistant-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/*,audio/*" multiple className="sr-only" onChange={(e) => addFiles(e.target.files)} />
-                <button type="button" className="btn-secondary" disabled={working || recording || roomFor <= 0} onClick={() => picker.current?.click()} aria-label="Add a PDF or photo" title="Add a PDF or photo">📎</button>
+                <input ref={picker} id="assistant-file" type="file" accept={`application/pdf,image/jpeg,image/png,image/webp,image/heic,image/*,${AUDIO_ACCEPT}`} multiple className="sr-only" onChange={(e) => addFiles(e.target.files)} />
+                <button type="button" className="btn-secondary" disabled={working || recording || roomFor <= 0} onClick={() => picker.current?.click()} aria-label="Add a PDF, photo or recording" title="Add a PDF, photo or recording">📎 File</button>
                 <button type="button" className="btn-secondary" disabled={working || recording || roomFor <= 0} onClick={startRecording} aria-label="Record a voice note" title="Record a voice note">🎙</button>
               </>
             )}

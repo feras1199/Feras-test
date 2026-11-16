@@ -22,7 +22,8 @@ export function demoTranscript(request: string, n: number): string {
       `Builder: So tell me what you're after.`,
       `Customer: We'd like ${ask}. We want it done before Christmas if possible.`,
       `Builder: The ground falls about 300 mm from the house to the back fence, so we'll need to level it out.`,
-      `Customer: Our budget is around fifteen thousand.`,
+      `Customer: Our budget is around fifteen thousand. The back lawn is about 40 square metres.`,
+      `Customer: Best number for me is my mobile, my mobile is 0491 570 159`,
     ],
     [
       `Builder: Side access is about 1.1 metres wide, so a small excavator will fit but no truck.`,
@@ -75,6 +76,15 @@ export function demoClient(): MessagesClient {
           const width = /(\d+(?:\.\d+)?) metres wide/.exec(text);
           input.accessWidthM = width ? Number(width[1]) : null;
           input.accessDifficulty = width && Number(width[1]) < 1.5 ? "Difficult" : "";
+          input.budgetDollars = /budget is around fifteen thousand/i.test(text) ? 15000 : null;
+          input.customer = {
+            phone: /mobile is ([\d ]{8,})/.exec(text)?.[1]?.trim() ?? "",
+            email: /email is (\S+@\S+?)\.?\s/.exec(text + " ")?.[1] ?? "",
+            address: /address is ([^,\n]+),/.exec(text)?.[1]?.trim() ?? "",
+            suburb: /address is [^,\n]+, ([A-Za-z ]+)/.exec(text)?.[1]?.trim() ?? "",
+          };
+          const area = /(\d+) square metres/.exec(text);
+          input.measurements = area ? [{ zone: "Back lawn", workType: "Turfing", unit: "m²", lengthM: null, widthM: null, heightM: null, quantity: Number(area[1]), note: `About ${area[1]} m² mentioned (demo)` }] : [];
           input.summary = `Demo summary (made up for testing).\n${sentences.slice(0, 6).map((s) => `- ${s}`).join("\n")}`;
           return {
             id: "msg_demo", type: "message", role: "assistant", model: "demo", stop_reason: "end_turn", stop_sequence: null,

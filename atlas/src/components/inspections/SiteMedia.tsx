@@ -1,12 +1,13 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { clock, recorderType, shrinkPhoto } from "@/components/media/browser";
+import { audioDuration, clock, mb, recorderType, shrinkPhoto } from "@/components/media/browser";
+import { AUDIO_ACCEPT, MAX_RECORDING_SECONDS, MAX_VOICE_BYTES } from "@/lib/domain/media";
 
 export type MediaFile = { id: string; kind: "photo" | "voice"; name: string; durationS?: number; createdBy: string; createdTime: string; transcript?: string };
 type AiStatus = { demo: boolean; transcription: boolean; writeUp: boolean };
 
-const MAX_SECONDS = 15 * 60;
+const MAX_SECONDS = MAX_RECORDING_SECONDS;
 
 async function upload(inspectionId: string, blob: Blob, extra: Record<string, string> = {}) {
   const fd = new FormData();
@@ -57,6 +58,32 @@ export function SiteMedia({ inspectionId, files, editable, available, ai = { dem
       setBusy(false);
       router.refresh();
     }
+  }
+
+  async function addRecordings(list: FileList | null) {
+    if (!list?.length) return;
+    setError(null); setStatus(null); setAiResult(null);
+    const all = Array.from(list);
+    const big = all.find((f) => f.size > MAX_VOICE_BYTES);
+    if (big) { setError(`${big.name} is ${mb(big.size)}. ATLAS takes recordings up to ${mb(MAX_VOICE_BYTES)}. On iPhone, set Voice Memos > Audio Quality to Compressed, or split the recording.`); return; }
+    setBusy(true);
+    let done = 0;
+    try {
+      for (const f of all) {
+        setStatus(`Uploading ${f.name} (${mb(f.size) === "0 MB" ? "under 1 MB" : mb(f.size)})${all.length > 1 ? `, ${done + 1} of ${all.length}` : ""}…`);
+        const durationS = await audioDuration(f);
+        await upload(inspectionId, f, { name: f.name.replace(/\.[a-z0-9]+$/i, "").slice(0, 80), ...(durationS ? { durationS: durationS.toFixed(1) } : {}) });
+        done++;
+      }
+      setStatus(`${done} recording${done === 1 ? "" : "s"} saved.`);
+    } catch (e) {
+      setError(`${(e as Error).message}${done ? ` ${done} of ${all.length} saved.` : ""}`);
+      setStatus(null);
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
+    if (done && aiReady) void writeUp();
   }
 
   async function startRecording() {
@@ -124,7 +151,15 @@ export function SiteMedia({ inspectionId, files, editable, available, ai = { dem
       if (!res?.ok) throw new Error(json.error ?? "Couldn't reach the server. Your voice notes are saved; try Write up again later.");
       const filled: string[] = json.filled ?? [];
       const kept: string[] = json.kept ?? [];
-      setAiResult(`${filled.length ? `Filled in: ${filled.join(", ")}.` : "No empty boxes needed filling."}${kept.length ? ` Left your own writing in: ${kept.join(", ")}.` : ""} Check them below before relying on them.`);
+      const blank: string[] = json.blank ?? [];
+      const notSaved: string[] = json.notSaved ?? [];
+      setAiResult([
+        filled.length ? `Filled in: ${filled.join(", ")}.` : "No empty boxes needed filling.",
+        kept.length ? `Kept what was already there in: ${kept.join(", ")}.` : "",
+        notSaved.length ? `Couldn't fill: ${notSaved.join(", ")}.` : "",
+        blank.length ? `Not in the recording, fill in by hand: ${blank.join(", ")}.` : "",
+        "Check everything below before relying on it.",
+      ].filter(Boolean).join("\n"));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -198,9 +233,16 @@ export function SiteMedia({ inspectionId, files, editable, available, ai = { dem
               <button type="button" className="btn-secondary" onClick={() => stopRecording(true)}>Discard</button>
             </div>
           ) : (
-            <button type="button" className="btn-primary" disabled={busy} onClick={startRecording}>● Record a voice note</button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-primary" disabled={busy} onClick={startRecording}>● Record a voice note</button>
+              <label className={`btn-secondary inline-flex cursor-pointer ${busy ? "pointer-events-none opacity-50" : ""}`}>
+                ⬆ Upload a recording
+                <input type="file" accept={AUDIO_ACCEPT} multiple className="sr-only" disabled={busy} aria-label="Upload a recording from your phone" onChange={(e) => { addRecordings(e.target.files); e.target.value = ""; }} />
+              </label>
+            </div>
           ))}
-          {recording && <p className="mt-2 text-xs text-stone-500">Keep ATLAS open while you talk. It stops by itself at 15 minutes.</p>}
+          {editable && !recording && <p className="mt-2 text-xs text-stone-500">Upload a meeting recorded in Voice Memos, WhatsApp or any recorder app{aiReady ? ". ATLAS writes it up and fills in the empty boxes by itself" : ""}.</p>}
+          {recording && <p className="mt-2 text-xs text-stone-500">Keep ATLAS open while you talk. It stops by itself after {MAX_SECONDS / 60} minutes.</p>}
         </div>
       </div>
 
@@ -212,7 +254,7 @@ export function SiteMedia({ inspectionId, files, editable, available, ai = { dem
           </div>
           {!aiReady && <p className="mt-1 text-xs text-stone-500">Turning voice notes into text and filling in the notes needs two keys on the server: a transcription key and an Anthropic key. Until then, voice notes are saved and play back as normal.</p>}
           {writing && <p className="mt-2 text-sm text-stone-600" role="status">Listening to the voice notes and filling in the site notes…</p>}
-          {aiResult && !writing && <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{aiResult}</p>}
+          {aiResult && !writing && <p className="mt-2 whitespace-pre-line rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{aiResult}</p>}
           {summary && <div className="mt-2"><p className="label">Meeting summary</p><p className="whitespace-pre-wrap text-sm text-stone-800">{summary}</p></div>}
         </div>
       )}

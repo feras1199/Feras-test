@@ -2,9 +2,17 @@ import type { FileKind } from "../data/repository";
 
 /** Photos are shrunk on the phone before upload, so 8 MB is generous. */
 export const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
-/** About 30 minutes of speech at the bitrate the recorder asks for. */
-export const MAX_VOICE_BYTES = 12 * 1024 * 1024;
-export const MAX_VOICE_SECONDS = 15 * 60;
+/**
+ * Recordings uploaded from the phone (Voice Memos, WhatsApp, call recorders) can be long meetings.
+ * 50 MB is about 2 hours from iPhone Voice Memos on its normal setting, and well over 1 hour
+ * from ATLAS's own recorder. Kept modest so a 512 MB server never runs short of memory.
+ */
+export const MAX_VOICE_BYTES = 50 * 1024 * 1024;
+export const MAX_VOICE_SECONDS = 3 * 60 * 60;
+/** ATLAS's own in-app recorder stops by itself after this long. */
+export const MAX_RECORDING_SECONDS = 60 * 60;
+/** For the file picker: iPhone Voice Memos (.m4a), WhatsApp (.opus/.ogg), Android recorders (.m4a/.mp3/.aac/.wav). */
+export const AUDIO_ACCEPT = "audio/*,.m4a,.mp3,.mp4,.aac,.wav,.ogg,.opus,.oga,.webm";
 
 /**
  * Works out the real type from the file's first bytes, so ATLAS only ever
@@ -26,8 +34,10 @@ export function sniffMedia(b: Uint8Array): { kind: FileKind; mime: string } | nu
     if (/^(heic|heix|hevc|heim|heis|mif1|msf1|avif|avis)$/.test(brand)) return null;
     return { kind: "voice", mime: "audio/mp4" };
   }
-  if (ascii(0, "ID3") || at(0, 0xff, 0xfb) || at(0, 0xff, 0xf3)) return { kind: "voice", mime: "audio/mpeg" };
+  if (ascii(0, "ID3") || at(0, 0xff, 0xfb) || at(0, 0xff, 0xf3) || at(0, 0xff, 0xfa) || at(0, 0xff, 0xf2)) return { kind: "voice", mime: "audio/mpeg" };
   if (at(0, 0xff, 0xf1) || at(0, 0xff, 0xf9)) return { kind: "voice", mime: "audio/aac" };
+  if (ascii(0, "RIFF") && ascii(8, "WAVE")) return { kind: "voice", mime: "audio/wav" };
+  if (ascii(0, "fLaC")) return { kind: "voice", mime: "audio/flac" };
   return null;
 }
 
