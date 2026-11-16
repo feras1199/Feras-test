@@ -9,7 +9,7 @@ export interface MessagesClient {
   beta: { messages: { create(params: Beta.MessageCreateParamsNonStreaming): Promise<Beta.BetaMessage> } };
 }
 
-export const DEFAULT_MODEL = "claude-opus-5-5";
+export const DEFAULT_MODEL = "claude-sonnet-5-5";
 const MAX_STEPS = 8;
 
 const fileId = z.string().regex(/^fil[A-Za-z0-9]{14}$/);

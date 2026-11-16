@@ -110,7 +110,7 @@ describe("assistant loop", () => {
     const last = second.messages[second.messages.length - 1]!;
     expect(last.role).toBe("user");
     expect((last.content as Beta.BetaToolResultBlockParam[]).map((b) => b.tool_use_id)).toEqual(["t1", "t2"]);
-    expect(second.model).toBe("claude-opus-5-5");
+    expect(second.model).toBe("claude-sonnet-5-5");
     expect(second.thinking).toEqual({ type: "adaptive" });
     expect(second.fallbacks).toBe("default");
   });

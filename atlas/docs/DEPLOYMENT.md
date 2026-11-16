@@ -8,18 +8,18 @@ ATLAS can keep all its data in its own Postgres database (`ATLAS_DATA_SOURCE=pos
 
 **One-tap setup on Render.** The `render.yaml` at the repo root creates the web service and a Postgres database together. Open
 `https://render.com/deploy?repo=https://github.com/feras1199/Feras-test/tree/claude/project-thread-wby4er`
-(use `main` instead of the branch once merged), enter the owner email and a password of 12+ characters when asked, and deploy. Then:
+(use `main` instead of the branch once merged), enter the owner email and a password of 12+ characters when asked, and deploy. `ANTHROPIC_API_KEY` and `DEEPGRAM_API_KEY` are asked for too; they are optional: ATLAS runs without them, and they can be added or changed later under the service's **Environment** tab (Render only asks for them on the first setup). Then:
 
 1. Sign in with that email and password.
 2. Settings → **Backup and import** → choose the Airtable export file → **Check the file** → **Import new records**.
 3. Download a backup from the same screen and keep it somewhere safe.
 
-**Cost and backups (checked 4 Nov 2026 on render.com/pricing):** the blueprint uses a Starter web service (US$7/month, always on; the free plan sleeps after 15 idle minutes and takes about a minute to wake) and the smallest paid database (`0.1c-256mb`, US$6/month, 1 GB included then US$0.30/GB). A free Render Postgres is deleted 30 days after creation and has no backups, so don't use it for real data. Paid databases get point-in-time recovery (the last 3 days on the Hobby workspace plan, 7 days on Pro). On top of that, take both downloads on Settings → Backup and import weekly:
+**Cost and backups (checked 16 Nov 2026 on render.com/pricing and the blueprint spec):** the blueprint uses a Starter web service (`starter`, now also called `0.5c-512mb`, US$7/month, always on; the free plan sleeps after 15 idle minutes and takes about a minute to wake) and the smallest paid database (`0.1c-256mb`, US$6/month). Database storage is extra at US$0.30 per GB a month; Render gives this plan 15 GB by default, so the blueprint asks for 5 GB (about US$1.50) instead. Storage can be raised later in Render but never lowered. A free Render Postgres is deleted 30 days after creation and has no backups, so don't use it for real data. Paid databases get point-in-time recovery (the last 3 days on the Hobby workspace plan, 7 days on Pro). On top of that, take both downloads on Settings → Backup and import weekly:
 
 - **Download records (.json)**: every record, the logins added in the app (with scrambled passwords) and the audit log. Import it on the same screen of a fresh database to get all of that back.
 - **Download photos and recordings (.tar)**: every stored file plus a `manifest.json` saying which record each belongs to. To put them back, import the records file first, then run `DATABASE_URL=… npm run restore-files -- atlas-files-YYYY-MM-DD.tar` from the `atlas` folder. Files already in the database are left alone.
 
-Photos and recordings live in the database, so they count towards its 1 GB. The Backup and import screen shows how much is used.
+Photos and recordings live in the database, so they count towards its 5 GB. The Backup and import screen shows how much is used.
 
 **How data is stored.** One table, `atlas_records(entity, id, created_time, updated_time, data jsonb)`, holds every record; the field list stays in `src/lib/data/entities.ts`, so adding a field needs no database migration. `atlas_audit` keeps the audit log permanently and `atlas_imports` records each import. Tables are created automatically on first use.
 
@@ -59,7 +59,7 @@ Once the additive "Atlas Audit Log" table is approved in Airtable, the audit log
 | `ATLAS_ADDRESS_LOOKUP` | no | Set to `off` to stop sending typed addresses to any outside service. |
 | `OPENAI_API_KEY` | no | Alternative speech-to-text if there is no Deepgram key. Model `gpt-4o-mini-transcribe` unless `ATLAS_TRANSCRIBE_MODEL` is set. Used for transcription only. |
 | `ATLAS_AI_DEMO` | no | `1` turns on labelled stand-ins for transcription and the write-up, **only** in demo-data mode, so the flow can be tested without keys. Ignored with real data. |
-| `ATLAS_AI_MODEL` | no | Defaults to `claude-opus-5-5`. |
+| `ATLAS_AI_MODEL` | no | Defaults to `claude-sonnet-5-5` (Claude Sonnet 5.5, US$2 in / US$10 out per million tokens). Set `claude-opus-5-5` for the stronger, roughly twice as expensive model. Do not set `claude-haiku-5-5` without a code change: Ask ATLAS sends `fallbacks: "default"`, which Haiku 5.5 does not support. |
 | `QUICKBOOKS_CLIENT_ID` / `QUICKBOOKS_CLIENT_SECRET` | no | Reserved. The QuickBooks connection is not built yet (see known limitations). |
 | `ATLAS_ALLOW_DEMO_LOGINS` | never in production | Enables the demo accounts. Only for test environments. |
 | `ATLAS_MEMORY_PERSIST` | no | `1` keeps the demo store in `data/local-store.json`. Demo mode only. |
