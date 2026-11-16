@@ -20,7 +20,7 @@ export const DEFAULT_ESTIMATE: EstimateSettings = {
   rates: { skilled: 85, general: 60, supervisor: 100 },
   productivity: {
     paving: 1.0, 'wall.concrete-sleeper': 1.5, 'wall.segmental-block': 2.0, 'wall.sandstone-block': 3.0, 'wall.timber-sleeper': 1.5,
-    garden: 0.4, planting: 0.15, turf: 0.15, deck: 2.5, drain: 0.5, edging: 0.25, light: 0.75, pit: 2, tree: 1.5, excavation: 0.5,
+    garden: 0.4, planting: 0.15, turf: 0.15, deck: 2.5, pergola: 3.0, firepit: 6, drain: 0.5, edging: 0.25, light: 0.75, pit: 2, tree: 1.5, excavation: 0.5,
   },
   skilledShare: 0.6,
   supervisionPct: 10,

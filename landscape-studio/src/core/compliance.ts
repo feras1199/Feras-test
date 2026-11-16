@@ -134,6 +134,32 @@ export function evaluateCompliance(project: Project, priceInc: number | null, se
     });
   }
 
+  // 4b. Pergolas (same exempt-development subdivision as decks)
+  for (const d of proposed.filter(o => o.type === 'pergola')) {
+    const area = polygonArea(d.points), ht = d.props.height, db = d.props.distToBoundary;
+    const fail: string[] = [];
+    if (area > 25) fail.push(`roof area ${area.toFixed(1)} m² exceeds 25 m²`);
+    if (ht != null && ht !== '' && Number(ht) > 3) fail.push(`height ${ht} m exceeds 3 m`);
+    if (db != null && db !== '' && Number(db) < 0.9) fail.push(`${db} m from boundary is less than 900 mm`);
+    out.push({
+      ...base(`pergola-exempt:${d.id}`, `Planning pathway: ${d.name}`, SRC.decks), objectId: d.id,
+      rule: 'Exempt pergolas share the Codes SEPP Subdivision 6 standards with decks: no more than 25 m², no higher than 3 m above existing ground, at least 900 mm from each lot boundary, behind the building line, and total-area limits.',
+      parameter: `Roof area ${area.toFixed(1)} m²; height ${ht ?? 'unknown'} m; distance to boundary ${db ?? 'unknown'} m`,
+      status: fail.length ? 'potential' : 'insufficient',
+      result: fail.length ? `Does not meet exempt standards: ${fail.join('; ')}.` : 'Boundary distance and total-area standards are not all recorded or encoded.',
+      uncertainty: 'Structural adequacy, wind loading and roof drainage are not assessed.',
+      humanReview: 'Check Subdivision 6; structure to the kit manufacturer or an engineer; roof water to stormwater.',
+    });
+  }
+  for (const f of proposed.filter(o => o.type === 'firepit')) out.push({
+    ...base(`firepit:${f.id}`, `Fire pit: ${f.name}`, { n: 'Local council rules on outdoor fires; gasfitting licence (NSW Government categories of work)', u: SRC.categories.u, e: 'Varies by council' }, site.council || 'Local council'), objectId: f.id,
+    rule: 'Councils control outdoor solid-fuel burning. Gas connections are specialist work needing a licensed gasfitter.',
+    parameter: `Product: ${f.materialId ?? 'not selected'}; bushfire prone ${site.bushfire}`,
+    status: 'potential', result: 'Fire pit in the design. Burning rules and any gas connection need checking.',
+    uncertainty: 'Council rules are not encoded. Clearance to structures, fences and trees is not checked.',
+    humanReview: `Check ${site.council || 'the council'} rules; licensed gasfitter for gas units; keep clear of timber and overhanging trees.`,
+  });
+
   // 5. Decks
   for (const d of proposed.filter(o => o.type === 'deck')) {
     const area = polygonArea(d.points), ht = d.props.height, db = d.props.distToBoundary;

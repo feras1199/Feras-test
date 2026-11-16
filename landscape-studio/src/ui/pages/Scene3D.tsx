@@ -46,6 +46,13 @@ function buildScene(project: Project, materials: Material[]) {
   for (const o of objs) {
     const g = GEOM[o.type];
     if (g === 'area' && o.points.length >= 3) {
+      if (o.type === 'pergola') {
+        const h = Number(o.props.height) || 2.7, bb = bbox(o.points), timber = std('#6b5140');
+        for (const [x, y] of [[bb.minX, bb.minY], [bb.maxX, bb.minY], [bb.minX, bb.maxY], [bb.maxX, bb.maxY]]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, h, 0.12), timber); post.position.set(x, h / 2, y); post.castShadow = true; group.add(post); }
+        for (let x = bb.minX; x <= bb.maxX + 0.001; x += 0.35) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, bb.h + 0.4), timber); r.position.set(x, h + 0.075, bb.minY + bb.h / 2); r.castShadow = true; group.add(r); }
+        for (const y of [bb.minY, bb.maxY]) { const beam = new THREE.Mesh(new THREE.BoxGeometry(bb.w + 0.4, 0.2, 0.1), timber); beam.position.set(bb.minX + bb.w / 2, h - 0.05, y); group.add(beam); }
+        continue;
+      }
       if (o.type === 'boundary') {
         const pts = [...o.points, o.points[0]].map(p => new THREE.Vector3(p.x, 0.01, p.y));
         group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: '#b3261e', dashSize: 0.4, gapSize: 0.2 })).computeLineDistances());
@@ -106,6 +113,14 @@ function buildScene(project: Project, materials: Material[]) {
         bulb.position.set(p.x, 0.47, p.y);
         const glow = new THREE.PointLight('#ffd27a', 0.6, 3, 2); glow.position.set(p.x, 0.5, p.y);
         group.add(pole, bulb, glow);
+      } else if (o.type === 'firepit') {
+        const r = (Number(o.props.diameter) || 1) / 2;
+        const bowl = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.85, 0.45, 24), std('#3a3a3a', { metalness: 0.4 }));
+        bowl.position.set(p.x, 0.225, p.y); bowl.castShadow = true;
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(r * 0.45, 0.5, 12), new THREE.MeshStandardMaterial({ color: '#f59e0b', emissive: '#f97316', emissiveIntensity: 1.5 }));
+        flame.position.set(p.x, 0.7, p.y);
+        const glow = new THREE.PointLight('#ff9a3c', 1.2, 5, 2); glow.position.set(p.x, 0.9, p.y);
+        group.add(bowl, flame, glow);
       } else if (o.type === 'pit') {
         const m = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.04, 0.45), std('#3f4a55', { metalness: 0.5 }));
         m.position.set(p.x, 0.07, p.y); group.add(m);

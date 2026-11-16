@@ -8,6 +8,7 @@ import { fmt, money, UNIT_LABEL } from '../../core/units.ts';
 import { today, uid } from '../../core/project.ts';
 import { Banner, download, Empty, Field, Num, PriceBadge, safeName, Text } from '../kit.tsx';
 import type { ExtraLine } from '../../core/types.ts';
+import { withExampleAllowances } from '../../core/catalogue.ts';
 
 type View = 'internal' | 'customer' | 'materials' | 'labour' | 'quantities' | 'compare' | 'settings';
 
@@ -23,7 +24,8 @@ export function EstimatePage() {
     <p className="muted">Calculated from the drawing and the Materials Library. Change a dimension or material and every figure here updates.</p>
     {p.synthetic && <Banner kind="info">Synthetic demo: labour rates, productivity, equipment and disposal lines are assumptions for demonstration, not market rates.</Banner>}
     {e.flags.length > 0 && <Banner kind="warn"><b>Estimate incomplete: {e.flags.length} open items.</b> Unpriced items are excluded from the total, never guessed.
-      <details className="explain"><summary>Show open items</summary><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{e.flags.map((f, i) => <li key={i}>{f}</li>)}</ul></details></Banner>}
+      <details className="explain"><summary>Show open items</summary><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{e.flags.map((f, i) => <li key={i}>{f}</li>)}</ul></details>
+      {e.flags.some(f => /No price/.test(f)) && <button className="btn sm" style={{ marginTop: 6 }} onClick={() => s.update(x => { x.priceAssumptions = withExampleAllowances(x.priceAssumptions, s.materials); }, { audit: 'Example allowances applied to unpriced items' })}>Fill unpriced items with example allowances</button>}</Banner>}
     {e.assumed.length > 0 && <Banner kind="warn"><b>{e.assumed.length} items use assumed prices for this project.</b> They are included in the total and labelled "Assumption".
       <details className="explain"><summary>Show assumed prices</summary><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{e.assumed.map((f, i) => <li key={i}>{f}</li>)}</ul></details></Banner>}
     <div className="grid g4" style={{ marginBottom: 14 }}>

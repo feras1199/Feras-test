@@ -47,6 +47,7 @@ export function validateProject(project: Project): Issue[] {
   // Overlaps between proposed surfaces
   const surf = objs.filter(o => o.layer === 'proposed' && SURFACES.includes(o.type) && o.points.length >= 3);
   for (let i = 0; i < surf.length; i++) for (let j = i + 1; j < surf.length; j++) {
+    if (surf[i].props.hostId === surf[j].id || surf[j].props.hostId === surf[i].id) continue; // intentionally set into the other surface
     const a = overlapArea(surf[i].points, surf[j].points);
     if (a == null) { if (surf[i].points.some(p => pointInPolygon(p, surf[j].points)) || surf[j].points.some(p => pointInPolygon(p, surf[i].points))) out.push({ severity: 'warn', kind: 'overlap', objectId: surf[i].id, message: `${surf[i].name} and ${surf[j].name} may overlap. Quantities would be double-counted.` }); }
     else if (a > 0.01) out.push({ severity: 'warn', kind: 'overlap', objectId: surf[i].id, message: `${surf[i].name} and ${surf[j].name} overlap by ${a.toFixed(2)} m². Quantities are double-counted in the overlap.` });

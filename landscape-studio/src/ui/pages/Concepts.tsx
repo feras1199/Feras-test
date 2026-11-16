@@ -9,6 +9,8 @@ import { uid } from '../../core/project.ts';
 import { prepareUpload, useMediaUrl } from '../media.ts';
 import { Banner, Empty, Field, Num, Text } from '../kit.tsx';
 import { Iso3D } from './Iso3D.tsx';
+import { IdeasPanel } from './IdeasPanel.tsx';
+import { buildPrompt, CHAT_PROMPT_INTRO } from '../../core/prompt.ts';
 import { ApiError } from '../../store/storage.ts';
 import type { DesignProposal, ProposalBrief, RenderAsset } from '../../core/types.ts';
 
@@ -35,9 +37,13 @@ export function Concepts() {
     <p className="muted">Three structured options the customer can choose from. Each option is a list of real geometry and material changes costed by the estimate engine. Pictures only illustrate them.</p>
     <Banner kind="warn"><b>{ILLUSTRATIVE_LABEL}</b> Concept pictures never create measurements, boundaries, drainage design or engineering.</Banner>
 
+    <div>{imgOn ? <Banner kind="ok">AI image generation is configured ({s.storage!.health.image!.provider} {s.storage!.health.image!.model}).</Banner>
+        : <Banner kind="info"><b>AI image generation is not configured.</b> Everything else works. You can import a render made elsewhere; it will be labelled "Imported illustrative render".</Banner>}</div>
     {story && <div className="card" data-testid="customer-story"><h2>What the customer asked for</h2><p style={{ margin: 0 }}>{p.brief.description}</p><small>{p.customer.name} · budget {p.brief.budgetMax ? money(p.brief.budgetMax, 0) : 'not set'} · synthetic demo</small></div>}
-    <div className="card">
-      <h2>Design brief</h2>
+    <IdeasPanel onGenerated={() => setTimeout(() => document.querySelector('[data-testid="concept-economy"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)} />
+    <details className="card" style={{ marginTop: 14 }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Or build a custom mix (choose items and style yourself)</summary>
+      <h2 style={{ marginTop: 10 }}>Design brief</h2>
       <div className="grid g3">
         <Field label="Style"><select id="concept-style" value={brief.style} onChange={e => setBrief({ ...brief, style: e.target.value })}>{STYLES.map(x => <option key={x}>{x}</option>)}</select></Field>
         <Field label="Budget ceiling (inc GST)"><Num value={brief.budgetMax} allowNull min={0} unit="AUD" onChange={v => setBrief({ ...brief, budgetMax: v })} /></Field>
@@ -52,11 +58,9 @@ export function Concepts() {
       <div className="row" style={{ marginTop: 12 }}><button className="btn primary" onClick={generate}><Wand2 size={16} /> {props.length ? 'Regenerate concepts' : 'Generate three concepts'}</button>
         {props.length > 0 && <small>Regenerating replaces draft and selected concepts; applied ones are kept.</small>}</div>
       {err && <div style={{ marginTop: 10 }}><Banner kind="danger">{err}</Banner></div>}
-      <div style={{ marginTop: 10 }}>{imgOn ? <Banner kind="ok">AI image generation is configured ({s.storage!.health.image!.provider} {s.storage!.health.image!.model}).</Banner>
-        : <Banner kind="info"><b>AI image generation is not configured.</b> Everything else works. You can import a render made elsewhere; it will be labelled "Imported illustrative render".</Banner>}</div>
-    </div>
+    </details>
 
-    {props.length === 0 ? <Empty title="No concepts yet"><p>Fill in the brief and press "Generate three concepts".</p></Empty> :
+    {props.length === 0 ? <Empty title="No concepts yet"><p>Upload the before photo, set the yard size, then pick an idea above.</p></Empty> :
       <div className="cards" style={{ marginTop: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>{props.map(x => <ConceptCard key={x.id} prop={x} />)}</div>}
 
     {props.some(x => x.status === 'customer-selected') && <ApplyPanel prop={props.find(x => x.status === 'customer-selected')!} />}
@@ -97,6 +101,7 @@ function ConceptCard({ prop }: { prop: DesignProposal }) {
   const s = useStore(), p = s.project!;
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState<{ k: 'danger' | 'info' | 'ok'; t: string } | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [selecting, setSelecting] = useState(false), [cust, setCust] = useState(p.customer.name), [note, setNote] = useState('');
   const upd = (fn: (x: DesignProposal) => void, audit?: string) => s.update(x => { const k = x.proposals?.find(z => z.id === prop.id); if (k) fn(k); }, audit ? { audit } : undefined);
   const over = p.brief.budgetMax != null && prop.costLow > p.brief.budgetMax;
@@ -137,9 +142,11 @@ function ConceptCard({ prop }: { prop: DesignProposal }) {
     <div className="row" style={{ marginTop: 8 }}>
       <button className="btn sm" disabled={busy} onClick={() => void ai()}><Sparkles size={14} /> {busy ? 'Working…' : 'Generate AI render'}</button>
       <button className="btn sm" disabled={busy} onClick={() => file.current?.click()}><ImagePlus size={14} /> Import render</button>
+      <button className="btn sm" onClick={() => setShowPrompt(!showPrompt)}>Copy prompt for ChatGPT</button>
       <input ref={file} type="file" accept="image/*" hidden data-testid={`import-${prop.tier}`} onChange={e => { const f = e.target.files?.[0]; if (f) void importRender(f); e.target.value = ''; }} />
     </div>
     {msg && <div style={{ marginTop: 8 }}><Banner kind={msg.k}>{msg.t}</Banner></div>}
+    {showPrompt && <PromptBox text={buildPrompt({ title: prop.title, style: prop.brief.style, changes: prop.changes.map(c => c.text), materials: prop.materials })} />}
     <p style={{ fontSize: '.86rem', marginTop: 8 }}>{prop.summary}</p>
     <div className="stat" style={{ fontSize: '1.25rem' }}>{money(prop.costLow, 0)} to {money(prop.costHigh, 0)}</div>
     <small>preliminary installed cost inc GST{!prop.costComplete && <span className="badge danger" style={{ marginLeft: 6 }}>incomplete</span>}{over && <span className="badge warn" style={{ marginLeft: 6 }}>over budget</span>}</small>
@@ -190,3 +197,14 @@ function ApplyPanel({ prop }: { prop: DesignProposal }) {
   </div>;
 }
 
+
+function PromptBox({ text }: { text: string }) {
+  const [state, setState] = useState<'idle' | 'copied' | 'select'>('idle');
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const copy = () => navigator.clipboard?.writeText(text).then(() => setState('copied'), () => { setState('select'); ref.current?.select(); }) ?? (setState('select'), ref.current?.select());
+  return <div style={{ marginTop: 8 }} data-testid="prompt-box">
+    <small>{CHAT_PROMPT_INTRO} Then save the picture and press "Import render" here. It will be labelled illustrative.</small>
+    <textarea ref={ref} readOnly value={text} style={{ marginTop: 4, minHeight: 110, fontSize: '.78rem' }} aria-label="Prompt text" onFocus={e => e.currentTarget.select()} />
+    <button className="btn sm" onClick={copy}>{state === 'copied' ? 'Copied' : 'Copy'}</button>{state === 'select' && <small> Copying is blocked here: the text is selected, use your device's Copy.</small>}
+  </div>;
+}

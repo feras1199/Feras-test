@@ -86,6 +86,15 @@ export const SEED_MATERIALS: Material[] = [
   { id: 'deck-composite-138', name: 'Composite decking board 138 x 23mm (per metre)', category: 'Timber', supplierId: 'generic', unit: 'lm', price: null, gstInclusive: true, priceStatus: 'quote-required', dims: { w: 138, t: 23 }, group: 'deck-board', tier: 'premium' },
   { id: 'deck-framing', name: 'Treated pine framing H3 (joists and bearers, per metre)', category: 'Timber', supplierId: 'barrenjoey', unit: 'lm', price: null, gstInclusive: true, priceStatus: 'quote-required', note: 'Section sizes must come from AS 1684 span tables or an engineer.' },
 
+  // ---- Outdoor living (added for design ideas; no verified prices)
+  { id: 'pergola-kit', name: 'Pergola, timber or aluminium (supply and install allowance, per m² of roof)', category: 'Timber', supplierId: 'generic', unit: 'm2', price: null, gstInclusive: true, priceStatus: 'quote-required', group: 'pergola', note: 'Post sizes, footings, spans and roof fixing must come from the kit manufacturer or an engineer. Attached pergolas may need council approval.' },
+  { id: 'firepit-gas', name: 'Fire pit (gas, installed by licensed gasfitter)', category: 'Consumables', supplierId: 'generic', unit: 'each', price: null, gstInclusive: true, priceStatus: 'quote-required', group: 'firepit', tier: 'premium', note: 'Gas connection is specialist licensed work.' },
+  { id: 'firepit-steel', name: 'Fire pit bowl, steel (freestanding)', category: 'Consumables', supplierId: 'generic', unit: 'each', price: null, gstInclusive: true, priceStatus: 'quote-required', group: 'firepit', tier: 'economy', note: 'Check council rules before solid-fuel burning.' },
+  { id: 'pav-stepper-900', name: 'Concrete stepping stone 900 x 450 x 40mm', category: 'Paving', supplierId: 'generic', unit: 'each', price: null, gstInclusive: true, priceStatus: 'quote-required', dims: { l: 900, w: 450, t: 40 }, group: 'stepper', tier: 'balanced' },
+  { id: 'pav-stepper-sandstone', name: 'Sandstone stepping stone 900 x 450 x 40mm', category: 'Sandstone', supplierId: 'stonefront', unit: 'each', price: null, gstInclusive: false, priceStatus: 'quote-required', dims: { l: 900, w: 450, t: 40 }, group: 'stepper', tier: 'premium' },
+  { id: 'gravel-pebble-black', name: 'Black river pebble 20-40mm', category: 'Aggregates', supplierId: 'generic', unit: 't', price: null, gstInclusive: true, priceStatus: 'quote-required', density: 1.5, densitySource: 'Assumed; confirm with supplier', increment: 0.5, group: 'gravel', tier: 'premium' },
+  { id: 'turf-synthetic', name: 'Synthetic turf 35-40 mm pile (per m²)', category: 'Turf', supplierId: 'generic', unit: 'm2', price: null, gstInclusive: true, priceStatus: 'quote-required', group: 'turf', note: 'Needs compacted crushed-rock base, not soil underlay.' },
+
   // ---- Lighting
   { id: 'light-spike', name: 'Low-voltage LED garden spike light', category: 'Lighting', supplierId: 'generic', unit: 'each', price: null, gstInclusive: true, priceStatus: 'quote-required', group: 'light' },
   { id: 'light-cable', name: 'Low-voltage garden lighting cable (per metre)', category: 'Lighting', supplierId: 'generic', unit: 'lm', price: null, gstInclusive: true, priceStatus: 'quote-required' },
@@ -98,3 +107,29 @@ export const CATEGORIES = [
 ];
 
 export const matMap = (list: Material[]) => new Map(list.map(m => [m.id, m]));
+
+/**
+ * EXAMPLE allowances ($ inc GST per unit of sale) for items that have no verified price.
+ * These are rough placeholders chosen for demonstration, NOT quotes or market research.
+ * They are only applied when the user asks, are stored on the project (never in the catalogue)
+ * and are shown everywhere as "assumption" until replaced with a real quote.
+ */
+export const EXAMPLE_ALLOWANCES: Record<string, number> = {
+  'sand-bedding': 120, 'sand-jointing': 25, 'edge-restraint': 12, 'pav-porcelain-600': 45, 'mulch': 110, 'gravel-deco': 200,
+  'plant-lomandra': 9, 'plant-westringia': 16, 'plant-dianella': 9, 'plant-lillypilly': 45, 'tree-advanced': 180,
+  'pvc-100-stormwater': 14, 'channel-drain': 90, 'pit-450': 95, 'light-spike': 85, 'light-cable': 4, 'light-transformer': 250,
+  'post-h-tbc': 85, 'slp-pine-2400': 45, 'deck-merbau-90': 14, 'deck-composite-138': 22, 'deck-framing': 9, 'edging-steel': 28,
+  'sst-stonefront-quote': 260, 'pergola-kit': 450, 'firepit-gas': 2500, 'firepit-steel': 400, 'pav-stepper-900': 35,
+  'pav-stepper-sandstone': 85, 'gravel-pebble-black': 350, 'turf-synthetic': 45,
+};
+export const EXAMPLE_NOTE = 'EXAMPLE ALLOWANCE, not a quote: replace with a supplier price';
+
+/** Adds example allowances for every catalogue item that has no price and no project allowance yet. */
+export function withExampleAllowances(existing: Record<string, { price: number; note: string }> | undefined, materials: Material[]) {
+  const out = { ...(existing ?? {}) };
+  for (const [id, price] of Object.entries(EXAMPLE_ALLOWANCES)) {
+    const m = materials.find(x => x.id === id);
+    if (m && m.price == null && !out[id]) out[id] = { price, note: EXAMPLE_NOTE };
+  }
+  return out;
+}

@@ -11,6 +11,8 @@ export const STYLE: Record<ObjType, TypeStyle> = {
   garden: { stroke: '#2f6b3a', fill: '#cfe6c8', w: 0.5, label: 'Garden bed' },
   turf: { stroke: '#4c8a3f', fill: '#e2f1d4', w: 0.35, label: 'Turf' },
   deck: { stroke: '#8a5a2b', fill: '#e6c9a5', w: 0.5, label: 'Deck' },
+  pergola: { stroke: '#5b4636', fill: '#d8cfc4', w: 0.6, dash: [4, 1.5], label: 'Pergola (roof outline)' },
+  firepit: { stroke: '#7c2d12', fill: '#f59e0b', w: 0.5, label: 'Fire pit' },
   gravel: { stroke: '#8a8172', fill: '#ece6da', w: 0.35, label: 'Gravel' },
   steps: { stroke: '#4b5563', fill: '#dcdfe4', w: 0.5, label: 'Steps' },
   wall: { stroke: '#111827', w: 1.4, label: 'Retaining wall' },

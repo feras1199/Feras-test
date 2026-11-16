@@ -9,15 +9,7 @@ export const imageStatus = () => ({ configured: !!KEY, provider: KEY ? PROVIDER 
 
 export class ImageError extends Error { status: number; code: string; constructor(m: string, status = 503, code = 'IMAGE_NOT_CONFIGURED') { super(m); this.status = status; this.code = code; } }
 
-export function buildPrompt(input: { title: string; style: string; changes: string[]; materials: string[] }) {
-  return [
-    `Photorealistic illustrative "after" visualisation of this same residential backyard in Sydney, Australia, in a ${input.style} style (${input.title}).`,
-    'Keep the existing house, fences, boundary, major trees and the camera viewpoint exactly where they are in the photo.',
-    `Show these proposed works: ${input.changes.slice(0, 12).join('; ')}.`,
-    `Materials: ${input.materials.slice(0, 8).join('; ')}.`,
-    'Natural daylight, realistic scale, no text, no people, no watermarks.',
-  ].join(' ');
-}
+export { buildPrompt } from '../src/core/prompt.ts';
 
 export async function generateRender(photo: Buffer, mime: string, prompt: string): Promise<{ png: Buffer; provider: string; model: string }> {
   if (!KEY) throw new ImageError('AI image generation is not configured on the server.');

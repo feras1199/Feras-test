@@ -52,6 +52,12 @@ export function assemblyFor(o: SiteObject, project: Project, lines: QtyLine[], m
     { name: 'Existing soil', purpose: 'Subsoil', product: 'Existing, loosened', qty: '-', source: '-', status: 'assumed', instruction: 'Loosen; remove rubble.', thicknessMm: null, fill: '#b7a58a' },
     { name: 'Edging', purpose: 'Defines bed', product: 'See garden edging items on the plan', qty: '-', source: 'Drawing', status: 'assumed', instruction: 'Install before soil.', thicknessMm: null, fill: 'none' },
   ] };
+  if (o.type === 'pergola') return { objectId: o.id, title: o.name, concept: true, banner: ENGINEER_REQUIRED, layers: [
+    { name: 'Roof / battens', purpose: 'Shade', product: name(o.materialId), qty: q(lines, o.id, 'Pergola (roof area)'), source: 'Selected product (allowance)', status: st(o.materialId), instruction: 'Install to the kit instructions.', thicknessMm: null, fill: '#a0826d' },
+    { name: 'Beams and posts', purpose: 'Structure', product: 'BY KIT MANUFACTURER / ENGINEER', qty: q(lines, o.id, 'Pergola posts (indicative count)') + ' (indicative)', source: 'Not designed by this software', status: 'review', instruction: 'Do not size from this sheet.', hold: 'Approved kit or engineer detail before ordering.', thicknessMm: null, fill: '#6b5140' },
+    { name: 'Footings', purpose: 'Hold posts down and up', product: 'SIZE BY ENGINEER / MANUFACTURER', qty: '-', source: 'Not designed by this software', status: 'review', instruction: 'Build only to an approved detail.', hold: 'Footing inspection before pouring if required by the certifier.', thicknessMm: null, fill: '#c0c4c8' },
+    { name: 'Roof water', purpose: 'Drainage', product: o.props.attached ? 'Attached: connect to house stormwater' : 'Freestanding: shed to garden', qty: '-', source: 'Design input', status: 'review', instruction: 'Licensed plumber for any stormwater connection.', thicknessMm: null, fill: 'none' },
+  ] };
   if (o.type === 'wall') {
     const sys: WallSystem = p.system ?? 'concrete-sleeper';
     const approved = project.approvals.some(a => a.kind === 'engineering' && a.scope === o.id);

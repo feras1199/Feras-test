@@ -14,7 +14,7 @@ export type IsoPrim =
   | { t: 'line'; a: [number, number]; b: [number, number]; stroke: string; w: number; dash?: number[] }
   | { t: 'circle'; c: [number, number]; r: number; fill: string; stroke: string };
 
-const HEIGHT = (o: SiteObject): number => o.type === 'building' ? 2.7 : o.type === 'wall' ? Number(o.props.exposedHeight) || 0.4 : o.type === 'fence' ? Number(o.props.height) || 1.8 : o.type === 'deck' ? Number(o.props.height) || 0.3 : o.type === 'steps' ? 0.3 : o.type === 'garden' ? 0.15 : 0;
+const HEIGHT = (o: SiteObject): number => o.type === 'pergola' ? 0 : o.type === 'building' ? 2.7 : o.type === 'wall' ? Number(o.props.exposedHeight) || 0.4 : o.type === 'fence' ? Number(o.props.height) || 1.8 : o.type === 'deck' ? Number(o.props.height) || 0.3 : o.type === 'steps' ? 0.3 : o.type === 'garden' ? 0.15 : 0;
 
 /** Display colour from the selected material, so a material change shows in 3D. */
 export function materialColour(o: SiteObject, materials: Material[]): string {

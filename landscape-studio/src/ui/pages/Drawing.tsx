@@ -15,7 +15,7 @@ import { Iso3D } from './Iso3D.tsx';
 type Tool = 'select' | 'pan' | 'measure' | 'calibrate' | ObjType;
 const GROUPS: [string, ObjType[]][] = [
   ['Existing site', ['boundary', 'building', 'feature', 'fence', 'tree', 'level']],
-  ['Proposed design', ['paving', 'wall', 'garden', 'turf', 'deck', 'gravel', 'steps', 'edging', 'drain', 'pit', 'light', 'cable', 'plant']],
+  ['Proposed design', ['paving', 'wall', 'garden', 'turf', 'deck', 'pergola', 'firepit', 'gravel', 'steps', 'edging', 'drain', 'pit', 'light', 'cable', 'plant']],
   ['Annotate', ['dimension', 'note', 'line']],
 ];
 const short = (t: ObjType) => TYPE_LABEL[t].replace(' (reference)', '').replace('Retaining wall', 'Retaining wall').replace('Site boundary', 'Site outline');
@@ -321,7 +321,7 @@ function Shape({ o, S, z, selected, dims }: { o: SiteObject; S: (q: Pt) => [numb
     {z > 24 && <Label x={x} y={y - 12} text={o.type === 'plant' ? `${o.props.qty ?? 1} × ${o.name}` : o.name} size={10} color="#374151" />}</g>;
 }
 
-const GROUP_FOR: Partial<Record<ObjType, string>> = { paving: 'paving', steps: 'paving', turf: 'turf', garden: 'soil', deck: 'deck-board', gravel: 'gravel', edging: 'edging', light: 'light', pit: 'pit', plant: 'plant', tree: 'tree' };
+const GROUP_FOR: Partial<Record<ObjType, string>> = { pergola: 'pergola', firepit: 'firepit', paving: 'paving', steps: 'paving', turf: 'turf', garden: 'soil', deck: 'deck-board', gravel: 'gravel', edging: 'edging', light: 'light', pit: 'pit', plant: 'plant', tree: 'tree' };
 
 function Inspector({ o, onDelete, onDuplicate }: { o: SiteObject; onDelete: () => void; onDuplicate: () => void }) {
   const s = useStore(), d = useDerived()!, p = s.project!;
@@ -410,6 +410,7 @@ function Inspector({ o, onDelete, onDuplicate }: { o: SiteObject; onDelete: () =
       {o.type === 'level' && <>{N('Reduced level', 'rl', { unit: 'RL m', nullable: true, min: -500, max: 9000 })}<small>Levels are estimates unless taken with a level and marked verified.</small></>}
       {o.type === 'note' && <Field label="Text"><Text value={o.props.text ?? ''} onChange={v => prop('text', v)} /></Field>}
       {o.type === 'fence' && N('Height', 'height', { unit: 'm', nullable: true, max: 5 })}
+      {o.type === 'pergola' && <><Banner kind="warn">Posts, beams, footings and roof fixing must come from the kit manufacturer or an engineer.</Banner><div className="grid g2">{N('Height', 'height', { unit: 'm', min: 2, max: 4 })}{N('Distance to boundary', 'distToBoundary', { unit: 'm', nullable: true })}</div></>}
       {o.type === 'feature' && <Field label="Note"><Text value={o.props.note ?? ''} onChange={v => prop('note', v)} placeholder='e.g. "To be demolished"' /></Field>}
 
       {lines.length > 0 && <>

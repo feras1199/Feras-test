@@ -23,7 +23,7 @@ export interface Measurement {
 }
 
 export type ObjType =
-  | 'boundary' | 'building' | 'feature' | 'paving' | 'garden' | 'turf' | 'deck' | 'gravel' | 'steps'
+  | 'boundary' | 'building' | 'feature' | 'paving' | 'garden' | 'turf' | 'deck' | 'gravel' | 'steps' | 'pergola' | 'firepit'
   | 'wall' | 'fence' | 'edging' | 'drain' | 'cable' | 'dimension' | 'line'
   | 'tree' | 'plant' | 'light' | 'pit' | 'level' | 'note';
 
@@ -164,6 +164,9 @@ export interface ProposalBrief {
   budgetMax: number | null;
   constraints: string;
   sourceMediaIds: string[];
+  /** Chosen design idea (layout pattern); absent = generic layout from inclusions. */
+  ideaId?: string;
+  conditions?: Record<string, boolean>;
 }
 
 export interface DesignProposal {
@@ -185,6 +188,7 @@ export interface DesignProposal {
   selection?: { by: string; customerName: string; date: string; note?: string };
   appliedVersionId?: string;
   approvedChangeIds?: string[];
+  ideaId?: string;
 }
 
 export interface ActualLine { category: string; estimated: number; actual: number; hoursEst?: number; hoursAct?: number; note?: string }
@@ -285,9 +289,9 @@ export interface CompanySettings {
 
 export const GEOM: Record<ObjType, GeomKind> = {
   boundary: 'area', building: 'area', feature: 'area', paving: 'area', garden: 'area', turf: 'area',
-  deck: 'area', gravel: 'area', steps: 'area',
+  deck: 'area', gravel: 'area', steps: 'area', pergola: 'area',
   wall: 'line', fence: 'line', edging: 'line', drain: 'line', cable: 'line', dimension: 'line', line: 'line',
-  tree: 'point', plant: 'point', light: 'point', pit: 'point', level: 'point', note: 'point',
+  tree: 'point', plant: 'point', light: 'point', pit: 'point', level: 'point', note: 'point', firepit: 'point',
 };
 
 export const TYPE_LABEL: Record<ObjType, string> = {
@@ -295,5 +299,5 @@ export const TYPE_LABEL: Record<ObjType, string> = {
   garden: 'Garden bed', turf: 'Turf', deck: 'Deck', gravel: 'Gravel area', steps: 'Steps',
   wall: 'Retaining wall', fence: 'Fence', edging: 'Garden edging', drain: 'Drainage line', cable: 'Lighting cable',
   dimension: 'Dimension', line: 'Line', tree: 'Tree', plant: 'Plant group', light: 'Light', pit: 'Drainage pit',
-  level: 'Level marker', note: 'Note',
+  level: 'Level marker', note: 'Note', pergola: 'Pergola', firepit: 'Fire pit',
 };

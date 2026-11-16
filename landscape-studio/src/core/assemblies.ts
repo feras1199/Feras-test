@@ -31,6 +31,8 @@ export function defaultProps(type: SiteObject['type']): Record<string, any> {
     case 'steps': return { risers: null, riserHeight: null };
     case 'level': return { rl: null };
     case 'note': return { text: 'Note' };
+    case 'pergola': return { height: 2.7, attached: true, distToBoundary: null };
+    case 'firepit': return { diameter: 1.0 };
     case 'fence': return { height: null };
     default: return {};
   }
@@ -51,6 +53,8 @@ export function defaultMaterial(type: SiteObject['type'], props: Record<string, 
     case 'pit': return 'pit-450';
     case 'plant': return 'plant-lomandra';
     case 'tree': return 'tree-advanced';
+    case 'pergola': return 'pergola-kit';
+    case 'firepit': return 'firepit-steel';
     default: return undefined;
   }
 }
@@ -61,6 +65,12 @@ export const objLength = (o: SiteObject) => (GEOM[o.type] === 'line' ? polylineL
 const num = (v: any): number | null => (v === null || v === undefined || v === '' || !isFinite(Number(v)) ? null : Number(v));
 
 interface Ctx { project: Project; mats: Map<string, Material>; out: QtyLine[] }
+
+/** Plan area minus anything set into it (stepping stones in gravel, a fire-pit circle in a lawn). */
+function netArea(ctx: Ctx, o: SiteObject) {
+  const insets = ctx.project.objects.filter(x => x.props.hostId === o.id && GEOM[x.type] === 'area');
+  return Math.max(0, polygonArea(o.points) - insets.reduce((a, x) => a + polygonArea(x.points), 0));
+}
 
 function add(ctx: Ctx, o: SiteObject, component: string, opts: {
   materialId?: string; net: number | null; unit: Unit; wastePct?: number; formula: string;
@@ -216,12 +226,13 @@ function wall(ctx: Ctx, o: SiteObject) {
 }
 
 function paving(ctx: Ctx, o: SiteObject) {
-  const p = o.props, A = polygonArea(o.points), P = polylineLength(o.points, true);
+  const p = o.props, A = netArea(ctx, o), P = polylineLength(o.points, true);
   const m = o.materialId ? ctx.mats.get(o.materialId) : undefined;
   const waste = num(p.wastePct) ?? PATTERN_WASTE[p.pattern] ?? 5;
   const base = (num(p.baseDepth) ?? 0) / 1000, bed = (num(p.beddingDepth) ?? 0) / 1000, pt = (m?.dims?.t ?? 0) / 1000;
   const a = { area: `${fmt(A, 3)} m²` };
-  add(ctx, o, 'Pavers', {
+  if (p.isStepper) add(ctx, o, 'Pavers', { materialId: o.materialId, net: 1, unit: 'each', formula: 'one stepping stone per position drawn', inputs: { size: `${fmt(A, 3)} m²` }, assumptions: ['No cutting waste; add spares as a manual override if wanted'], source: 'Drawing' });
+  else add(ctx, o, 'Pavers', {
     materialId: o.materialId, net: A, unit: 'm2', wastePct: waste, formula: 'paved area', inputs: { ...a, pattern: p.pattern },
     assumptions: [`${waste}% cutting waste for ${p.pattern} pattern (assumption; increase for curves and small pieces)`], source: 'Geometry model',
   });
@@ -236,13 +247,13 @@ function paving(ctx: Ctx, o: SiteObject) {
     inputs: { ...a, 'bedding depth': `${num(p.beddingDepth)} mm` }, assumptions: ['10% allowance (assumption)'], source: 'Geometry model',
   });
   const jc = num(p.jointCoverage);
-  add(ctx, o, 'Jointing sand', {
+  if (!p.isStepper) add(ctx, o, 'Jointing sand', {
     materialId: 'sand-jointing', net: jc == null ? null : A / jc, unit: 'bag', formula: 'area ÷ coverage per bag',
     inputs: { ...a, coverage: jc == null ? 'unknown' : `${jc} m² per bag` },
     warning: jc == null ? 'Enter the jointing sand coverage from the product datasheet.' : undefined, source: 'Product datasheet (user-entered)',
   });
   const ep = num(p.edgePct) ?? 100;
-  add(ctx, o, 'Edge restraint', {
+  if (ep > 0) add(ctx, o, 'Edge restraint', {
     materialId: 'edge-restraint', net: (P * ep) / 100, unit: 'lm', formula: 'perimeter × restrained share',
     inputs: { perimeter: `${fmt(P, 3)} m`, 'restrained share': `${ep}%` },
     assumptions: ['Reduce the share where paving abuts a wall or building'], source: 'Geometry model',
@@ -256,7 +267,7 @@ function paving(ctx: Ctx, o: SiteObject) {
 }
 
 function garden(ctx: Ctx, o: SiteObject) {
-  const p = o.props, A = polygonArea(o.points);
+  const p = o.props, A = netArea(ctx, o);
   const sd = (num(p.soilDepth) ?? 0) / 1000, md = (num(p.mulchDepth) ?? 0) / 1000;
   const a = { area: `${fmt(A, 3)} m²` };
   add(ctx, o, 'Garden soil', { materialId: o.materialId || 'soil-garden-organic', net: A * sd, unit: 'm3', wastePct: 5, formula: 'area × soil depth', inputs: { ...a, 'soil depth': `${num(p.soilDepth)} mm` }, assumptions: ['Soil depth is an editable assumption', '5% settlement allowance (assumption)'] });
@@ -316,14 +327,14 @@ export function takeoff(project: Project, materials: Material[]): QtyLine[] {
       case 'garden': garden(ctx, o); break;
       case 'deck': deck(ctx, o); break;
       case 'turf': {
-        const A = polygonArea(o.points), d = (num(o.props.underlayDepth) ?? 0) / 1000;
+        const A = netArea(ctx, o), d = (num(o.props.underlayDepth) ?? 0) / 1000;
         add(ctx, o, 'Turf', { materialId: o.materialId, net: A, unit: 'm2', wastePct: 5, formula: 'turf area', inputs: { area: `${fmt(A, 3)} m²` }, assumptions: ['5% for trimming (assumption)'] });
         add(ctx, o, 'Turf underlay', { materialId: 'soil-turf-underlay', net: A * d, unit: 'm3', wastePct: 5, formula: 'area × underlay depth', inputs: { area: `${fmt(A, 3)} m²`, depth: `${num(o.props.underlayDepth)} mm` }, assumptions: ['Underlay depth is an editable assumption'] });
         labour(ctx, o, 'turf', 'prepare and lay turf', A, 'm²');
         break;
       }
       case 'gravel': {
-        const A = polygonArea(o.points), d = (num(o.props.depth) ?? 0) / 1000;
+        const A = netArea(ctx, o), d = (num(o.props.depth) ?? 0) / 1000;
         add(ctx, o, 'Decorative gravel', { materialId: o.materialId, net: A * d, unit: 'm3', wastePct: 5, formula: 'area × depth', inputs: { area: `${fmt(A, 3)} m²`, depth: `${num(o.props.depth)} mm` }, assumptions: ['Depth is an editable assumption'] });
         add(ctx, o, 'Geotextile under gravel', { materialId: 'geo-2000x50', net: A, unit: 'm2', wastePct: 10, formula: 'area', inputs: { area: `${fmt(A, 3)} m²` }, assumptions: ['10% for laps'] });
         labour(ctx, o, 'garden', 'spread gravel', A, 'm²');
@@ -350,6 +361,17 @@ export function takeoff(project: Project, materials: Material[]): QtyLine[] {
         labour(ctx, o, 'planting', 'planting', q, 'plant');
         break;
       }
+      case 'pergola': {
+        const A = polygonArea(o.points), P = polylineLength(o.points, true);
+        add(ctx, o, 'Pergola (roof area)', { materialId: o.materialId, net: A, unit: 'm2', formula: 'roof plan area', inputs: { area: `${fmt(A, 3)} m²` }, assumptions: ['Supply-and-install allowance per m² of roof. Structure, posts and footings by kit manufacturer or engineer.'] });
+        add(ctx, o, 'Pergola posts (indicative count)', { kind: 'earthworks', net: Math.max(4, Math.ceil(P / 3)), unit: 'each', formula: 'max(4, ⌈perimeter ÷ 3 m⌉)', inputs: { perimeter: `${fmt(P, 2)} m` }, assumptions: ['Indicative only, for set-out discussion. Not a structural design.'], source: 'Geometry model (indicative)' });
+        labour(ctx, o, 'pergola', 'build pergola', A, 'm²');
+        break;
+      }
+      case 'firepit':
+        add(ctx, o, 'Fire pit', { materialId: o.materialId, net: 1, unit: 'each', formula: 'count', source: 'Drawing' });
+        labour(ctx, o, 'firepit', 'install fire pit', 1, 'fire pit');
+        break;
       case 'tree':
         add(ctx, o, 'Tree', { materialId: o.materialId, net: 1, unit: 'each', formula: 'count', source: 'Drawing' });
         labour(ctx, o, 'tree', 'plant tree', 1, 'tree');

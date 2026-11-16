@@ -291,6 +291,7 @@ let pricesBefore;
 await step('Part 1-2 three structured concepts generated; no-key AI render says not configured; imported render labelled', async () => {
   await nav('Visual Concepts');
   await page.getByText('AI image generation is not configured.').first().waitFor();
+  await page.getByText('Or build a custom mix').click();
   await page.getByRole('button', { name: 'Generate three concepts' }).click();
   for (const t of ['economy', 'balanced', 'premium']) await page.getByTestId(`concept-${t}`).waitFor();
   const price = async t => Number((await page.getByTestId(`concept-${t}`).locator('.stat').innerText()).split(' to ')[0].replace(/[^0-9.]/g, ''));

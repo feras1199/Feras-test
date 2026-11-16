@@ -7,6 +7,7 @@ import { evaluateCompliance } from './compliance.ts';
 import { bbox, polygonArea, polylineLength, rectPoints } from './geometry.ts';
 import { uid } from './project.ts';
 import { fmt } from './units.ts';
+import { IDEAS, ideaChanges } from './ideas.ts';
 
 // Concept proposals are STRUCTURED: each one is a list of geometry and material operations
 // that the deterministic engine can cost. Pictures are attached separately and are illustrative only.
@@ -16,14 +17,14 @@ export const ILLUSTRATIVE_LABEL = 'Illustrative concept only - not surveyed, not
 export const INCLUSIONS = ['paving', 'wall', 'turf', 'garden', 'lighting', 'drainage', 'deck'] as const;
 export const STYLES = ['Modern', 'Sydney sandstone', 'Mediterranean', 'Coastal native', 'Low-maintenance', 'Luxury'];
 
-type Tier = DesignProposal['tier'];
-interface TierSpec {
+export type Tier = DesignProposal['tier'];
+export interface TierSpec {
   name: string; paving: string; pattern: string; wall: (h: number) => { system: WallSystem; materialId: string }; edging: string;
   plant: string; spacing: number; lights: number; pavingDepth: number; pavingWidthShare: number;
   pros: string[]; cons: string[]; maintenance: string; adjective: string;
 }
 
-const TIERS: Record<Tier, TierSpec> = {
+export const TIERS: Record<Tier, TierSpec> = {
   economy: {
     name: 'Economy', adjective: 'Practical', paving: 'pav-concrete-400', pattern: 'stretcher', edging: 'edging-steel', plant: 'plant-lomandra', spacing: 0.8, lights: 4, pavingDepth: 2.5, pavingWidthShare: 0.6,
     wall: h => (h <= 0.8 ? { system: 'segmental-block', materialId: 'blk-versawall' } : { system: 'concrete-sleeper', materialId: 'slp-pioneer-2000-charcoal' }),
@@ -44,7 +45,7 @@ const TIERS: Record<Tier, TierSpec> = {
   },
 };
 
-const obj = (type: SiteObject['type'], name: string, points: SiteObject['points'], materialId: string | undefined, props: Record<string, any> = {}): SiteObject =>
+export const obj = (type: SiteObject['type'], name: string, points: SiteObject['points'], materialId: string | undefined, props: Record<string, any> = {}): SiteObject =>
   ({ id: uid('obj'), type, name, layer: 'proposed', points, materialId, confidence: 'estimated', props: { ...defaultProps(type), ...props } });
 
 /** Usable yard: inside the site outline, beyond the house. Null when the site outline is not drawn. */
@@ -127,16 +128,20 @@ export function generateProposals(project: Project, brief: ProposalBrief, materi
   const hasDesign = project.objects.some(o => o.layer === 'proposed');
   if (!hasDesign && !yardOf(project)) return { proposals: [], error: 'Draw the site outline (and the house, if any) in Site Drawing first. Concept layouts are placed inside the drawn outline, not taken from photos.' };
   const inc = new Set(brief.inclusions);
-  if (!hasDesign && inc.size === 0) return { proposals: [], error: 'Choose at least one item to include.' };
+  const idea = brief.ideaId ? IDEAS.find(i => i.id === brief.ideaId) : undefined;
+  if (brief.ideaId && hasDesign) return { proposals: [], error: 'This project already has a design. Restore the empty version (Design Studio → versions) or start a new project to try a different idea.' };
+  if (!hasDesign && !idea && inc.size === 0) return { proposals: [], error: 'Choose at least one item to include.' };
+  const mname = (id: string) => materials.find(m => m.id === id)?.name ?? id;
   const proposals = (Object.keys(TIERS) as Tier[]).map(tier => {
     const t = TIERS[tier];
-    const changes = hasDesign ? swapOps(project, t, materials) : layoutOps(project, t, inc, materials);
+    const changes = hasDesign ? swapOps(project, t, materials) : idea ? ideaChanges(project, idea.id, tier, mname) : layoutOps(project, t, inc, materials);
+    if (idea && !changes.length) return null;
     const c = proposalCost(project, changes.map(x => x.op), materials, suppliers, settings);
     const priced = c.est.flags.filter(f => /No price|Quantity incomplete/.test(f));
     const used = [...new Set(c.project.objects.filter(o => o.layer === 'proposed' && o.materialId).map(o => materials.find(m => m.id === o.materialId)?.name).filter(Boolean) as string[])];
     return {
-      id: uid('prop'), tier, title: `${t.name}: ${t.adjective} ${brief.style.toLowerCase()}`.trim(),
-      summary: hasDesign ? `Keeps the current layout and dimensions, using ${t.name.toLowerCase()} materials.` : `A ${brief.style.toLowerCase()} layout inside the drawn site outline with ${[...inc].join(', ')}, using ${t.name.toLowerCase()} materials.`,
+      id: uid('prop'), tier, ideaId: idea?.id, title: idea ? `${idea.name}: ${t.name}` : `${t.name}: ${t.adjective} ${brief.style.toLowerCase()}`.trim(),
+      summary: idea ? `${idea.pitch} ${t.name} materials.` : hasDesign ? `Keeps the current layout and dimensions, using ${t.name.toLowerCase()} materials.` : `A ${brief.style.toLowerCase()} layout inside the drawn site outline with ${[...inc].join(', ')}, using ${t.name.toLowerCase()} materials.`,
       status: 'draft' as const, createdAt: new Date().toISOString(), brief: structuredClone(brief), changes,
       materials: used.slice(0, 8), pros: t.pros, cons: t.cons, maintenance: t.maintenance,
       costLow: Math.round(c.est.priceInc), costHigh: Math.round(c.est.priceInc * 1.15), costComplete: priced.length === 0, excluded: priced,
@@ -150,7 +155,8 @@ export function generateProposals(project: Project, brief: ProposalBrief, materi
       reviewFlags: [...new Set(c.flags)],
       renders: [],
     } satisfies DesignProposal;
-  });
+  }).filter(Boolean) as DesignProposal[];
+  if (idea && !proposals.length) return { proposals: [], error: `${idea.name} does not fit this yard (needs at least ${idea.min.w} × ${idea.min.d} m).` };
   return { proposals };
 }
 
