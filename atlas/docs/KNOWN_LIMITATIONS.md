@@ -7,7 +7,7 @@ What ATLAS does not do yet, and what is waiting on a decision. Nothing here is h
 | Item | Effect until then |
 |---|---|
 | `ANTHROPIC_API_KEY` and a transcription key | Ask ATLAS and the voice-note write-up say they are not set up. They have only ever run against a scripted stand-in, never a real model, so expect some fixing on the first real run. |
-| File storage account (for example Cloudflare R2 or S3) | Photos, recordings and PDFs are kept inside the database, which includes 1 GB on the current plan. Settings > Backup and import shows how much is used. |
+| File storage account (for example Cloudflare R2 or S3) | Photos, recordings and PDFs are kept inside the database, which the blueprint sets to 5 GB (can be raised in Render). Settings > Backup and import shows how much is used. |
 | Is component revenue ex GST or inc GST? | ATLAS assumes ex GST. If it's inc GST, profit on finished components is overstated by the GST. |
 | Which Airtable records to bring across | Only the price lists have been prepared for import. Almost every customer and project in the old base is test data. |
 | Removing the live-Airtable mode | The code can still run directly on the old Airtable base. Since the decision to leave Airtable this is unused; removing it is a one-way change and needs a yes. |

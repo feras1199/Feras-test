@@ -96,7 +96,7 @@ Every change made through ATLAS (who, when, what, before and after) is listed on
 - Turned on by setting `ANTHROPIC_API_KEY`. Usage is billed to that Anthropic account; each question typically makes 2–4 model calls.
 - It reads records through the same permission rules as the person asking, so a worker's question never pulls in money.
 - It cannot send messages, raise invoices, take payments, approve anything or change records on its own. It can suggest a task, a follow-up date, customer details, a new enquiry or estimate lines; nothing is saved until the person presses Confirm, and that save goes through the normal checks and audit log.
-- If the model's safety checks decline a request, the API retries it on Anthropic's recommended fallback model automatically (`fallbacks: "default"`). If that also declines, the person sees "I can't help with that request."
+- If the model's safety checks decline a request, the API retries it on Anthropic's recommended fallback model automatically (`fallbacks: "default"`), on Sonnet and Opus only; Claude Haiku 5.5, the default, has no such fallback. If the request is still declined, the person sees "I can't help with that request."
 - Each person is limited to 20 questions per 10 minutes.
 
 ### Sharing a PDF, photo or voice note
@@ -108,7 +108,7 @@ Tap 📎 to share a PDF or photo, or 🎙 to record a voice note, then say which
 - What it accepts: PDFs up to 10 MB, photos (JPEG, PNG, WebP; phone photos are shrunk first), and voice recordings up to 15 minutes. Save Word or Excel files as PDF first. Up to 4 files per message and 6 per chat.
 - Shared files are private to the person who shared them. They're kept in ATLAS's database (never deleted, like everything else) and appear in the audit log.
 - PDFs and photos need `ANTHROPIC_API_KEY`. Voice notes also need a transcription key (`DEEPGRAM_API_KEY` or `OPENAI_API_KEY`), the same one site visits use.
-- Rough cost (US dollars, Anthropic list price for Claude Opus 5.5 of $4 per million tokens in and $20 out, at the time of writing): a question about a short PDF or a photo is about 10 to 30 cents, because each page is read as text and as a picture and ATLAS usually makes 2 to 4 calls per question. A 30-page PDF is roughly 50 cents to $1 for the first question; follow-up questions within a few minutes are cheaper because the document is cached. Voice notes add the transcription cost (Deepgram charges well under 1 cent a minute). Check current prices with Anthropic and Deepgram before relying on these.
+- Rough cost (US dollars, Anthropic list price for Claude Haiku 5.5, the default, of $0.10 per million tokens in and $0.50 out for prompts up to 100K tokens, checked November 2026; Sonnet 5.5 is 20 times that and Opus 5.5 40 times): a question about a short PDF or a photo is well under 1 cent on Haiku (5 to 15 cents on Sonnet), because each page is read as text and as a picture and ATLAS usually makes 2 to 4 calls per question. A 30-page PDF is a few cents on Haiku (25 to 50 cents on Sonnet) for the first question; follow-up questions within a few minutes are cheaper because the document is cached. Voice notes add the transcription cost (Deepgram charges well under 1 cent a minute). Check current prices with Anthropic and Deepgram before relying on these.
 
 ## Payment automations in Airtable
 

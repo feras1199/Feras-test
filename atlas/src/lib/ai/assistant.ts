@@ -9,7 +9,16 @@ export interface MessagesClient {
   beta: { messages: { create(params: Beta.MessageCreateParamsNonStreaming): Promise<Beta.BetaMessage> } };
 }
 
-export const DEFAULT_MODEL = "claude-opus-5-5";
+export const DEFAULT_MODEL = "claude-haiku-5-5";
+
+/**
+ * Server-side refusal fallback (`fallbacks: "default"`) exists for Sonnet, Opus and
+ * Fable models but not for Haiku 5.5, so it is only sent where the model supports it.
+ * On Haiku a declined request simply ends with stop_reason "refusal".
+ */
+export function supportsServerFallback(model: string) {
+  return !model.startsWith("claude-haiku");
+}
 const MAX_STEPS = 8;
 
 const fileId = z.string().regex(/^fil[A-Za-z0-9]{14}$/);
@@ -97,12 +106,14 @@ export async function runAssistant(client: MessagesClient, input: ChatInput, ctx
   const proposals: Proposal[] = [];
   let text = "";
 
+  const model = opts.model || DEFAULT_MODEL;
+  const fallback = supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {};
+
   for (let step = 0; step < MAX_STEPS; step++) {
     const res = await client.beta.messages.create({
-      model: opts.model || DEFAULT_MODEL,
+      model,
       max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      ...fallback,
       thinking: { type: "adaptive" },
       output_config: { effort: "medium" },
       system: [

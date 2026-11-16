@@ -110,9 +110,19 @@ describe("assistant loop", () => {
     const last = second.messages[second.messages.length - 1]!;
     expect(last.role).toBe("user");
     expect((last.content as Beta.BetaToolResultBlockParam[]).map((b) => b.tool_use_id)).toEqual(["t1", "t2"]);
-    expect(second.model).toBe("claude-opus-5-5");
+    expect(second.model).toBe("claude-haiku-5-5");
     expect(second.thinking).toEqual({ type: "adaptive" });
-    expect(second.fallbacks).toBe("default");
+    // Haiku 5.5 has no server-side fallback, so none is sent.
+    expect(second.fallbacks).toBeUndefined();
+    expect(second.betas).toBeUndefined();
+  });
+
+  it("asks for the server-side fallback on models that support it", async () => {
+    const { client, calls } = fakeClient([msg([text("Done.")], "end_turn")]);
+    await runAssistant(client, ask("Hi"), ctxFor("owner"), { model: "claude-sonnet-5-5" });
+    expect(calls[0]!.model).toBe("claude-sonnet-5-5");
+    expect(calls[0]!.fallbacks).toBe("default");
+    expect(calls[0]!.betas).toEqual(["server-side-fallback-2026-07-01"]);
   });
 
   it("reports tool errors to the model with is_error", async () => {
