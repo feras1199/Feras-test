@@ -84,6 +84,9 @@ await shot("recording", p.locator('section[aria-label="Photos and voice notes"]'
 await p.getByRole("button", { name: "Stop and save" }).click();
 await p.getByText("Voice note saved.").waitFor({ timeout: 15_000 });
 await shot("photos-voice", p.locator('section[aria-label="Photos and voice notes"]'));
+// The AI write-up of the voice note refreshes the whole editor when it lands (it adds a
+// "Back lawn" measurement); wait for it so the measurement typed next isn't wiped.
+await p.getByText(/^Back lawn · /).waitFor({ timeout: 30_000 });
 const m = p.getByRole("form", { name: "Add measurement" });
 await m.getByLabel("Area *").fill("Rear patio");
 await m.locator('select[name=workType]').selectOption("Paving");

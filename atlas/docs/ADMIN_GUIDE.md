@@ -106,7 +106,7 @@ Tap 📎 to share a PDF or photo, or 🎙 to record a voice note, then say which
 - **Customer details** (new customer, or the empty boxes on an existing one). Details already saved are never changed; if the file says something different, the card says so and you change it yourself if it's right. If the new customer looks like someone already in ATLAS, it shows the match instead.
 - **Estimate lines** added to a draft estimate. Lines matched to the Cost Library use the library's price, never a price the AI made up. A line with no match only gets a price if that price is written in the file (the line's note says so); otherwise it stays at $0 and the estimate checks flag it. Every line is marked "AI suggested" with its quantity unchecked, so the estimate can't be approved until someone ticks each quantity as checked. Existing lines are never touched, and the customer scope is only written if that box is empty.
 - What it accepts: PDFs up to 10 MB, photos (JPEG, PNG, WebP; phone photos are shrunk first), and voice recordings up to 15 minutes. Save Word or Excel files as PDF first. Up to 4 files per message and 6 per chat.
-- Shared files are private to the person who shared them. They're kept in ATLAS's database (never deleted, like everything else) and appear in the audit log.
+- Shared files are private to the person who shared them. They're kept in ATLAS's database (not deleted with the chat) and appear in the audit log.
 - PDFs and photos need `ANTHROPIC_API_KEY`. Voice notes also need a transcription key (`DEEPGRAM_API_KEY` or `OPENAI_API_KEY`), the same one site visits use.
 - Rough cost (US dollars, Anthropic list price for Claude Haiku 5.5, the default, of $0.10 per million tokens in and $0.50 out for prompts up to 100K tokens, checked November 2026; Sonnet 5.5 is 20 times that and Opus 5.5 40 times): a question about a short PDF or a photo is well under 1 cent on Haiku (5 to 15 cents on Sonnet), because each page is read as text and as a picture and ATLAS usually makes 2 to 4 calls per question. A 30-page PDF is a few cents on Haiku (25 to 50 cents on Sonnet) for the first question; follow-up questions within a few minutes are cheaper because the document is cached. Voice notes add the transcription cost (Deepgram charges well under 1 cent a minute). Check current prices with Anthropic and Deepgram before relying on these.
 
@@ -125,3 +125,11 @@ Nothing in ATLAS changes the automations itself.
 - **A figure doesn't match Airtable:** check `docs/FINANCIAL_RULES.md`. The common causes are GST basis (Airtable actual costs are inc GST; ATLAS reports them ex GST) and unsubmitted timesheets (ATLAS only counts submitted ones).
 - **"Airtable … expects" errors on save:** a field was renamed or its type changed in Airtable. Run the schema check in the deployment guide.
 - **Everyone got signed out:** `ATLAS_SESSION_SECRET` changed, or `ATLAS_USERS_JSON` was edited.
+
+## Deleting and restoring
+
+Owners can delete a customer, enquiry, site inspection, estimate or project from its page (the red **Delete** button). Anyone who can edit them can delete a task, a measurement or a schedule entry.
+
+- Before anything is deleted, ATLAS shows what goes with it. Deleting a customer also deletes their enquiries, inspections, estimates, projects, tasks and payment stages; deleting a project deletes its payment stages, costs, time and schedule.
+- If money is involved (an accepted quote, a payment received, recorded costs or time), you have to type DELETE. If the job was simply cancelled, set the project to **Cancelled** instead: its unpaid payment stages come off Finance and the history stays.
+- Nothing is lost. **Settings > Recently deleted** lists every delete, and **Restore** puts it all back, links and photos included. Every delete and restore is in the audit log.

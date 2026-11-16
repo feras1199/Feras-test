@@ -4,6 +4,7 @@ import { audit } from "@/lib/server/audit";
 import { EstimateCreate, scheduleToFields } from "@/lib/domain/estimates";
 import { addDays } from "@/lib/domain/dates";
 import { todayIn } from "@/lib/dates";
+import { recycleBinOf } from "@/lib/data/repository";
 
 export const GET = route("estimates.view", async () => ({ estimates: await getRepo().list("estimates") }));
 
@@ -18,8 +19,12 @@ export const POST = route("estimates.edit", async ({ req, session }) => {
   const year = today.slice(0, 4);
   // One at a time, so two estimates started together can't take the same quote number.
   const rec = await repo.atomic("quote-number", async (tx) => {
-    const existing = await tx.list("estimates", { where: (e) => !!e.quoteNumber?.startsWith(`Q-${year}-`) });
-    const next = Math.max(0, ...existing.map((e) => Number(e.quoteNumber!.slice(7).replace(/-R\d+$/, "")) || 0)) + 1;
+    const existing = (await tx.list("estimates")).map((e) => e.quoteNumber ?? "");
+    // Numbers of deleted estimates aren't reused, so a quote the customer already has never shares a number.
+    const deleted = (await recycleBinOf(tx)?.listBin(1000)) ?? [];
+    const binned = deleted.flatMap((b) => b.records.filter((r) => r.entity === "estimates").map((r) => String(r.data.quoteNumber ?? "")));
+    const numbers = [...existing, ...binned].filter((q) => q.startsWith(`Q-${year}-`));
+    const next = Math.max(0, ...numbers.map((q) => Number(q.slice(7).replace(/-R\d+$/, "")) || 0)) + 1;
     const quoteNumber = `Q-${year}-${String(next).padStart(3, "0")}`;
     return tx.create("estimates", {
       title: `${quoteNumber} ${i.title}`,

@@ -7,6 +7,8 @@ import { formatAud } from "@/lib/finance/money";
 import { can } from "@/lib/auth/roles";
 import { getRepo, requirePage } from "@/lib/server/context";
 import { loadSuggestions } from "@/lib/server/suggestions";
+import { DeleteButton } from "@/components/DeleteButton";
+import { formatTime } from "@/lib/domain/inspections";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +20,13 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const c = await repo.get("customers", id);
   if (!c) notFound();
   const linked = <T extends { customerIds?: string[] }>(rows: T[]) => rows.filter((r) => r.customerIds?.includes(id));
-  const [enquiries, projects, estimates, comms] = await Promise.all([
+  const [enquiries, projects, estimates, comms, inspections, tasks] = await Promise.all([
     repo.list("enquiries").then(linked),
     repo.list("projects").then(linked),
     can(s.role, "estimates.view") ? repo.list("estimates").then(linked) : Promise.resolve([]),
     repo.list("communications").then(linked).then((r) => r.sort((a, b) => (b.at ?? "").localeCompare(a.at ?? ""))),
+    can(s.role, "inspections.view") ? repo.list("inspections").then(linked).then((r) => r.sort((a, b) => (b.inspectionDate ?? "").localeCompare(a.inspectionDate ?? ""))) : Promise.resolve([]),
+    repo.list("tasks").then(linked).then((r) => r.filter((t) => !["Done", "Cancelled"].includes(t.status ?? "")).sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"))),
   ]);
   const editable = can(s.role, "crm.edit");
 
@@ -37,7 +41,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
 
   return (
     <>
-      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && (<><a href="?edit=1" className="btn-secondary">Edit details</a><a href={`/tasks/new?customer=${c.id}`} className="btn-secondary">Add task</a><a href={`/pipeline/new?customer=${c.id}`} className="btn-secondary">New enquiry</a>{can(s.role, "estimates.edit") && <a href={`/estimates/new?customer=${c.id}`} className="btn-primary">New estimate</a>}</>)} />
+      <PageHeader title={c.name ?? "Customer"} subtitle={[c.suburb, c.customerType, c.leadSource && `via ${c.leadSource}`].filter(Boolean).join(" · ")} actions={editable && (<><a href="?edit=1" className="btn-secondary">Edit details</a><a href={`/tasks/new?customer=${c.id}`} className="btn-secondary">Add task</a><a href={`/pipeline/new?customer=${c.id}`} className="btn-secondary">New enquiry</a>{can(s.role, "inspections.edit") && <a href={`/inspections/new?customer=${c.id}`} className="btn-secondary">Book inspection</a>}{can(s.role, "estimates.edit") && <a href={`/estimates/new?customer=${c.id}`} className="btn-primary">New estimate</a>}{can(s.role, "records.delete") && <DeleteButton entity="customers" id={c.id} noun="customer" />}</>)} />
       {c.doNotContact && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-800">Do not contact this customer.</p>}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <section className="card p-5 lg:col-span-1">
@@ -72,6 +76,24 @@ export default async function CustomerPage({ params, searchParams }: { params: P
               )}
             </section>
           )}
+          {can(s.role, "inspections.view") && (
+            <section className="card p-5">
+              <h2 className="mb-3 font-semibold">Site inspections</h2>
+              {inspections.length === 0 ? <Empty title="No site inspections yet" /> : (
+                <ul className="divide-y divide-stone-100">{inspections.map((i) => (
+                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><a href={`/inspections/${i.id}`} className="text-forest-800 underline">{formatDate(i.inspectionDate)}{i.inspectionTime ? `, ${formatTime(i.inspectionTime)}` : ""}{i.siteAddress ? ` · ${i.siteAddress}` : ""}</a>{i.complete ? <Chip tone="green">Complete</Chip> : <Chip tone="gold">Booked</Chip>}</li>
+                ))}</ul>
+              )}
+            </section>
+          )}
+          <section className="card p-5">
+            <h2 className="mb-3 font-semibold">Open tasks</h2>
+            {tasks.length === 0 ? <Empty title="No open tasks" /> : (
+              <ul className="divide-y divide-stone-100">{tasks.map((t) => (
+                <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><a href={`/tasks/${t.id}`} className="text-forest-800 underline">{t.title}</a><span className="flex items-center gap-2">{t.status && <Chip tone={statusTone(t.status)}>{t.status}</Chip>}<span className="text-stone-500">{t.dueDate ? formatDate(t.dueDate) : "No due date"}</span></span></li>
+              ))}</ul>
+            )}
+          </section>
           <section className="card p-5">
             <h2 className="mb-3 font-semibold">Contact history</h2>
             {comms.length === 0 ? <Empty title="No contact logged">Log calls and messages from the enquiry card in the Pipeline.</Empty> : (
@@ -84,7 +106,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <h2 className="mb-3 font-semibold">Projects</h2>
             {projects.length === 0 ? <Empty title="No projects yet" /> : (
               <ul className="divide-y divide-stone-100">{projects.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{p.name}</span>{p.status && <Chip tone={statusTone(p.status)}>{p.status}</Chip>}</li>
+                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><a href={`/projects/${p.id}`} className="text-forest-800 underline">{p.name}</a>{p.status && <Chip tone={statusTone(p.status)}>{p.status}</Chip>}</li>
               ))}</ul>
             )}
           </section>

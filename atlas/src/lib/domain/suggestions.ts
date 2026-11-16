@@ -9,6 +9,8 @@ export const STARTERS = {
   areas: ["Front yard", "Backyard", "Front lawn", "Back lawn", "Side path", "Driveway", "Rear patio", "Entry path", "Pool area", "Garden beds"],
   nextActions: ["First contact", "Call to book site visit", "Send quote", "Follow up quote", "Waiting on customer", "Book start date"],
   taskTitles: ["Call customer back", "Book site visit", "Send quote", "Follow up quote", "Order materials", "Book skip bin", "Confirm start date", "Chase payment"],
+  contactNotes: ["No answer, left voicemail", "Booked site visit", "Sent quote", "Customer is thinking about it", "Asked for a call back", "Customer wants changes to the quote"],
+  declineReasons: ["Over budget", "Went with another quote", "Postponed the project", "No response", "Changed the scope"],
   units: ["m2", "lm", "m3", "Each", "Tonne", "hour", "Bag", "Bulka Bag", "Day"],
   suburbs: [] as string[],
   categories: [] as string[],
@@ -60,4 +62,31 @@ export function matchSuggestions(options: readonly string[], typed: string, limi
     })
     .sort((a, b) => Number(key(b).startsWith(q)) - Number(key(a).startsWith(q)))
     .slice(0, limit);
+}
+
+/** The owner's list first (in their order), then other suggestions not already in it. */
+export function withPinned(pinned: readonly string[], rest: readonly string[], limit = 60): string[] {
+  const seen = new Set(pinned.map(key));
+  return [...pinned, ...rest.filter((s) => !seen.has(key(s)))].slice(0, limit);
+}
+
+/**
+ * A sensible task Type for a task title, so picking "Site Visit" also sets the
+ * Type box. Returns null when nothing fits (the Type box is left alone).
+ */
+export function guessTaskType(title: string): string | null {
+  const t = key(title);
+  if (!t) return null;
+  const rules: [RegExp, string][] = [
+    [/\bfollow[\s-]?up\b|\bchase quote\b/, "Lead Follow-up"],
+    [/\bsite (visit|inspection)\b|\bmeasure up\b/, "Site Visit"],
+    [/\bpayment\b|\binvoice\b|\bdeposit\b|\bchase payment\b/, "Payment"],
+    [/\bvariation\b/, "Variation"],
+    [/\bestimate\b|\bquote\b/, "Estimate"],
+    [/\bdesign\b|\baction plan\b|\bupdate\b/, "Customer Update"],
+    [/\border\b|\bmaterials?\b|\bsupplier\b|\bskip\b|\bdelivery\b/, "Material / Supplier"],
+    [/\bcall\b|\bring\b|\bphone\b/, "Customer Call"],
+  ];
+  for (const [re, type] of rules) if (re.test(t)) return type;
+  return null;
 }

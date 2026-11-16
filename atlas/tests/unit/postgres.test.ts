@@ -12,7 +12,7 @@ describe.skipIf(!url)("PostgresRepository", () => {
   let repo: PostgresRepository;
   beforeAll(async () => {
     pool = new Pool({ connectionString: url });
-    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files, atlas_settings");
+    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files, atlas_settings, atlas_deleted");
     repo = new PostgresRepository(pool);
   });
   afterAll(async () => { await pool.end(); });

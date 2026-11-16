@@ -14,12 +14,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const s = await requirePage("dashboard.view");
   const { view = "open" } = await searchParams;
   const today = todayIn((await getSettings()).business.timezone);
-  const all = await getRepo().list("tasks");
+  const [all, customers] = await Promise.all([getRepo().list("tasks"), getRepo().list("customers")]);
+  const custName = new Map(customers.map((c) => [c.id, c.name ?? ""]));
   const visible = can(s.role, "crm.view") ? all : all.filter((t) => t.assignedTo === s.name);
   const rows = visible
     .filter((t) => (view === "done" ? !OPEN.has(t.status ?? "") : view === "mine" ? OPEN.has(t.status ?? "") && t.assignedTo === s.name : OPEN.has(t.status ?? "")))
     .sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"))
-    .map((t) => ({ id: t.id, title: t.title ?? "Task", status: t.status ?? "Backlog", priority: t.priority ?? "Normal", dueDate: t.dueDate ?? null, assignedTo: t.assignedTo ?? null, taskType: t.taskType ?? null, mine: t.assignedTo === s.name }));
+    .map((t) => ({ id: t.id, title: t.title ?? "Task", status: t.status ?? "Backlog", priority: t.priority ?? "Normal", dueDate: t.dueDate ?? null, assignedTo: t.assignedTo ?? null, taskType: t.taskType ?? null, mine: t.assignedTo === s.name, customer: t.customerIds?.[0] ? custName.get(t.customerIds[0]) ?? null : null }));
   const tab = (v: string, label: string) => <Link href={`/tasks?view=${v}`} aria-current={view === v ? "page" : undefined} className={`btn ${view === v ? "bg-forest-700 text-white" : "btn-secondary"}`}>{label}</Link>;
   return (
     <>

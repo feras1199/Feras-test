@@ -88,7 +88,7 @@ Every write in the app follows this same pattern: **wrapper → zod → domain r
   }
   ```
 
-  There is deliberately **no delete**. Records are archived by status instead, so history is never lost.
+  Deleting goes through a **recycle bin** (`src/lib/server/deletion.ts`): a delete removes the record and everything that belongs to it (a customer's enquiries, inspections, estimates and projects; a project's payment stages, costs and time), strips links to it from records that stay, and keeps a full copy in `atlas_deleted` so the owner can restore it from Settings > Recently deleted. Main records are owner-only; deletes that involve money (accepted quote, received payment, costs, time) need DELETE typed. Everything else is still archived by status.
 
   One more method, `atomic(key, fn)`, runs `fn` as a single unit of work: everything it writes is saved, or nothing is, and two calls with the same key never overlap. In Postgres it is a transaction plus an advisory lock. Anything that checks and then writes several records uses it: accepting a quote (project + payment stages + status), declining, and taking the next quote number. A unique index also makes a second copy of a payment stage impossible.
 - **`validateWrite()`** applies the same write rules in every store: only known fields, no writes to computed fields, cents must be integers, and dates must be YYYY-MM-DD.
@@ -169,7 +169,7 @@ The full rules are in `docs/FINANCIAL_RULES.md`.
 1. **Never trust the browser.** Check every permission and every money calculation on the server.
 2. **One way to touch data:** the Repository. No page or route talks to a database directly.
 3. **Money in integer cents.** Use one pure finance module, and test it first.
-4. **No hard deletes.** Archive records, and audit every change with before and after values.
+4. **Nothing is lost.** Archive by status where that fits; a delete goes to the recycle bin and can be undone. Audit every change with before and after values.
 5. **Lock what the customer saw.** Store a snapshot on approval, and drive acceptance and payments from it.
 6. **Validate every input with a schema** before running any logic.
 7. **Secrets stay on the server.** Use `server-only` modules, and keep tokens and keys out of the client bundle.

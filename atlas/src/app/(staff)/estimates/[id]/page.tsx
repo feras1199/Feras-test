@@ -33,7 +33,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ id: s
       settings={{ defaultMarkup: settings.pricing.defaultMarkup, commissionRate: settings.commission.rate, commissionEnabled: settings.commission.enabled, schedules: settings.payments.schedules, gstRate: settings.pricing.gstRate }}
       costItems={toCostOptions(costItems)}
       measurements={measurements.map((m) => ({ id: m.id, label: `${m.zone ?? "Area"} · ${m.workType ?? ""}`, quantity: measurementQuantity(m), unit: m.unit ?? "" })).filter((m) => m.quantity !== null) as { id: string; label: string; quantity: number; unit: string }[]}
-      perms={{ edit: can(s.role, "estimates.edit"), approve: can(s.role, "estimates.approve"), owner: s.role === "owner" }}
+      perms={{ edit: can(s.role, "estimates.edit"), approve: can(s.role, "estimates.approve"), owner: s.role === "owner", delete: can(s.role, "records.delete") }}
     />
   );
 }

@@ -5,6 +5,7 @@ import { enquiryFlags, PIPELINE, isOpen } from "@/lib/domain/crm";
 import { todayIn } from "@/lib/dates";
 import { can } from "@/lib/auth/roles";
 import { getRepo, getSettings, requirePage } from "@/lib/server/context";
+import { loadSuggestions } from "@/lib/server/suggestions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pipeline" };
@@ -52,7 +53,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
           </>
         }
       />
-      <Pipeline columns={columns} cards={cards} canEdit={can(s.role, "crm.edit")} today={today} />
+      <Pipeline columns={columns} cards={cards} canEdit={can(s.role, "crm.edit")} canDelete={can(s.role, "records.delete")} today={today} suggest={can(s.role, "crm.edit") ? await loadSuggestions(getRepo(), ["nextActions", "contactNotes"]) : undefined} />
     </>
   );
 }

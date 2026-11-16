@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import { ENTITIES, type EntityName, type Rec } from "../entities";
-import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
+import { applyListOptions, newBinId, newFileId, newRecordId, validateWrite, type DeletedBatch, type FileStore, type FileOwner, type ListOptions, type NewDeletedBatch, type NewFile, type RecycleBin, type Repository, type StoredFile } from "../repository";
 
 /**
  * ATLAS's own database. One table holds every record as JSON, keyed by entity
@@ -8,7 +8,8 @@ import { applyListOptions, newFileId, newRecordId, validateWrite, type FileStore
  * field needs no database migration. Business volumes here are thousands of
  * rows, not millions, so lists are filtered in the app like the other stores.
  *
- * There is no hard delete, same as everywhere else in ATLAS.
+ * Deleting moves records to atlas_deleted (the recycle bin) with a full copy,
+ * so a delete can be undone from Settings.
  */
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS atlas_records (
@@ -60,6 +61,17 @@ CREATE TABLE IF NOT EXISTS atlas_files (
 );
 CREATE INDEX IF NOT EXISTS atlas_files_record ON atlas_files (entity, record_id);
 ALTER TABLE atlas_files ADD COLUMN IF NOT EXISTS transcript text;
+CREATE TABLE IF NOT EXISTS atlas_deleted (
+  id           text        PRIMARY KEY,
+  at           timestamptz NOT NULL DEFAULT now(),
+  by_user      text        NOT NULL,
+  label        text        NOT NULL,
+  root_entity  text        NOT NULL,
+  root_id      text        NOT NULL,
+  payload      jsonb       NOT NULL,
+  restored_at  timestamptz,
+  restored_by  text
+);
 CREATE TABLE IF NOT EXISTS atlas_settings (
   key          text        PRIMARY KEY,
   data         jsonb       NOT NULL,
@@ -100,7 +112,14 @@ const toFile = (r: FileRow): StoredFile => ({ id: r.id, entity: r.entity, record
 export type ImportMode = "add-new" | "replace";
 export interface ImportResult { entity: EntityName; added: number; replaced: number; skipped: number }
 
-export class PostgresRepository implements Repository, FileStore {
+type BinRow = { id: string; at: Date; by_user: string; label: string; root_entity: EntityName; root_id: string; payload: Pick<DeletedBatch, "records" | "unlinks" | "fileIds" | "userIds">; restored_at: Date | null; restored_by: string | null };
+const toBatch = (r: BinRow): DeletedBatch => ({
+  id: r.id, at: r.at.toISOString(), by: r.by_user, label: r.label, rootEntity: r.root_entity, rootId: r.root_id,
+  records: r.payload.records ?? [], unlinks: r.payload.unlinks ?? [], fileIds: r.payload.fileIds ?? [], userIds: r.payload.userIds ?? [],
+  restoredAt: r.restored_at?.toISOString(), restoredBy: r.restored_by ?? undefined,
+});
+
+export class PostgresRepository implements Repository, FileStore, RecycleBin {
   readonly source = "postgres" as const;
   private ready: Promise<void> | null = null;
 
@@ -373,5 +392,44 @@ export class PostgresRepository implements Repository, FileStore {
     await this.ensureSchema();
     const { rows } = await this.db.query<FileRow>(`UPDATE atlas_files SET transcript = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, transcript]);
     return rows[0] ? toFile(rows[0]) : null;
+  }
+
+  async moveToBin(b: NewDeletedBatch): Promise<DeletedBatch> {
+    await this.ensureSchema();
+    const byEntity = new Map<string, string[]>();
+    for (const r of b.records) byEntity.set(r.entity, [...(byEntity.get(r.entity) ?? []), r.id]);
+    for (const [entity, ids] of byEntity) await this.db.query("DELETE FROM atlas_records WHERE entity = $1 AND id = ANY($2::text[])", [entity, ids]);
+    const { rows } = await this.db.query<BinRow>(
+      "INSERT INTO atlas_deleted (id, by_user, label, root_entity, root_id, payload) VALUES ($1,$2,$3,$4,$5,$6::jsonb) RETURNING *",
+      [newBinId(), b.by, b.label, b.rootEntity, b.rootId, JSON.stringify({ records: b.records, unlinks: b.unlinks, fileIds: b.fileIds, userIds: b.userIds })],
+    );
+    return toBatch(rows[0]!);
+  }
+
+  async listBin(limit: number): Promise<DeletedBatch[]> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<BinRow>("SELECT * FROM atlas_deleted ORDER BY at DESC LIMIT $1", [limit]);
+    return rows.map(toBatch);
+  }
+
+  async getBinBatch(id: string): Promise<DeletedBatch | null> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<BinRow>("SELECT * FROM atlas_deleted WHERE id = $1", [id]);
+    return rows[0] ? toBatch(rows[0]) : null;
+  }
+
+  async restoreFromBin(id: string, by: string): Promise<{ restored: number; skipped: number }> {
+    const b = await this.getBinBatch(id);
+    if (!b || b.restoredAt) return { restored: 0, skipped: 0 };
+    let restored = 0;
+    for (const r of b.records) {
+      const { rowCount } = await this.db.query(
+        "INSERT INTO atlas_records (entity, id, created_time, data) VALUES ($1,$2,$3,$4::jsonb) ON CONFLICT (entity, id) DO NOTHING",
+        [r.entity, r.id, r.createdTime, JSON.stringify(payload(r.entity, r.data))],
+      );
+      restored += rowCount ?? 0;
+    }
+    await this.db.query("UPDATE atlas_deleted SET restored_at = now(), restored_by = $2 WHERE id = $1", [id, by]);
+    return { restored, skipped: b.records.length - restored };
   }
 }

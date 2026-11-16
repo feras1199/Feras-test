@@ -96,6 +96,8 @@ export function projectFinancials(
   const revenueIncGst = roll.revenue + Math.round(roll.revenue * gstRate);
   const revenueGap = project.estValue && roll.revenue ? contract.original - revenueIncGst : null;
 
+  // Projects made from an accepted quote have no components yet; the quote's cost base is the estimate then.
+  const estimatedCost = roll.estimatedCost > 0 ? roll.estimatedCost : project.estimatedCostSnapshot ?? 0;
   const done = comps.filter((c) => c.actualProfit !== null);
   const completedProfit = sumCents(done.map((c) => c.actualProfit));
   const completedRevenue = sumCents(done.map((c) => c.revenue));
@@ -103,7 +105,7 @@ export function projectFinancials(
     completedProfit,
     completedRevenue,
     completedCount: done.length,
-    costUsed: roll.estimatedCost > 0 ? totalCost / roll.estimatedCost : null,
+    costUsed: estimatedCost > 0 ? totalCost / estimatedCost : null,
     components: comps,
     unallocatedCost,
     unallocatedHours,
@@ -111,7 +113,7 @@ export function projectFinancials(
     totalCost,
     profit,
     margin: roll.revenue > 0 ? profit / roll.revenue : null,
-    estimatedCost: roll.estimatedCost,
+    estimatedCost,
     personHours: roll.personHours + unallocatedHours,
     unsubmittedTimesheets: timesheets.length - submitted.length,
     duplicates: findLikelyDuplicateCosts(costs.map((x) => ({ id: x.id, projectId: x.projectIds?.[0] ?? null, componentId: x.componentIds?.[0] ?? null, supplier: x.supplier ?? "", amount: actualCostExGst(x, gstRate), date: x.costDate ?? null, reference: x.reference ?? "" }))),

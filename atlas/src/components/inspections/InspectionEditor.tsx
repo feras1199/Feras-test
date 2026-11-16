@@ -2,8 +2,9 @@
 import { SuggestInput } from "@/components/ui/SuggestInput";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { DeleteButton } from "@/components/DeleteButton";
 
-type Insp = { id: string; complete: boolean; scope: string; accessDifficulty: string; accessWidthM: number | null; existingConditions: string; slopeLevels: string; drainage: string; services: string; risks: string; priorities: string; notes: string; budgetFit: string };
+type Insp = { id: string; inspectionDate: string; inspectionTime: string; complete: boolean; scope: string; accessDifficulty: string; accessWidthM: number | null; existingConditions: string; slopeLevels: string; drainage: string; services: string; risks: string; priorities: string; notes: string; budgetFit: string };
 type M = { id: string; zone: string; workType: string; unit: string; method: string; lengthM: number | null; widthM: number | null; heightM: number | null; measuredQuantity: number | null; confidence: string; verified: boolean; quantity: number | null };
 
 const WORK = ["Paving", "Retaining Wall", "Excavation", "Turfing", "Planting", "Drainage", "Concrete Driveway", "Pergola / Fencing", "Lighting", "Other"];
@@ -47,8 +48,14 @@ export function InspectionEditor({ inspection: i, measurements, editable, areas 
           if (fd.get("budgetFit")) body.budgetFit = fd.get("budgetFit");
           body.accessWidthM = num(fd.get("accessWidthM"));
           body.complete = fd.get("complete") === "on";
+          if (fd.get("inspectionDate")) body.inspectionDate = String(fd.get("inspectionDate"));
+          body.inspectionTime = String(fd.get("inspectionTime") ?? "") || null;
           go(() => send(`/api/inspections/${i.id}`, "PATCH", body));
         }}>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="text-sm"><span className="label">Visit date</span><input type="date" name="inspectionDate" required defaultValue={i.inspectionDate} disabled={!editable} className="input" /></label>
+            <label className="text-sm"><span className="label">Time</span><input type="time" name="inspectionTime" defaultValue={i.inspectionTime} disabled={!editable} className="input" /></label>
+          </div>
           {area("scope", "What the customer wants", 3)}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm"><span className="label">Access</span><select name="accessDifficulty" defaultValue={i.accessDifficulty} disabled={!editable} className="input"><option value="">Not assessed</option>{["Easy", "Moderate", "Difficult", "Unknown"].map((x) => <option key={x}>{x}</option>)}</select></label>
@@ -76,7 +83,7 @@ export function InspectionEditor({ inspection: i, measurements, editable, areas 
               {measurements.map((m) => (
                 <li key={m.id} className="flex items-center justify-between gap-3 p-4 text-sm">
                   <div><p className="font-medium">{m.zone} · {m.workType}</p><p className="text-xs text-stone-500">{[m.lengthM && `L ${m.lengthM} m`, m.widthM && `W ${m.widthM} m`, m.heightM && `H/D ${m.heightM} m`, m.measuredQuantity !== null && "measured"].filter(Boolean).join(" × ")} · {m.method} · {m.confidence}</p></div>
-                  <p className="font-display text-lg font-semibold">{m.quantity ?? "–"} {m.unit}</p>
+                  <div className="flex items-center gap-2"><p className="font-display text-lg font-semibold">{m.quantity ?? "–"} {m.unit}</p>{editable && <DeleteButton entity="measurements" id={m.id} noun={`measurement ${m.zone}`} small onDeleted={() => router.refresh()} />}</div>
                 </li>
               ))}
             </ul>

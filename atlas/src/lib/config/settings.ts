@@ -39,6 +39,10 @@ export const SettingsSchema = z.object({
     defaultRatePerPersonHourCents: z.number().int().nonnegative(),
     hoursPerDay: z.number().positive(),
   }),
+  /** Quick-pick lists the owner keeps (shown first in the matching boxes). */
+  lists: z.object({
+    taskTitles: z.array(z.string()).default([]),
+  }).default({ taskTitles: [] }),
 });
 
 export type Settings = z.infer<typeof SettingsSchema>;
@@ -54,6 +58,8 @@ export const DEFAULT_SETTINGS: Settings = {
   commission: { enabled: true, rate: 0.06, base: "invoice_inc_gst", treatment: "absorb" },
   payments: { defaultSchedule: "fiveStage", schedules: SCHEDULE_PRESETS, maxDepositRate: 0.1, dueDays: 7 },
   labour: { defaultRatePerPersonHourCents: 4500, hoursPerDay: 8 },
+  // From the manager's list of the tasks that come up most.
+  lists: { taskTitles: ["Site Visit", "Submit New Design", "Create Estimate", "Send Action Plan", "Follow Up (Estimate)"] },
 };
 
 export function mergeSettings<T>(base: T, over: unknown): T {
@@ -120,8 +126,26 @@ export const SettingsEdit = z.object({
     defaultRatePerPersonHourCents: z.number().int().min(0).max(100_000),
     hoursPerDay: z.number().gt(0).max(24),
   }),
+  lists: z.object({
+    taskTitles: z.array(z.string().trim().max(80, "Keep each common task under 80 characters")).max(30, "Keep the common tasks list to 30 or fewer")
+      .transform((a) => cleanList(a)),
+  }).optional(),
 });
 export type SettingsEditInput = z.infer<typeof SettingsEdit>;
+
+/** Trimmed, blank lines dropped, repeats (ignoring case) removed. */
+export function cleanList(a: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of a) {
+    const v = raw.trim().replace(/\s+/g, " ");
+    const k = v.toLowerCase();
+    if (!v || seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+  }
+  return out;
+}
 
 /** Rules that span fields. Returns plain-English problems; empty means fine. */
 export function settingsProblems(s: Pick<Settings, "pricing" | "payments">): string[] {
@@ -145,6 +169,7 @@ export function applySettingsEdit(current: Settings, edit: SettingsEditInput): S
     commission: { ...edit.commission },
     payments: { ...edit.payments },
     labour: { ...edit.labour },
+    lists: edit.lists ? { ...current.lists, ...edit.lists } : current.lists,
   };
   const parsed = SettingsSchema.parse(next);
   const problems = settingsProblems(parsed);

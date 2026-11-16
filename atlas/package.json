@@ -23,6 +23,7 @@
     "e2e:upload-recording": "node tests/e2e/upload-recording.mjs",
     "e2e:all": "node tests/e2e/all.mjs",
     "e2e:safety": "node tests/e2e/safety.mjs",
+    "e2e:deleting": "node tests/e2e/deleting.mjs",
     "restore-files": "node scripts/restore-files.mjs"
   },
   "dependencies": {

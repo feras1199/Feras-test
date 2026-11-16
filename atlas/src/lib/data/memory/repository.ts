@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import fs from "node:fs";
 import path from "node:path";
 import type { EntityName, Rec } from "../entities";
-import { applyListOptions, KeyedQueue, newFileId, newRecordId, validateWrite, type FileStore, type FileOwner, type ListOptions, type NewFile, type Repository, type StoredFile } from "../repository";
+import { applyListOptions, KeyedQueue, newBinId, newFileId, newRecordId, validateWrite, type DeletedBatch, type FileStore, type FileOwner, type ListOptions, type NewDeletedBatch, type NewFile, type RecycleBin, type Repository, type StoredFile } from "../repository";
 import { buildFixtures } from "./fixtures";
 
 export { newRecordId };
@@ -14,11 +14,13 @@ type Store = { [E in EntityName]?: Rec<E>[] };
  * the end-to-end run. It applies the same read-only rules as Airtable so code
  * cannot rely on writing calculated fields. Optional JSON persistence for dev.
  */
-export class MemoryRepository implements Repository, FileStore {
+export class MemoryRepository implements Repository, FileStore, RecycleBin {
   readonly source = "memory" as const;
   private store: Store;
   /** Photos and voice notes; kept in memory only, so they reset on restart like the rest of the demo. */
   private files = new Map<string, { meta: StoredFile; bytes: Buffer }>();
+  /** Deleted records, newest first. Kept in memory only, like the demo data. */
+  private bin: DeletedBatch[] = [];
 
   constructor(private persistPath?: string, seed: Store = buildFixtures()) {
     if (persistPath && fs.existsSync(persistPath)) {
@@ -93,10 +95,12 @@ export class MemoryRepository implements Repository, FileStore {
     if (this.inside.getStore()) return fn(this);
     return this.queue.run("all", async () => {
       const before = structuredClone(this.store);
+      const binBefore = structuredClone(this.bin);
       try {
         return await this.inside.run(true, () => fn(this));
       } catch (e) {
         this.store = before;
+        this.bin = binBefore;
         this.save();
         throw e;
       }
@@ -121,5 +125,42 @@ export class MemoryRepository implements Repository, FileStore {
     if (!f) return null;
     f.meta.transcript = transcript;
     return { ...f.meta };
+  }
+
+  async moveToBin(b: NewDeletedBatch): Promise<DeletedBatch> {
+    for (const r of b.records) {
+      const rows = this.rows(r.entity);
+      const i = rows.findIndex((x) => x.id === r.id);
+      if (i >= 0) rows.splice(i, 1);
+    }
+    const batch: DeletedBatch = { ...structuredClone(b), id: newBinId(), at: new Date().toISOString() };
+    this.bin.unshift(batch);
+    this.save();
+    return structuredClone(batch);
+  }
+
+  async listBin(limit: number): Promise<DeletedBatch[]> {
+    return structuredClone(this.bin.slice(0, limit));
+  }
+
+  async getBinBatch(id: string): Promise<DeletedBatch | null> {
+    const b = this.bin.find((x) => x.id === id);
+    return b ? structuredClone(b) : null;
+  }
+
+  async restoreFromBin(id: string, by: string): Promise<{ restored: number; skipped: number }> {
+    const b = this.bin.find((x) => x.id === id);
+    if (!b || b.restoredAt) return { restored: 0, skipped: 0 };
+    let restored = 0;
+    for (const r of b.records) {
+      const rows = this.rows(r.entity);
+      if (rows.some((x) => x.id === r.id)) continue;
+      rows.push({ ...structuredClone(r.data), id: r.id, createdTime: r.createdTime } as never);
+      restored++;
+    }
+    b.restoredAt = new Date().toISOString();
+    b.restoredBy = by;
+    this.save();
+    return { restored, skipped: b.records.length - restored };
   }
 }

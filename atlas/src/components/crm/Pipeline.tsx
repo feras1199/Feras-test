@@ -24,7 +24,7 @@ export interface Card {
 
 const fmtDate = (d: string | null) => (d ? new Date(d + "T00:00:00Z").toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "UTC" }) : null);
 
-export function Pipeline({ columns, cards, canEdit, today }: { columns: { status: string; label: string }[]; cards: Card[]; canEdit: boolean; today: string }) {
+export function Pipeline({ columns, cards, canEdit, canDelete, today, suggest }: { columns: { status: string; label: string }[]; cards: Card[]; canEdit: boolean; canDelete?: boolean; today: string; suggest?: { nextActions: string[]; contactNotes: string[] } }) {
   const router = useRouter();
   const [open, setOpen] = useState<Card | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function Pipeline({ columns, cards, canEdit, today }: { columns: { status
           })}
         </div>
       </div>
-      {open && <EnquiryPanel card={open} statuses={[...columns.map((c) => c.status)]} canEdit={canEdit} onClose={() => setOpen(null)} />}
+      {open && <EnquiryPanel card={open} statuses={[...columns.map((c) => c.status)]} canEdit={canEdit} canDelete={canDelete} suggest={suggest} onClose={() => setOpen(null)} />}
       <p className="mt-2 text-xs text-stone-500">Tap a card to update it. On a computer you can also drag cards between columns. <Link href="/tasks" className="underline">Tasks</Link></p>
     </>
   );

@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { DeletedNote } from "../DeleteButton";
 import { Logo } from "../Logo";
 import { Icon } from "./Icon";
 import { GlobalSearch } from "./GlobalSearch";
@@ -73,7 +74,7 @@ export function Shell({ nav, user, demo, canCreate, children }: { nav: NavItem[]
         </div>
         {demo && <div className="bg-gold-300/60 px-4 py-1 text-center text-xs font-medium text-forest-900">Demo mode: fictional data only. Nothing here is a real customer.</div>}
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6"><Suspense fallback={null}><DeletedNote /></Suspense>{children}</main>
     </div>
   );
 }

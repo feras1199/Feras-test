@@ -5,6 +5,9 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { Chip, statusTone } from "../ui";
 import type { EstimateSummary } from "@/lib/domain/estimates";
 import { searchCostItems, type CostOption } from "@/lib/domain/costLibrary";
+import { SuggestInput } from "../ui/SuggestInput";
+import { STARTERS } from "@/lib/domain/suggestions";
+import { DeleteButton } from "../DeleteButton";
 
 type Line = { id: string; description: string; costType: string; quantity: number; unit: string; wasteRate: number; unitCostCents: number; priceIncludesGst: boolean; proposalOption: string; customerDescription: string; quantityVerified: boolean; measurementId: string | null; costExGst: number };
 type Est = { id: string; title: string; status: string; locked: boolean; quoteNumber: string; customerScope: string; assumptions: string; assumptionsResolved: boolean; markupOverride: number | null; managerOverride: number | null; commissionRate: number | null; validUntil: string | null; internalReviewNotes: string; projectId: string | null };
@@ -16,7 +19,7 @@ type Props = {
   settings: { defaultMarkup: number; commissionRate: number; commissionEnabled: boolean; schedules: Record<string, { name: string; stages: { label: string; rate: number }[] }>; gstRate: number };
   costItems: CostOption[];
   measurements: { id: string; label: string; quantity: number; unit: string }[];
-  perms: { edit: boolean; approve: boolean; owner: boolean };
+  perms: { edit: boolean; approve: boolean; owner: boolean; delete?: boolean };
 };
 
 const aud = (c: number | null | undefined) => (typeof c === "number" ? (c / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" }) : "–");
@@ -85,10 +88,11 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
           {perms.approve && (e.status === "Quoted" || e.status === "Ready") && <button className="btn-gold" disabled={busy} onClick={() => setDialog("accept")}>Record acceptance</button>}
           {perms.edit && e.status === "Quoted" && <button className="btn-secondary" disabled={busy} onClick={() => setDialog("decline")}>Declined</button>}
           {perms.edit && e.locked && e.status !== "Accepted" && e.status !== "Superseded" && <button className="btn-secondary" disabled={busy} onClick={() => action({ action: "revise" })}>Revise</button>}
+          {perms.delete && <DeleteButton entity="estimates" id={e.id} noun="estimate" />}
         </div>
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-      {e.status === "Accepted" && e.projectId && <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-900">Accepted. The project and payment schedule have been created.</p>}
+      {e.status === "Accepted" && e.projectId && <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-900">Accepted. The project and payment schedule have been created. <Link href={`/projects/${e.projectId}`} className="font-semibold underline">Open the project</Link></p>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] [&>*]:min-w-0">
         <div className="space-y-6">
@@ -339,7 +343,7 @@ function LineForm({ estimateId, line, costItems, gstRate, owner, measurements, o
           </label>
         )}
         <label className="text-sm"><span className="label">{labour ? "Person-hours *" : "Quantity *"}</span><input className="input" name="quantity" required inputMode="decimal" value={qty} onChange={(x) => setQty(x.target.value)} /></label>
-        {!labour && <label className="text-sm"><span className="label">Unit</span><input className="input" value={unit} onChange={(x) => setUnit(x.target.value)} placeholder="m², lm, each" /></label>}
+        {!labour && <label className="text-sm"><span className="label">Unit</span><SuggestInput id="line-unit" value={unit} onValueChange={setUnit} options={STARTERS.units} placeholder="m², lm, each" /></label>}
         {!labour && <label className="text-sm"><span className="label">Waste %</span><input className="input" name="waste" inputMode="decimal" defaultValue={line ? (line.wasteRate * 100).toString() : "0"} /></label>}
         <label className="text-sm"><span className="label">{labour ? "Rate per person-hour *" : "Unit price *"}</span><input className="input" required inputMode="decimal" value={price} onChange={(x) => setPrice(x.target.value)} /></label>
         {!labour && <label className="flex items-center gap-2 self-end pb-3 text-sm"><input type="checkbox" className="h-5 w-5" checked={incGst} onChange={(x) => setIncGst(x.target.checked)} />Price includes GST</label>}
@@ -387,7 +391,7 @@ function ActionDialog({ kind, e, summary, perms, busy, error, onClose, onSubmit 
               <label className="block"><span className="label">How *</span><select name="method" className="input">{["Signed quote", "Email", "In person", "Phone"].map((m) => <option key={m}>{m}</option>)}</select></label>
             </>
           )}
-          {kind === "decline" && <label className="block"><span className="label">Reason *</span><input name="reason" required minLength={2} className="input" placeholder="e.g. Went with another builder on price" /></label>}
+          {kind === "decline" && <label className="block"><span className="label">Reason *</span><SuggestInput id="decline-reason" name="reason" required minLength={2} options={STARTERS.declineReasons} placeholder="Tap to pick, or type the reason" /></label>}
         </div>
         {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
         <div className="mt-5 flex gap-2">

@@ -87,6 +87,10 @@ export const TaskCreate = z.object({
   projectId: recId.optional(),
 });
 export const TaskUpdate = z.object({
+  title: text(200).min(3, "Give the task a title").optional(),
+  taskType: z.enum(TASK_TYPES).optional(),
+  /** null unlinks the customer. */
+  customerId: recId.nullable().optional(),
   status: z.enum(TASK_STATUSES).optional(),
   priority: z.enum(TASK_PRIORITIES).optional(),
   dueDate: date.nullable().optional(),

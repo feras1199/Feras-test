@@ -555,6 +555,8 @@ export const ENTITIES = {
       paymentMethod: s("Payment Method"),
       customerNotified: b("Customer Notified"),
       archived: b("Archived"),
+      /** Taken off Finance because the project was cancelled; put back if it is un-cancelled. */
+      cancelledWithProject: own("checkbox")("Cancelled With Project"),
       paymentKey: t("Payment Key"),
       notes: t("Notes"),
     },

@@ -105,3 +105,21 @@ describe("address suggestions", () => {
     expect(demoSuggest("12 penr")[0]?.suburb).toBe("Penrith");
   });
 });
+
+import { guessTaskType, withPinned } from "@/lib/domain/suggestions";
+
+describe("common tasks", () => {
+  it("keeps the owner's list first and drops repeats from the rest", () => {
+    expect(withPinned(["Site Visit", "Create Estimate"], ["site visit", "Order materials", "Create Estimate"])).toEqual(["Site Visit", "Create Estimate", "Order materials"]);
+  });
+  it("guesses a Type for the manager's tasks", () => {
+    expect(guessTaskType("Site Visit")).toBe("Site Visit");
+    expect(guessTaskType("Submit New Design")).toBe("Customer Update");
+    expect(guessTaskType("Create Estimate")).toBe("Estimate");
+    expect(guessTaskType("Send Action Plan")).toBe("Customer Update");
+    expect(guessTaskType("Follow Up (Estimate)")).toBe("Lead Follow-up");
+    expect(guessTaskType("Order materials")).toBe("Material / Supplier");
+    expect(guessTaskType("Chase payment")).toBe("Payment");
+    expect(guessTaskType("Water the plants")).toBeNull();
+  });
+});

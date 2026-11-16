@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Chip } from "../ui";
 
-type T = { id: string; title: string; status: string; priority: string; dueDate: string | null; assignedTo: string | null; taskType: string | null; mine: boolean };
+type T = { id: string; title: string; status: string; priority: string; dueDate: string | null; assignedTo: string | null; taskType: string | null; mine: boolean; customer?: string | null };
 const STATUSES = ["Backlog", "Today", "Doing", "Waiting", "Delayed", "Done", "Cancelled"];
 
 export function TaskList({ tasks, today, canEditAll }: { tasks: T[]; today: string; canEditAll: boolean }) {
@@ -28,8 +28,8 @@ export function TaskList({ tasks, today, canEditAll }: { tasks: T[]; today: stri
                 <button onClick={() => set(t.id, "Done")} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-forest-500 hover:bg-forest-50" aria-label={`Mark "${t.title}" done`} />
               )}
               <div className="min-w-0 flex-1">
-                <p className={`font-medium ${t.status === "Done" ? "text-stone-400 line-through" : ""}`}>{t.title}</p>
-                <p className="text-xs text-stone-500">{[t.taskType, t.assignedTo].filter(Boolean).join(" · ")}</p>
+                <p className={`font-medium ${t.status === "Done" ? "text-stone-400 line-through" : ""}`}>{canEditAll ? <a href={`/tasks/${t.id}`} className="hover:underline">{t.title}</a> : t.title}</p>
+                <p className="text-xs text-stone-500">{[t.taskType, t.assignedTo, t.customer].filter(Boolean).join(" · ")}</p>
               </div>
               {t.priority !== "Normal" && <Chip tone={t.priority === "Critical" || t.priority === "High" ? "red" : "stone"}>{t.priority}</Chip>}
               {t.dueDate && <span className={`text-xs ${overdue ? "font-semibold text-red-700" : "text-stone-500"}`}>{overdue ? "Overdue · " : ""}{new Date(t.dueDate + "T00:00:00Z").toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "UTC" })}</span>}
