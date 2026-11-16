@@ -50,15 +50,20 @@ await step("owner edits markup and labour rate on a phone and saves", async () =
   await p.goto(`${BASE}/settings`);
   await p.getByRole("link", { name: "Edit settings" }).click();
   await p.waitForURL(/\/settings\/edit/);
-  await p.getByLabel("Default markup on cost").fill("40");
-  await p.getByLabel("Default labour rate").fill("52");
+  // Relative to what's there, so the test also works on a database an earlier run changed.
+  const markup = p.getByLabel("Default markup on cost");
+  const newMarkup = String(Number(await markup.inputValue()) + 5);
+  await markup.fill(newMarkup);
+  const labour = p.getByLabel("Default labour rate");
+  const newLabour = (Number(await labour.inputValue()) + 7).toFixed(2);
+  await labour.fill(newLabour);
   assert.equal(await p.evaluate(() => document.documentElement.scrollWidth), 390, "no sideways scroll on a phone");
   await p.getByRole("button", { name: "Save changes" }).click();
   await p.getByText("Saved 2 changes").waitFor();
   await p.goto(`${BASE}/settings`);
   const text = await p.innerText("main");
-  assert.match(text, /Default markup on cost\s+40%/);
-  assert.match(text, /\$52\.00 \/ person-hour/);
+  assert.ok(text.includes(`Default markup on cost\n${newMarkup}%`) || new RegExp(`Default markup on cost\\s+${newMarkup}%`).test(text), `markup ${newMarkup}% shown`);
+  assert.ok(text.includes(`$${newLabour} / person-hour`), `labour $${newLabour} shown`);
   assert.match(text, /Last changed by/);
 });
 

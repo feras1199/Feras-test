@@ -23,6 +23,8 @@ describe.skipIf(!url)("PostgresRepository", () => {
     await repo.putSettingsDoc("business", { pricing: { defaultMarkup: 0.4 } }, "Owner");
     await repo.putSettingsDoc("business", { pricing: { defaultMarkup: 0.3 } }, "ATLAS (first start)", { onlyIfMissing: true });
     expect(await repo.getSettingsDoc("business")).toMatchObject({ data: { pricing: { defaultMarkup: 0.4 } }, updatedBy: "Owner" });
+    // The browser tests share this database: leave no settings behind for them.
+    await pool.query("DELETE FROM atlas_settings WHERE key = 'business'");
   });
 
   it("creates, reads, lists and merges updates", async () => {
