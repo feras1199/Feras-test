@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en-AU" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* Palette and faces taken from the Whispering Leaf site (index.html :root). */
+      :root {
+        --leaf: #3f5a40;
+        --leaf-d: #2c412e;
+        --sage: #a9b8a0;
+        --stone: #e9e3d8;
+        --timber: #9a6a43;
+        --soil: #3b2c22;
+        --paper: #f6f2ea;
+        --warm: #e5c79b;
+        --ground: #2c412e;
+        --ink: #f6f2ea;
+        --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+        --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      .clip { position: absolute; inset: 0; }
+
+      /* Scene 1: stone-to-leaf ground, leaf mark, brand name */
+      #ground {
+        background: radial-gradient(ellipse at 50% 40%, #4b6a4a 0%, var(--leaf-d) 70%);
+      }
+      #mark {
+        left: 0; top: 0; width: 1920px; height: 1080px;
+      }
+      #mark svg { position: absolute; left: 960px; top: 330px; width: 160px; height: 160px; transform: translate(-50%, -50%); overflow: visible; }
+      #brand {
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+      }
+      #brand-name {
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: 150px;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        line-height: 1;
+      }
+      #rule {
+        width: 180px; height: 2px; background: var(--warm);
+        margin: 44px 0 40px;
+        transform-origin: center;
+      }
+      #tagline {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 56px;
+        color: var(--warm);
+        letter-spacing: -0.01em;
+      }
+
+      /* Scene 2: closing card */
+      #close {
+        background: var(--paper);
+        display: flex; align-items: center; justify-content: center; flex-direction: column;
+      }
+      #close-line {
+        font-family: var(--font-display);
+        font-size: 84px;
+        color: var(--leaf-d);
+        letter-spacing: -0.02em;
+        text-align: center;
+        line-height: 1.1;
+      }
+      #close-sub {
+        margin-top: 36px;
+        font-family: var(--font-body);
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--timber);
+      }
+      #disclaimer {
+        position: absolute; left: 0; right: 0; bottom: 48px;
+        text-align: center;
+        font-family: var(--font-body);
+        font-size: 28px;
+        color: #6b645a;
+      }
+      #fade {
+        background: #000;
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1: 0 to 6.2 s -->
+      <div id="ground" class="clip" data-start="0" data-duration="6.2" data-track-index="0"></div>
+
+      <div id="mark" class="clip" data-start="0" data-duration="6.2" data-track-index="1">
+        <svg viewBox="-60 -90 120 180" aria-hidden="true">
+          <!-- Leaf: a single closed path with a midrib -->
+          <path id="leaf-shape" d="M0,-80 C52,-40 52,40 0,80 C-52,40 -52,-40 0,-80 Z" fill="#a9b8a0" />
+          <path id="leaf-vein" d="M0,-70 L0,70" stroke="#3f5a40" stroke-width="3" fill="none" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <div id="brand" class="clip" data-start="0" data-duration="6.2" data-track-index="2">
+        <div id="brand-name">Whispering Leaf</div>
+        <div id="rule"></div>
+        <div id="tagline">Outdoor spaces, thoughtfully built.</div>
+      </div>
+
+      <!-- Scene 2: 6.0 to 10 s -->
+      <div id="close" class="clip" data-start="6" data-duration="4" data-track-index="3">
+        <div id="close-line">Gardens, decks and paving<br />for Sydney homes.</div>
+        <div id="close-sub">Whispering Leaf</div>
+      </div>
+
+      <div id="disclaimer" class="clip" data-start="6" data-duration="4" data-track-index="4">
+        Fictional concept. Not a real business.
+      </div>
+
+      <!-- Fade to black at the end -->
+      <div id="fade" class="clip" data-start="9.3" data-duration="0.7" data-track-index="5"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1 (0 to 6.2 s)
+      tl.fromTo("#ground", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0);
+
+      tl.fromTo(
+        "#leaf-shape",
+        { scale: 0.2, rotation: -70, transformOrigin: "50% 50%", opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 1.4, ease: "power3.out" },
+        0.3
+      );
+      tl.fromTo(
+        "#leaf-vein",
+        { strokeDasharray: 160, strokeDashoffset: 160 },
+        { strokeDashoffset: 0, duration: 0.9, ease: "power2.out" },
+        1.1
+      );
+      // Leaf drifts up and out of the way as the name arrives
+      tl.to("#mark svg", { y: -180, scale: 0.55, duration: 0.9, ease: "power3.inOut" }, 2.6);
+      tl.to("#mark svg", { opacity: 0, duration: 0.4, ease: "power1.in" }, 3.2);
+
+      tl.fromTo(
+        "#brand-name",
+        { opacity: 0, y: 30, filter: "blur(12px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: "power3.out" },
+        2.2
+      );
+      tl.fromTo(
+        "#rule",
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.7, ease: "power2.out" },
+        3.2
+      );
+      tl.fromTo(
+        "#tagline",
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power2.out" },
+        3.6
+      );
+
+      // Slow push on the brand block through the hold
+      tl.to("#brand", { scale: 1.03, duration: 2.6, ease: "none" }, 3.6);
+
+      // Scene 1 out, scene 2 in (crossfade via a wipe-up)
+      tl.to("#ground, #brand", { opacity: 0, duration: 0.5, ease: "power2.in" }, 5.7);
+
+      // Scene 2 (6 to 10 s)
+      tl.fromTo(
+        "#close",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.out" },
+        6.0
+      );
+      tl.fromTo(
+        "#close-line",
+        { opacity: 0, y: 28, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out" },
+        6.3
+      );
+      tl.fromTo(
+        "#close-sub",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.out" },
+        7.0
+      );
+      tl.fromTo(
+        "#disclaimer",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.out" },
+        7.2
+      );
+
+      // Fade to black
+      tl.fromTo("#fade", { opacity: 0 }, { opacity: 1, duration: 0.7, ease: "power1.in" }, 9.3);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
