@@ -1,14 +1,14 @@
 import "server-only";
 import type { Repository } from "../data/repository";
 import type { Rec } from "../data/entities";
-import { summarise } from "../domain/estimates";
+import { settingsForEstimate, summarise } from "../domain/estimates";
 import { getSettings } from "./context";
 import { todayIn } from "../dates";
 import { HttpError } from "./api";
 import { quantityBasisFor } from "../domain/inspections";
 import type { QuoteSnapshot } from "../domain/estimates";
 import { addDays } from "../domain/dates";
-import { dataSource, isLive } from "./context";
+import { baseSettings, dataSource, isLive } from "./context";
 import { audit } from "./audit";
 import { formatAud } from "../finance/money";
 import type { SessionPayload } from "../auth/session";
@@ -31,7 +31,7 @@ export async function measurementsFor(repo: Repository, e: Rec<"estimates">) {
 export async function loadEstimate(repo: Repository, id: string) {
   const estimate = await repo.get("estimates", id);
   if (!estimate) throw new HttpError(404, "Estimate not found");
-  const settings = getSettings();
+  const settings = settingsForEstimate(estimate, await getSettings(), baseSettings());
   const today = todayIn(settings.business.timezone);
   const [lines, components, costItems, measurements] = await Promise.all([
     repo.list("estimateLines", { where: (l) => !!l.estimateIds?.includes(id) }),
@@ -60,7 +60,7 @@ export function assertEditable(e: Rec<"estimates">) {
  * left Accepted with half its payment stages. Accepting again is harmless.
  */
 export async function acceptEstimate(repo: Repository, estimate: Pick<Rec<"estimates">, "id">, actor: Pick<SessionPayload, "uid" | "name" | "role">, acceptedBy: string, method: string) {
-  const settings = getSettings();
+  const settings = (await getSettings());
   const today = todayIn(settings.business.timezone);
   const out = await repo.atomic(`estimate:${estimate.id}`, async (tx) => {
     // Read again inside the unit of work: the copy the caller holds may be stale by now.

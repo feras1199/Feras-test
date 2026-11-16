@@ -9,7 +9,7 @@ import { zonedToUtc } from "@/lib/dates";
 export const POST = route("timesheets.submit", async ({ req, session }) => {
   const i = TimesheetCreate.parse(await req.json());
   const repo = getRepo();
-  const settings = getSettings();
+  const settings = (await getSettings());
   const p = await getProject(repo, i.projectId);
   if (!["In Progress", "Accepted / Pre-start"].includes(p.status ?? "")) throw new HttpError(409, `Time can't be logged on a project that is ${p.status}`);
   const componentIds = await assertComponent(repo, p.id, i.componentId);

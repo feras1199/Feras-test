@@ -56,6 +56,10 @@ export const DEFAULT_SETTINGS: Settings = {
   labour: { defaultRatePerPersonHourCents: 4500, hoursPerDay: 8 },
 };
 
+export function mergeSettings<T>(base: T, over: unknown): T {
+  return deepMerge(base, over);
+}
+
 function deepMerge<T>(base: T, over: unknown): T {
   if (!over || typeof over !== "object" || Array.isArray(over)) return (over as T) ?? base;
   const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
@@ -73,4 +77,87 @@ export function resolveSettings(overrides?: unknown): Settings {
   if (!parsed.payments.schedules[parsed.payments.defaultSchedule]) throw new Error(`Unknown default schedule ${parsed.payments.defaultSchedule}`);
   if (parsed.pricing.minMargin >= parsed.pricing.maxMargin) throw new Error("minMargin must be below maxMargin");
   return parsed;
+}
+
+/**
+ * What the owner can change on the Settings page. Timezone stays a server
+ * setting: changing it moves every "today" in the app.
+ */
+const pct = (max = 1) => z.number().finite().min(0).max(max);
+export const SettingsEdit = z.object({
+  business: z.object({
+    name: z.string().trim().min(1, "Business name is required").max(200),
+    abn: z.string().trim().max(40),
+    licenceNumber: z.string().trim().max(60),
+    phone: z.string().trim().max(40),
+    email: z.string().trim().max(200),
+  }),
+  pricing: z.object({
+    gstRate: pct(0.5),
+    defaultMarkup: pct(5),
+    overheadRate: pct(0.5),
+    contingencyRate: pct(0.5),
+    minMargin: z.number().finite().min(-1).max(1),
+    maxMargin: z.number().finite().min(-1).max(1),
+    quoteValidityDays: z.number().int().min(1).max(365),
+  }),
+  commission: z.object({
+    enabled: z.boolean(),
+    rate: pct(0.5),
+    base: z.enum(["invoice_inc_gst", "revenue_ex_gst"]),
+    treatment: z.enum(["absorb", "pass_through"]),
+  }),
+  payments: z.object({
+    defaultSchedule: z.string().min(1),
+    schedules: z.record(
+      z.string().regex(/^[A-Za-z0-9_-]{1,40}$/),
+      z.object({ name: z.string().trim().min(1, "Every schedule needs a name").max(100), stages: z.array(z.object({ label: z.string().trim().min(1, "Every stage needs a label").max(60), rate: z.number().gt(0).lte(1) })).min(1).max(12) }),
+    ),
+    maxDepositRate: pct(1),
+    dueDays: z.number().int().min(0).max(120),
+  }),
+  labour: z.object({
+    defaultRatePerPersonHourCents: z.number().int().min(0).max(100_000),
+    hoursPerDay: z.number().gt(0).max(24),
+  }),
+});
+export type SettingsEditInput = z.infer<typeof SettingsEdit>;
+
+/** Rules that span fields. Returns plain-English problems; empty means fine. */
+export function settingsProblems(s: Pick<Settings, "pricing" | "payments">): string[] {
+  const out: string[] = [];
+  if (s.pricing.minMargin >= s.pricing.maxMargin) out.push("The lowest margin must be below the highest margin");
+  const keys = Object.keys(s.payments.schedules);
+  if (keys.length === 0) out.push("Keep at least one payment schedule");
+  if (!s.payments.schedules[s.payments.defaultSchedule]) out.push("Pick a default payment schedule that exists");
+  for (const sch of Object.values(s.payments.schedules)) {
+    const total = sch.stages.reduce((a, x) => a + Math.round(Number((x.rate * 10000).toPrecision(12))), 0);
+    if (total !== 10000) out.push(`"${sch.name}" adds up to ${(total / 100).toFixed(2)}%, not 100%`);
+  }
+  return out;
+}
+
+/** Owner's edit applied to the current settings (timezone and anything not editable are kept). */
+export function applySettingsEdit(current: Settings, edit: SettingsEditInput): Settings {
+  const next: Settings = {
+    business: { ...current.business, ...edit.business },
+    pricing: { ...edit.pricing },
+    commission: { ...edit.commission },
+    payments: { ...edit.payments },
+    labour: { ...edit.labour },
+  };
+  const parsed = SettingsSchema.parse(next);
+  const problems = settingsProblems(parsed);
+  if (problems.length) throw Object.assign(new Error(problems.join(". ")), { problems });
+  return parsed;
+}
+
+/** Flat list of what changed, for the audit log. */
+export function settingsChanges(before: unknown, after: unknown, prefix = ""): { path: string; from: unknown; to: unknown }[] {
+  const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+  if (isObj(before) && isObj(after)) {
+    const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])];
+    return keys.flatMap((k) => settingsChanges(before[k], after[k], prefix ? `${prefix}.${k}` : k));
+  }
+  return JSON.stringify(before) === JSON.stringify(after) ? [] : [{ path: prefix, from: before, to: after }];
 }

@@ -48,6 +48,7 @@ export const POST = route<{ id: string }>("estimates.edit", async ({ req, params
         schedule: summary.schedule,
         lines: lines.map((l) => ({ id: l.id, description: l.description ?? "", costType: l.costType ?? "", quantity: l.quantity ?? 0, unit: l.unitSnapshot ?? "", costExGst: lineCostExGst(l), customerDescription: l.customerDescription ?? "", option: l.proposalOption ?? "Included" })),
         optionalExtras: summary.optionalExtras,
+        rules: { pricing: settings.pricing, commission: settings.commission, maxDepositRate: settings.payments.maxDepositRate },
       };
       const after = await repo.update("estimates", e.id, {
         status: "Ready",

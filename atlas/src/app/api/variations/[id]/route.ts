@@ -21,7 +21,7 @@ export const PATCH = route<{ id: string }>("variations.edit", async ({ req, para
   if (!v) throw new HttpError(404, "Variation not found");
   if (!FROM[b.action]!.includes(v.status ?? "")) throw new HttpError(409, `Can't ${b.action} a variation that is ${v.status}`);
   if (b.action === "approve" && !can(session.role, "variations.approve")) throw new HttpError(403, "Only a manager or owner can record approval");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const patch =
     b.action === "send" ? { status: "Sent for Approval" } :
     b.action === "approve" ? { status: "Approved", approvedDate: today, customerApproved: true, notes: `${v.notes ? v.notes + "\n" : ""}Approved by ${b.approvedBy}, recorded by ${session.name} on ${today}` } :

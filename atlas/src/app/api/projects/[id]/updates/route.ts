@@ -13,7 +13,7 @@ export const POST = route<{ id: string }>("projects.edit", async ({ req, params,
   const b = Body.parse(await req.json());
   const repo = getRepo();
   const p = await getProject(repo, params.id);
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const rec = await repo.create("clientUpdates", {
     title: `${p.name} – update ${today}`, projectIds: [p.id], updateDate: today, projectStatus: (PORTAL_STATUS[p.status ?? ""] ?? "In Progress") as never,
     progress: p.progress ?? null, summary: b.summary, nextSteps: b.nextSteps ?? "", internalNotes: b.internalNotes ?? "", customerVisible: true, emailSent: false, readyToSend: false,

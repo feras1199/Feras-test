@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { formatAud, formatPct } from "@/lib/finance/money";
 import { markupToMargin } from "@/lib/finance/pricing";
-import { dataSource, getRepo, getSettings, requirePage } from "@/lib/server/context";
+import { dataSource, getRepo, getSettingsWithMeta, requirePage } from "@/lib/server/context";
 import { transcriptionProvider } from "@/lib/ai/transcribe";
 import { addressProvider } from "@/lib/domain/address";
 import { CHANGE_PREFIX } from "@/lib/domain/changeRequests";
@@ -24,7 +24,7 @@ function Row({ k, v, note }: { k: string; v: React.ReactNode; note?: string }) {
 
 export default async function SettingsPage() {
   const s = await requirePage("settings.view");
-  const st = getSettings();
+  const { settings: st, meta } = await getSettingsWithMeta();
   const source = dataSource();
   const stt = transcriptionProvider();
   const ap = addressProvider();
@@ -32,9 +32,14 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Business rules ATLAS uses for every calculation." />
-      <p className="mb-4 rounded-xl bg-stone-100 p-3 text-sm text-stone-700">
-        These values are set in the server configuration (ATLAS_SETTINGS_JSON). They can't be edited on this screen yet; ask your developer to change them.
-      </p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-stone-100 p-3 text-sm text-stone-700">
+        <p className="min-w-0 flex-1">
+          {can(s.role, "settings.edit")
+            ? <>Only the owner can change these. Approved quotes keep the prices they were approved at.{meta.updatedBy && meta.updatedTime ? <> Last changed by {meta.updatedBy} on {formatDate(meta.updatedTime.slice(0, 10))}.</> : null}{!meta.stored && source !== "memory" ? " Changes last until the server restarts in this mode." : ""}</>
+            : "Only the owner can change these."}
+        </p>
+        {can(s.role, "settings.edit") && <Link href="/settings/edit" className="btn-primary inline-flex">Edit settings</Link>}
+      </div>
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <section className="card p-5">
           <h2 className="mb-2 font-semibold">Pricing</h2>
@@ -53,6 +58,7 @@ export default async function SettingsPage() {
             <Row k="Marketing commission" v={st.commission.enabled ? formatPct(st.commission.rate, 0) : "Off"} note={`on ${st.commission.base === "invoice_inc_gst" ? "invoice total inc GST" : "revenue ex GST"}, ${st.commission.treatment === "absorb" ? "absorbed from profit" : "added to the price"}`} />
             <Row k="Default labour rate" v={`${formatAud(st.labour.defaultRatePerPersonHourCents)} / person-hour`} />
             <Row k="Hours per crew day" v={st.labour.hoursPerDay} />
+            <Row k="Payments due after" v={`${st.payments.dueDays} days`} />
           </dl>
         </section>
         <section className="card p-5">
@@ -69,6 +75,7 @@ export default async function SettingsPage() {
           <h2 className="mb-2 font-semibold">System</h2>
           <dl>
             <Row k="Data source" v={source === "postgres" ? "ATLAS database (live)" : source === "airtable" ? "Airtable (live)" : "Demo data (fictional)"} />
+            <Row k="Business name" v={st.business.name} note={[st.business.abn && `ABN ${st.business.abn}`, st.business.phone, st.business.email].filter(Boolean).join(" · ") || undefined} />
             <Row k="Timezone" v={st.business.timezone} />
             <Row k="Version" v={(process.env.RENDER_GIT_COMMIT ?? process.env.ATLAS_VERSION ?? "local").slice(0, 7)} note="Code version running on the server" />
             <Row k="QuickBooks" v="Not connected" note="OAuth sign-in and sandbox test still to do" />

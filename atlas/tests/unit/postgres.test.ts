@@ -12,10 +12,20 @@ describe.skipIf(!url)("PostgresRepository", () => {
   let repo: PostgresRepository;
   beforeAll(async () => {
     pool = new Pool({ connectionString: url });
-    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files");
+    await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files, atlas_settings");
     repo = new PostgresRepository(pool);
   });
   afterAll(async () => { await pool.end(); });
+
+  it("stores owner settings, and first-run seeding never overwrites them", async () => {
+    expect(await repo.getSettingsDoc("business")).toBeNull();
+    await repo.putSettingsDoc("business", { pricing: { defaultMarkup: 0.3 } }, "ATLAS (first start)", { onlyIfMissing: true });
+    await repo.putSettingsDoc("business", { pricing: { defaultMarkup: 0.4 } }, "Owner");
+    await repo.putSettingsDoc("business", { pricing: { defaultMarkup: 0.3 } }, "ATLAS (first start)", { onlyIfMissing: true });
+    expect(await repo.getSettingsDoc("business")).toMatchObject({ data: { pricing: { defaultMarkup: 0.4 } }, updatedBy: "Owner" });
+    // The browser tests share this database: leave no settings behind for them.
+    await pool.query("DELETE FROM atlas_settings WHERE key = 'business'");
+  });
 
   it("creates, reads, lists and merges updates", async () => {
     const c = await repo.create("customers", { name: "Casey Demo", suburb: "Kellyville", doNotContact: false });

@@ -11,7 +11,7 @@ export const PATCH = route<{ id: string }>("schedule.edit", async ({ req, params
   const repo = getRepo();
   const s = await repo.get("schedule", params.id);
   if (!s) throw new HttpError(404, "Schedule item not found");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const after = await repo.update("schedule", s.id, { status: b.status, ...(b.issue !== undefined ? { issue: b.issue } : {}), ...(b.status === "In Progress" && !s.actualStart ? { actualStart: today } : {}), ...(b.status === "Completed" ? { actualFinish: today } : {}) });
   audit(session, { action: "schedule.update", entity: "schedule", recordId: s.id, summary: `"${s.title}" → ${b.status}` });
   return { item: after };

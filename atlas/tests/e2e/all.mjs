@@ -23,6 +23,7 @@ const suites = [
   { file: "people.mjs", env: database, db: true },
   { file: "media.mjs", env: database, db: true },
   { file: "safety.mjs", env: database, db: true },
+  { file: "settings.mjs", env: database, db: true },
 ];
 
 const only = process.argv.slice(2);

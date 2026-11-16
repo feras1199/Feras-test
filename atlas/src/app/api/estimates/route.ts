@@ -10,7 +10,7 @@ export const GET = route("estimates.view", async () => ({ estimates: await getRe
 export const POST = route("estimates.edit", async ({ req, session }) => {
   const i = EstimateCreate.parse(await req.json());
   const repo = getRepo();
-  const settings = getSettings();
+  const settings = (await getSettings());
   const customer = await repo.get("customers", i.customerId);
   if (!customer) throw new HttpError(400, "Customer not found");
   const enquiry = i.enquiryId ? await repo.get("enquiries", i.enquiryId) : null;

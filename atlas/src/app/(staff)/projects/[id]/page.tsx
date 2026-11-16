@@ -25,7 +25,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     repo.list("components", of), repo.list("actualCosts", of), repo.list("timesheets", of), repo.list("variations", of), repo.list("payments", of), repo.list("schedule", of), repo.list("checklists", of),
     p.customerIds?.[0] ? repo.get("customers", p.customerIds[0]) : null,
   ]);
-  const settings = getSettings();
+  const settings = (await getSettings());
   const today = todayIn(settings.business.timezone);
   const fin = projectFinancials(p, components, costs, timesheets, variations, payments, today, settings.pricing.gstRate);
   const costsV = can(s.role, "costs.view"), profitV = can(s.role, "profit.view"), financeV = can(s.role, "finance.view");

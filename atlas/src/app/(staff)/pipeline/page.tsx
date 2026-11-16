@@ -12,7 +12,7 @@ export const metadata = { title: "Pipeline" };
 export default async function PipelinePage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const s = await requirePage("crm.view");
   const { show } = await searchParams;
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const repo = getRepo();
   const [enquiries, customers] = await Promise.all([repo.list("enquiries"), repo.list("customers")]);
   const byId = new Map(customers.map((c) => [c.id, c]));

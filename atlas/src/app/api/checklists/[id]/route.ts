@@ -11,7 +11,7 @@ export const PATCH = route<{ id: string }>("checklists.edit", async ({ req, para
   const repo = getRepo();
   const c = await repo.get("checklists", params.id);
   if (!c) throw new HttpError(404, "Checklist item not found");
-  const after = await repo.update("checklists", c.id, b.completed ? { completed: true, completedBy: session.name, completedDate: todayIn(getSettings().business.timezone), ...(b.notes ? { notes: b.notes } : {}) } : { completed: false, completedBy: "", completedDate: null });
+  const after = await repo.update("checklists", c.id, b.completed ? { completed: true, completedBy: session.name, completedDate: todayIn((await getSettings()).business.timezone), ...(b.notes ? { notes: b.notes } : {}) } : { completed: false, completedBy: "", completedDate: null });
   audit(session, { action: "checklist.update", entity: "checklists", recordId: c.id, summary: `"${c.title}" ${b.completed ? "ticked" : "unticked"}` });
   return { item: after };
 });

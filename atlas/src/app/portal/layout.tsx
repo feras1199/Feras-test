@@ -8,7 +8,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const s = await currentSession();
   if (!s) redirect("/login");
   if (s.role !== "customer" || !s.customerId) redirect("/");
-  const b = getSettings().business;
+  const b = (await getSettings()).business;
   return (
     <div className="min-h-screen">
       <header className="bg-forest-900 text-stone-50">

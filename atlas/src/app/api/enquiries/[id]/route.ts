@@ -13,7 +13,7 @@ export const PATCH = route<{ id: string }>("crm.edit", async ({ req, params, ses
   const repo = getRepo();
   const before = await repo.get("enquiries", params.id);
   if (!before) throw new HttpError(404, "Enquiry not found");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
 
   const patch: Partial<Rec<"enquiries">> = {};
   for (const k of ["status", "reasonWonLost", "nextFollowUp", "nextAction", "assignedTo", "leadQuality", "notes"] as const) {

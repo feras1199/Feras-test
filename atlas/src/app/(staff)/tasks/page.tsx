@@ -13,7 +13,7 @@ const OPEN = new Set(["Backlog", "Today", "Doing", "Waiting", "Delayed"]);
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const s = await requirePage("dashboard.view");
   const { view = "open" } = await searchParams;
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const all = await getRepo().list("tasks");
   const visible = can(s.role, "crm.view") ? all : all.filter((t) => t.assignedTo === s.name);
   const rows = visible

@@ -12,9 +12,9 @@ const KIND_LABEL = { "follow-up": "Follow-up", task: "Task", payment: "Payment",
 
 export default async function TodayPage() {
   const s = await requirePage("dashboard.view");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const t = await buildToday(getRepo(), s.role, today);
-  const hour = Number(new Intl.DateTimeFormat("en-AU", { hour: "numeric", hourCycle: "h23", timeZone: getSettings().business.timezone }).format(new Date()));
+  const hour = Number(new Intl.DateTimeFormat("en-AU", { hour: "numeric", hourCycle: "h23", timeZone: (await getSettings()).business.timezone }).format(new Date()));
   const greeting = `Good ${hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"}, ${s.name.split(" ")[0]}`;
 
   return (

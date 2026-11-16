@@ -10,7 +10,7 @@ export const metadata = { title: "My time" };
 export default async function TimesheetsPage() {
   const s = await requirePage("timesheets.submit");
   const repo = getRepo();
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const [projects, mine] = await Promise.all([
     repo.list("projects", { where: (p) => ["In Progress", "Accepted / Pre-start"].includes(p.status ?? "") }),
     repo.list("timesheets", { where: (t) => t.staffName === s.name }),

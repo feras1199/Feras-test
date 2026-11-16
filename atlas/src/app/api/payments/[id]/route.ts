@@ -18,9 +18,9 @@ export const PATCH = route<{ id: string }>("finance.edit", async ({ req, params,
   const p = await repo.get("payments", params.id);
   if (!p || p.archived) throw new HttpError(404, "Payment not found");
   if (p.status === "Paid") throw new HttpError(409, "Already marked paid");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   if (b.action === "raise") {
-    const due = b.dueDate ?? addDays(today, getSettings().payments.dueDays);
+    const due = b.dueDate ?? addDays(today, (await getSettings()).payments.dueDays);
     const after = await repo.update("payments", p.id, { dueDate: due, status: "Due" });
     audit(session, { action: "payment.raise", entity: "payments", recordId: p.id, summary: `${p.title}: ${formatAud(p.amount ?? 0)} raised, due ${due}. No invoice was sent; send it from your accounting system.` });
     return { payment: after };

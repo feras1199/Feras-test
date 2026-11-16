@@ -15,7 +15,7 @@ export const POST = route("ai.use", async ({ req, session }) => {
   if (!aiConfigured() && !demo) throw new HttpError(503, "The assistant is not set up yet. An administrator needs to add an Anthropic API key.");
   if (rateLimited(session.uid)) throw new HttpError(429, "That's a lot of questions in a short time. Try again in a few minutes.");
   const input = ChatInput.parse(await req.json());
-  const settings = getSettings();
+  const settings = (await getSettings());
   const ctx = { repo: getRepo(), session, settings, today: todayIn(settings.business.timezone) };
   const attachments = await loadAttachments(session, input.messages.flatMap((m) => m.attachmentIds ?? []));
   try {
