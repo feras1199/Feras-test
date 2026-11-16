@@ -20,6 +20,7 @@ const suites = [
   { file: "three-projects.mjs", env: demo },
   { file: "assistant-files.mjs", env: demo },
   { file: "suggestions.mjs", env: demo },
+  { file: "upload-recording.mjs", env: demo },
   { file: "people.mjs", env: database, db: true },
   { file: "media.mjs", env: database, db: true },
   { file: "safety.mjs", env: database, db: true },

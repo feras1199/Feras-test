@@ -174,7 +174,7 @@ await step("Job 1 · three voice notes, then the AI fills the site notes and wri
   assert.match(await val("slopeLevels"), /300 mm/, "Slope and levels");
   assert.match(await val("priorities"), /natural|sandstone/i, "Priorities");
   assert.equal(await val("risks"), "Owner's note: neighbours are sensitive about noise before 8 am", "hand-written risks must be kept");
-  assert.match(done, /Left your own writing in: Risks and hazards/);
+  assert.match(done, /Kept what was already there in: Risks and hazards/);
   assert.equal(await p.locator("input[name=accessWidthM]").inputValue(), "1.1");
   assert.equal(await p.locator("details").filter({ hasText: "What was said" }).count(), 3);
   summary.job1Filled = done;

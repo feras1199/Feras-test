@@ -39,3 +39,15 @@ describe("parseRange", () => {
     expect(parseRange("items=0-1", 100)).toBe("invalid");
   });
 });
+
+describe("uploaded recordings", () => {
+  it("recognises WAV, FLAC and the common MP3 frame headers, but not WebP photos as audio", async () => {
+    const { sniffMedia } = await import("@/lib/domain/media");
+    const pad = (h: number[]) => Uint8Array.from([...h, ...new Array(16).fill(0)]);
+    const asc = (s: string) => Array.from(s, (c) => c.charCodeAt(0));
+    expect(sniffMedia(pad([...asc("RIFF"), 0, 0, 0, 0, ...asc("WAVE")]))?.mime).toBe("audio/wav");
+    expect(sniffMedia(pad([...asc("RIFF"), 0, 0, 0, 0, ...asc("WEBP")]))?.kind).toBe("photo");
+    expect(sniffMedia(pad(asc("fLaC")))?.mime).toBe("audio/flac");
+    expect(sniffMedia(pad([0xff, 0xfa]))?.mime).toBe("audio/mpeg");
+  });
+});

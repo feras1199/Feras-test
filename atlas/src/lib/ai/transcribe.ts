@@ -21,7 +21,7 @@ export class TranscriptionError extends Error {
 /** Words the transcriber should expect, so trade terms come out right. */
 const VOCAB = ["pavers", "sandstone", "bluestone", "retaining wall", "sleepers", "turf", "Sir Walter", "drainage", "ag pipe", "stormwater", "pergola", "decking", "excavation", "road base", "crusher dust", "bedding sand", "mulch", "garden bed", "council", "DA"];
 
-const EXT: Record<string, string> = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/mpeg": "mp3", "audio/aac": "aac" };
+const EXT: Record<string, string> = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/mpeg": "mp3", "audio/aac": "aac", "audio/wav": "wav", "audio/flac": "flac" };
 
 type DeepgramResponse = {
   results?: { channels?: { alternatives?: { transcript?: string; paragraphs?: { transcript?: string } }[] }[] };
@@ -44,6 +44,8 @@ export async function transcribe(bytes: Buffer, mime: string, opts: { env?: Node
     return { text, provider };
   }
 
+  // OpenAI takes files up to 25 MB; Deepgram takes far longer recordings.
+  if (bytes.length > 25 * 1024 * 1024) throw new TranscriptionError(413, "That recording is over 25 MB, which is too long for the OpenAI transcription key. Add a DEEPGRAM_API_KEY on the server for long recordings, or send a shorter clip.");
   const form = new FormData();
   form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }), `voice-note.${EXT[mime] ?? "webm"}`);
   form.append("model", env.ATLAS_TRANSCRIBE_MODEL || "gpt-4o-mini-transcribe");

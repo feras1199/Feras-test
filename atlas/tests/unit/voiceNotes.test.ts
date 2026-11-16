@@ -23,6 +23,22 @@ describe("parseDraft", () => {
     expect(d).toEqual({ summary: "Met Sam", fields: { scope: "Turf" }, accessDifficulty: undefined, accessWidthM: 1.1 });
     expect(parseDraft(null).fields).toEqual({});
   });
+  it("keeps only clearly said customer details, budgets and sized measurements", () => {
+    const d = parseDraft({
+      summary: "s",
+      customer: { phone: "0491 570 159", email: "not an email", address: "12 Example St", suburb: "" },
+      budgetDollars: 15000.4,
+      measurements: [
+        { zone: "Back lawn", workType: "Turfing", unit: "m²", lengthM: null, widthM: null, heightM: null, quantity: 40, note: "about 40 m²" },
+        { zone: "Side", workType: "Paving", unit: "m²", lengthM: null, widthM: null, heightM: null, quantity: null, note: "no size said" },
+        { zone: "Wall", workType: "Moon base", unit: "lm", lengthM: 6, widthM: null, heightM: 0.6, quantity: null, note: "" },
+      ],
+    });
+    expect(d.customer).toEqual({ phone: "0491 570 159", address: "12 Example St" });
+    expect(d.budgetDollars).toBe(15000);
+    expect(d.measurements).toEqual([{ zone: "Back lawn", workType: "Turfing", unit: "m²", quantity: 40, note: "about 40 m²" }]);
+    expect(parseDraft({ customer: { phone: "call me maybe 12345678" }, budgetDollars: -5 }).customer).toBeUndefined();
+  });
 });
 
 describe("draftSiteNotes", () => {
@@ -37,7 +53,7 @@ describe("draftSiteNotes", () => {
     const format = (params.output_config as { format: { type: string; schema: { required: string[]; additionalProperties: boolean } } }).format;
     expect(format.type).toBe("json_schema");
     expect(format.schema.additionalProperties).toBe(false);
-    expect(format.schema.required).toEqual(expect.arrayContaining(["summary", "scope", "accessWidthM"]));
+    expect(format.schema.required).toEqual(expect.arrayContaining(["summary", "scope", "accessWidthM", "customer", "budgetDollars", "measurements"]));
     expect(JSON.stringify(params.messages)).toContain("We'd like paving");
   });
 
@@ -80,5 +96,8 @@ describe("demo stand-ins", () => {
     expect(d.fields.drainage).toMatch(/ag pipe/);
     expect(d.accessWidthM).toBe(1.1);
     expect(d.summary).toMatch(/^Demo summary/);
+    expect(d.budgetDollars).toBe(15000);
+    expect(d.customer).toEqual({ phone: "0491 570 159" });
+    expect(d.measurements?.[0]).toMatchObject({ workType: "Turfing", unit: "m²", quantity: 40 });
   });
 });

@@ -20,6 +20,7 @@
     "e2e:three-projects": "node tests/e2e/three-projects.mjs",
     "e2e:assistant-files": "node tests/e2e/assistant-files.mjs",
     "e2e:suggestions": "node tests/e2e/suggestions.mjs",
+    "e2e:upload-recording": "node tests/e2e/upload-recording.mjs",
     "e2e:all": "node tests/e2e/all.mjs",
     "e2e:safety": "node tests/e2e/safety.mjs",
     "restore-files": "node scripts/restore-files.mjs"

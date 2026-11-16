@@ -38,7 +38,7 @@ let pdfId;
 
 await step("record a voice note in the chat and say which job it's for", async () => {
   await p.goto(`${BASE}/assistant`);
-  await p.getByText("You can also share a PDF, photo or voice note").waitFor();
+  await p.getByText("You can also tap 📎 File to share a PDF, photo or a recording", { exact: false }).waitFor();
   await p.getByRole("button", { name: "Record a voice note" }).click();
   await p.getByText(/Recording 0:0[1-9]/).waitFor({ timeout: 10_000 });
   await p.waitForTimeout(1200);
