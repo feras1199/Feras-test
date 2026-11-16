@@ -43,6 +43,7 @@ export function SettingsEditor({ initial }: { initial: Settings }) {
   const [schedules, setSchedules] = useState<Schedule[]>(
     Object.entries(initial.payments.schedules).map(([key, s]) => ({ key, name: s.name, stages: s.stages.map((x) => ({ label: x.label, pct: toPct(x.rate) })) })),
   );
+  const [taskTitles, setTaskTitles] = useState(initial.lists.taskTitles.join("\n"));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export function SettingsEditor({ initial }: { initial: Settings }) {
         dueDays: num(pay.dueDays),
       },
       labour: { defaultRatePerPersonHourCents: Math.round(num(l.rate) * 100), hoursPerDay: num(l.hours) },
+      lists: { taskTitles: taskTitles.split("\n").map((x) => x.trim()).filter(Boolean) },
     };
     setBusy(true);
     try {
@@ -179,6 +181,12 @@ export function SettingsEditor({ initial }: { initial: Settings }) {
           <Field label="Warn when the deposit is above" suffix="%" hint="NSW Home Building Act deposit limit: confirm with your contract advisor">{input(pay.maxDeposit, (v) => setPay({ ...pay, maxDeposit: v }), { min: 0, max: 100, name: "maxDeposit" })}</Field>
           <Field label="Payments due after" suffix="days">{input(pay.dueDays, (v) => setPay({ ...pay, dueDays: v }), { min: 0, max: 120, step: 1, inputMode: "numeric", name: "dueDays" })}</Field>
         </div>
+      </section>
+
+      <section className="card space-y-4 p-5 lg:col-span-2">
+        <h2 className="font-semibold">Common tasks</h2>
+        <p className="text-sm text-stone-600">Shown first when someone taps the Task box on a new task. One per line, in the order you want them. Staff can still type anything else.</p>
+        <textarea id="taskTitles" name="taskTitles" aria-label="Common tasks, one per line" rows={7} className="input py-2" value={taskTitles} onChange={(e) => setTaskTitles(e.target.value)} />
       </section>
 
       <section className="card space-y-4 p-5 lg:col-span-2">

@@ -72,6 +72,11 @@ export default async function SettingsPage() {
           <dl><Row k="Deposit warning above" v={formatPct(st.payments.maxDepositRate, 0)} note="NSW Home Building Act deposit limit: confirm with your contract advisor" /></dl>
         </section>
         <section className="card p-5">
+          <h2 className="mb-2 font-semibold">Common tasks</h2>
+          <p className="mb-2 text-sm text-stone-600">Quick picks on the New task form.</p>
+          {st.lists.taskTitles.length ? <ul className="flex flex-wrap gap-1.5">{st.lists.taskTitles.map((t) => <li key={t} className="chip bg-stone-100 text-stone-800">{t}</li>)}</ul> : <p className="text-sm text-stone-500">None yet.</p>}
+        </section>
+        <section className="card p-5">
           <h2 className="mb-2 font-semibold">System</h2>
           <dl>
             <Row k="Data source" v={source === "postgres" ? "ATLAS database (live)" : source === "airtable" ? "Airtable (live)" : "Demo data (fictional)"} />

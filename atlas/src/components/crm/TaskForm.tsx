@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SuggestInput } from "@/components/ui/SuggestInput";
+import { guessTaskType } from "@/lib/domain/suggestions";
 
 const TYPES = ["Lead Follow-up", "Site Visit", "Estimate", "Quote Review", "Customer Call", "Material / Supplier", "Construction", "Payment", "Variation", "Customer Update", "Management", "Other"];
 
@@ -9,6 +10,10 @@ export function TaskForm({ customers, customerId, suggest = { taskTitles: [], pe
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [taskType, setTaskType] = useState(TYPES[0]!);
+  const [typeChosen, setTypeChosen] = useState(false);
+  // Picking or typing a common task fills in a matching Type, until the person picks a Type themselves.
+  const followTitle = (title: string) => { if (typeChosen) return; const t = guessTaskType(title); if (t && TYPES.includes(t)) setTaskType(t); };
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -24,9 +29,9 @@ export function TaskForm({ customers, customerId, suggest = { taskTitles: [], pe
   }
   return (
     <form onSubmit={onSubmit} className="card space-y-4 p-5">
-      <div><label htmlFor="title" className="label">Task *</label><SuggestInput id="title" name="title" required minLength={3} options={suggest.taskTitles} showOnFocus={false} /></div>
+      <div><label htmlFor="title" className="label">Task *</label><SuggestInput id="title" name="title" required minLength={3} options={suggest.taskTitles} limit={10} placeholder="Tap to pick, or type your own" onValueChange={followTitle} /></div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><label htmlFor="taskType" className="label">Type</label><select id="taskType" name="taskType" className="input">{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+        <div><label htmlFor="taskType" className="label">Type</label><select id="taskType" name="taskType" className="input" value={taskType} onChange={(e) => { setTaskType(e.target.value); setTypeChosen(true); }}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
         <div><label htmlFor="priority" className="label">Priority</label><select id="priority" name="priority" defaultValue="Normal" className="input">{["Critical", "High", "Normal", "Low"].map((t) => <option key={t}>{t}</option>)}</select></div>
         <div><label htmlFor="dueDate" className="label">Due</label><input id="dueDate" name="dueDate" type="date" className="input" /></div>
         <div><label htmlFor="assignedTo" className="label">Assigned to</label><SuggestInput id="assignedTo" name="assignedTo" placeholder="You" options={suggest.people} /></div>

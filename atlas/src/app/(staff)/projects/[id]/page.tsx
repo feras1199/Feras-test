@@ -9,6 +9,7 @@ import { formatDate, formatTime, todayIn } from "@/lib/dates";
 import { actualCostExGst, projectFinancials, timesheetCost, COST_TYPES } from "@/lib/domain/projects";
 import { can } from "@/lib/auth/roles";
 import { getRepo, getSettings, requirePage } from "@/lib/server/context";
+import { loadSuggestions } from "@/lib/server/suggestions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const p = await repo.get("projects", id);
   if (!p) notFound();
   const of = { where: (r: { projectIds?: string[] }) => !!r.projectIds?.includes(id) };
+  const suggest = await loadSuggestions(repo, ["suppliers", "people"]);
   const [components, costs, timesheets, variations, payments, schedule, checklists, customer] = await Promise.all([
     repo.list("components", of), repo.list("actualCosts", of), repo.list("timesheets", of), repo.list("variations", of), repo.list("payments", of), repo.list("schedule", of), repo.list("checklists", of),
     p.customerIds?.[0] ? repo.get("customers", p.customerIds[0]) : null,
@@ -77,7 +79,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <span className="flex items-center gap-2"><Chip tone={statusTone(x.status)}>{x.status}</Chip>{can(s.role, "schedule.edit") && x.status !== "Completed" && <ActionButton endpoint={`/api/schedule/${x.id}`} body={{ status: x.status === "In Progress" ? "Completed" : "In Progress" }} label={x.status === "In Progress" ? "Done" : "Start"} />}</span></li>
             ))}</ul>
           )}
-          {can(s.role, "schedule.edit") && <details><summary className="cursor-pointer text-sm font-medium text-forest-700">Add to schedule</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/schedule`} submitLabel="Add" fields={[{ name: "title", label: "What", type: "text", required: true, full: true }, { name: "type", label: "Type", type: "select", required: true, defaultValue: "Work", options: ["Work", "Milestone", "Site Visit", "Material Delivery", "Inspection", "Client Meeting", "Payment", "Other"] }, { name: "assignedTo", label: "Who", type: "text" }, { name: "plannedStart", label: "Start", type: "date", required: true }, { name: "plannedFinish", label: "Finish", type: "date" }, { name: "customerVisible", label: "Show to customer", type: "checkbox" }]} /></div></details>}
+          {can(s.role, "schedule.edit") && <details><summary className="cursor-pointer text-sm font-medium text-forest-700">Add to schedule</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/schedule`} submitLabel="Add" fields={[{ name: "title", label: "What", type: "text", required: true, full: true }, { name: "type", label: "Type", type: "select", required: true, defaultValue: "Work", options: ["Work", "Milestone", "Site Visit", "Material Delivery", "Inspection", "Client Meeting", "Payment", "Other"] }, { name: "assignedTo", label: "Who", type: "text", suggest: suggest.people }, { name: "plannedStart", label: "Start", type: "date", required: true }, { name: "plannedFinish", label: "Finish", type: "date" }, { name: "customerVisible", label: "Show to customer", type: "checkbox" }]} /></div></details>}
         </section>
 
         <section className="card p-5">
@@ -127,7 +129,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <li key={c.id} className="flex justify-between gap-2 py-2"><span>{c.title}<span className="block text-xs text-stone-500">{c.costType} · {formatDate(c.costDate)}{c.reference ? ` · ${c.reference}` : ""}{!c.componentIds?.length ? " · not allocated" : ""}</span></span><span className="text-right">{formatAud(actualCostExGst(c, settings.pricing.gstRate))}<span className="block text-xs text-stone-500">ex GST</span></span></li>
               ))}</ul>
             ))}
-            <details open={!costsV}><summary className="cursor-pointer text-sm font-medium text-forest-700">Record a cost</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/costs`} submitLabel="Save cost" fields={[{ name: "description", label: "What", type: "text", required: true }, { name: "supplier", label: "Supplier", type: "text", required: true }, { name: "costType", label: "Type", type: "select", required: true, defaultValue: "Material", options: [...COST_TYPES] }, { name: "componentId", label: "Part of the job", type: "select", options: compOptions }, { name: "amountIncGstCents", label: "Amount inc GST ($)", type: "money", required: true }, { name: "costDate", label: "Date", type: "date", required: true, defaultValue: today }, { name: "reference", label: "Invoice / receipt no.", type: "text" }, { name: "unplanned", label: "Not in the estimate", type: "checkbox" }]} /></div></details>
+            <details open={!costsV}><summary className="cursor-pointer text-sm font-medium text-forest-700">Record a cost</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/costs`} submitLabel="Save cost" fields={[{ name: "description", label: "What", type: "text", required: true }, { name: "supplier", label: "Supplier", type: "text", required: true, suggest: suggest.suppliers }, { name: "costType", label: "Type", type: "select", required: true, defaultValue: "Material", options: [...COST_TYPES] }, { name: "componentId", label: "Part of the job", type: "select", options: compOptions }, { name: "amountIncGstCents", label: "Amount inc GST ($)", type: "money", required: true }, { name: "costDate", label: "Date", type: "date", required: true, defaultValue: today }, { name: "reference", label: "Invoice / receipt no.", type: "text" }, { name: "unplanned", label: "Not in the estimate", type: "checkbox" }]} /></div></details>
           </section>
         )}
 

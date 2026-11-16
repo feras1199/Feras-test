@@ -86,6 +86,53 @@ await step("task: title and 'assigned to' suggest common entries and staff", asy
   await p.keyboard.press("Escape");
 });
 
+await step("new task: tapping the Task box lists the common tasks first; picking one sets the Type", async () => {
+  await p.goto(`${BASE}/tasks/new`);
+  await p.locator("#title").click();
+  const shown = await p.getByRole("listbox", { name: "Suggestions" }).getByRole("option").allInnerTexts();
+  assert.deepEqual(shown.slice(0, 5), ["Site Visit", "Submit New Design", "Create Estimate", "Send Action Plan", "Follow Up (Estimate)"]);
+  if (SHOTS) await p.screenshot({ path: `${SHOTS}/task-common.png` });
+  await option("Create Estimate").click();
+  assert.equal(await p.inputValue("#title"), "Create Estimate");
+  assert.equal(await p.inputValue("#taskType"), "Estimate");
+  // Free text still works, and a Type the person picks is kept.
+  await p.selectOption("#taskType", "Management");
+  await p.fill("#title", "Site visit with the council inspector");
+  assert.equal(await p.inputValue("#taskType"), "Management");
+  await p.keyboard.press("Escape");
+  await p.getByRole("button", { name: "Create task" }).click();
+  await p.waitForURL(/\/tasks$/);
+  const tasks = (await (await p.request.get(`${BASE}/api/tasks`)).json()).tasks;
+  const t = tasks.find((x) => x.title === "Site visit with the council inspector");
+  assert.ok(t, "task saved with typed title");
+  assert.equal(t.taskType, "Management");
+  await noSideScroll();
+});
+
+await step("owner edits the common tasks list in Settings", async () => {
+  await p.goto(`${BASE}/settings/edit`);
+  const box = p.getByLabel("Common tasks, one per line");
+  await box.fill("Order pavers\nSite Visit\nsite visit\n");
+  await p.getByRole("button", { name: "Save changes" }).click();
+  await p.getByRole("status").filter({ hasText: /Saved/ }).waitFor();
+  await p.goto(`${BASE}/tasks/new`);
+  await p.locator("#title").click();
+  const shown = await p.getByRole("listbox", { name: "Suggestions" }).getByRole("option").allInnerTexts();
+  assert.deepEqual(shown.slice(0, 2), ["Order pavers", "Site Visit"]);
+  await option("Order pavers").click();
+  assert.equal(await p.inputValue("#taskType"), "Material / Supplier");
+});
+
+await step("pipeline card: next action and 'what was discussed' offer quick picks", async () => {
+  await p.goto(`${BASE}/pipeline`);
+  await p.locator("main button[draggable]").first().click();
+  await p.locator("#contact-summary").click();
+  await option("No answer, left voicemail").click();
+  assert.equal(await p.inputValue("#contact-summary"), "No answer, left voicemail");
+  if (SHOTS) await p.screenshot({ path: `${SHOTS}/pipeline-contact.png` });
+  await noSideScroll();
+});
+
 await step("Cost Library: unit, category and supplier suggest what's already there", async () => {
   await p.goto(`${BASE}/cost-library`);
   await p.getByRole("button", { name: "Add an item" }).click();

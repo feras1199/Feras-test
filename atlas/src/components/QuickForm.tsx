@@ -1,9 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SuggestInput } from "./ui/SuggestInput";
 
 export type QField =
-  | { name: string; label: string; type: "text" | "textarea" | "date" | "time"; required?: boolean; placeholder?: string; defaultValue?: string; full?: boolean }
+  | { name: string; label: string; type: "text" | "textarea" | "date" | "time"; required?: boolean; placeholder?: string; defaultValue?: string; full?: boolean; /** Type-ahead suggestions (text boxes only). */ suggest?: string[] }
   | { name: string; label: string; type: "money" | "number" | "int" | "percent"; required?: boolean; placeholder?: string; defaultValue?: string; full?: boolean }
   | { name: string; label: string; type: "select"; options: { value: string; label: string }[] | string[]; required?: boolean; defaultValue?: string; full?: boolean }
   | { name: string; label: string; type: "checkbox"; defaultValue?: boolean; full?: boolean };
@@ -65,6 +66,8 @@ export function QuickForm({ endpoint, method = "POST", fields, submitLabel, extr
                 </select>
               ) : f.type === "textarea" ? (
                 <textarea id={id} name={f.name} required={f.required} rows={3} defaultValue={f.defaultValue} placeholder={f.placeholder} className="input py-2" />
+              ) : f.type === "text" && f.suggest?.length ? (
+                <SuggestInput id={id} name={f.name} required={f.required} defaultValue={f.defaultValue} placeholder={f.placeholder} options={f.suggest} />
               ) : (
                 <input id={id} name={f.name} required={f.required} defaultValue={f.defaultValue} placeholder={f.placeholder}
                   type={f.type === "date" || f.type === "time" ? f.type : "text"} inputMode={["money", "number", "percent"].includes(f.type) ? "decimal" : f.type === "int" ? "numeric" : undefined} className="input" />

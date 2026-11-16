@@ -24,6 +24,8 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaul
   footer?: string;
   /** Show suggestions on focus before anything is typed. */
   showOnFocus?: boolean;
+  /** Most suggestions shown at once (default 6). */
+  limit?: number;
 };
 
 /**
@@ -31,7 +33,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaul
  * its name and anything can be typed); the list just saves typing. Works with
  * tap, mouse, and arrow keys + Enter.
  */
-export function SuggestInput({ id, defaultValue, options = [], fetchOptions, value: controlled, onValueChange, onPick, footer, showOnFocus = true, className, ...rest }: Props) {
+export function SuggestInput({ id, defaultValue, options = [], fetchOptions, value: controlled, onValueChange, onPick, footer, showOnFocus = true, limit = 6, className, ...rest }: Props) {
   const [own, setOwn] = useState(defaultValue ?? "");
   const value = controlled ?? own;
   const setValue = (v: string) => { if (controlled === undefined) setOwn(v); onValueChange?.(v); };
@@ -67,8 +69,8 @@ export function SuggestInput({ id, defaultValue, options = [], fetchOptions, val
   }, [fetchOptions, value, open]);
 
   const shown: SuggestOption[] = useMemo(
-    () => (fetchOptions ? fetched : !value.trim() && !showOnFocus ? [] : matchSuggestions(options, value).map((v) => ({ value: v }))),
-    [fetchOptions, fetched, options, value, showOnFocus],
+    () => (fetchOptions ? fetched : !value.trim() && !showOnFocus ? [] : matchSuggestions(options, value, limit).map((v) => ({ value: v }))),
+    [fetchOptions, fetched, options, value, showOnFocus, limit],
   );
   const visible = open && (shown.length > 0 || !!note);
 
@@ -109,7 +111,7 @@ export function SuggestInput({ id, defaultValue, options = [], fetchOptions, val
       />
       {visible && (
         <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-card">
-          <ul id={listId} role="listbox" aria-label="Suggestions">
+          <ul id={listId} role="listbox" aria-label="Suggestions" className="max-h-[22rem] overflow-y-auto">
             {shown.map((o, i) => (
               <li key={`${o.value}|${o.label ?? ""}`} id={`${listId}-${i}`} role="option" aria-selected={i === hi}>
                 <button

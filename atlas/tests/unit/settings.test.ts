@@ -60,3 +60,17 @@ describe("approved quotes are not repriced", () => {
     expect(s.pricing.gstRate).toBe(0.1);
   });
 });
+
+describe("common tasks list", () => {
+  it("defaults to the manager's list and old stored settings without it still load", () => {
+    expect(DEFAULT_SETTINGS.lists.taskTitles).toContain("Site Visit");
+    const { lists: _drop, ...old } = DEFAULT_SETTINGS;
+    expect(resolveSettings(old).lists.taskTitles).toEqual(DEFAULT_SETTINGS.lists.taskTitles);
+  });
+  it("owner edits are trimmed and de-duplicated; leaving lists out keeps the current ones", () => {
+    const e = SettingsEdit.parse({ ...editOf(DEFAULT_SETTINGS), lists: { taskTitles: [" Site Visit ", "site visit", "", "Order  pavers"] } });
+    const next = applySettingsEdit(DEFAULT_SETTINGS, e);
+    expect(next.lists.taskTitles).toEqual(["Site Visit", "Order pavers"]);
+    expect(applySettingsEdit(next, editOf(DEFAULT_SETTINGS)).lists.taskTitles).toEqual(["Site Visit", "Order pavers"]);
+  });
+});
