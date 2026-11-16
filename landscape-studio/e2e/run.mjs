@@ -15,7 +15,7 @@ async function step(name, fn) {
 }
 const expect = (c, m) => { if (!c) throw new Error(m); };
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
@@ -324,7 +324,7 @@ await step('Part 2 customer selects Balanced; contractor approves changes; versi
   const n = await page.getByTestId('apply-panel').getByRole('button', { name: /Approve and apply/ }).innerText();
   await page.getByTestId('apply-panel').getByRole('button', { name: /Approve and apply/ }).click();
   await page.getByTestId('applied-panel').waitFor();
-  await page.getByTestId('applied-panel').getByTestId('massing').waitFor();
+  await page.getByTestId('applied-panel').getByTestId('model3d').waitFor();
   return `${n.trim()}; light 6 left out`;
 });
 
@@ -341,7 +341,7 @@ await step('Part 3 linked 2D plan: applied geometry present; editing paving upda
   await page.waitForTimeout(200);
   expect(/Area 24 m²/.test(await page.getByTestId('inspector').innerText()), 'paving not 24 m2');
   await page.getByRole('button', { name: '3D' }).click();
-  await page.getByTestId('massing').waitFor();
+  await page.getByTestId('model3d').waitFor();
   await page.locator('.draw').screenshot({ path: `${SHOTS}/05-3d-massing.png` });
   await page.getByRole('button', { name: '3D' }).click();
   await nav('Cost Estimator'); const after = await priceInc();
@@ -355,7 +355,7 @@ await step('Part 5 build layers with engineer banner and hold points', async () 
   const t = await page.locator('main').innerText();
   expect(/Concept detail - engineer\/manufacturer design required before construction\./.test(t), 'engineer banner missing');
   expect(/SIZE BY ENGINEER \/ MANUFACTURER/.test(t) && /Confirm drainage outlet before backfill/.test(t), 'footing / hold text missing');
-  expect(/Conceptual 3D massing - not structural design/.test(t), 'massing label missing');
+  expect(/Conceptual 3D model from the plan - not structural design/.test(t), '3D label missing');
   await page.locator('[data-testid^="layers-"]').nth(0).screenshot({ path: `${SHOTS}/06-build-layers-paving.png` });
   const wall = page.locator('[data-testid^="layers-"]', { hasText: 'Retaining wall' }).first();
   await wall.screenshot({ path: `${SHOTS}/07-build-layers-wall.png` });

@@ -29,6 +29,7 @@ interface State {
   close(): void;
   create(name: string): Promise<void>;
   loadDemo(siteOnly?: boolean): Promise<void>;
+  loadGallery(id: string): Promise<void>;
   remove(id: string): Promise<void>;
   importProject(p: Project): Promise<void>;
   update(fn: (p: Project) => void, opts?: { undo?: boolean; audit?: string }): void;
@@ -98,6 +99,25 @@ export const useStore = create<State>((set, get) => ({
     const id = siteOnly ? DEMO_SITE_ID : DEMO_ID;
     const existing = await s.storage!.getProject(id);
     if (!existing) { const d = siteOnly ? demoSiteOnly() : demoProject(); await s.storage!.saveProject(d); set({ projects: [summarise(d), ...s.projects.filter(x => x.id !== id)] }); }
+    await get().open(id);
+  },
+  async loadGallery(id) {
+    const s = get();
+    const { GALLERY, buildGalleryDemo } = await import('../core/demoGallery.ts');
+    const g = GALLERY.find(x => x.id === id);
+    if (!g) return;
+    if (!(await s.storage!.getProject(id))) {
+      const p = buildGalleryDemo(g, s.materials, s.suppliers, s.settings);
+      try {
+        const r = await fetch(`./demo/${g.photo}`);
+        if (!r.ok) throw new Error(String(r.status));
+        const blob = await r.blob();
+        await s.storage!.putMedia(p.id, p.media[0].id, blob);
+        p.media[0].size = blob.size;
+      } catch { p.media = []; s.notify('info', 'The demo photo could not be loaded; the rest of the demo works.'); }
+      await s.storage!.saveProject(p);
+      set({ projects: [summarise(p), ...get().projects.filter(x => x.id !== id)] });
+    }
     await get().open(id);
   },
   async remove(id) {

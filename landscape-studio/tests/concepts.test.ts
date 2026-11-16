@@ -192,3 +192,16 @@ describe('approval and quotation gates', () => {
     expect(e.marginPct).toBeCloseTo(20, 6); // 25% markup
   });
 });
+
+describe('concept layout without a retaining wall', () => {
+  it('lawn and garden bed do not overlap (no double-counted quantities)', async () => {
+    const { validateProject } = await import('../src/core/validation.ts');
+    let p = bareSite();
+    p.proposals = generateProposals(p, { ...BRIEF, inclusions: ['paving', 'turf', 'garden', 'lighting'] }, M, S, DEFAULT_SETTINGS).proposals;
+    p = selectProposal(p, p.proposals![0].id, 'C', 'T');
+    const q = applyProposal(p, p.proposals![0].id, p.proposals![0].changes.map(c => c.id), 'T');
+    expect(validateProject(q).filter(i => i.kind === 'overlap')).toEqual([]);
+    const garden = q.objects.find(o => o.type === 'garden')!;
+    expect(polygonArea(garden.points)).toBeLessThan(20); // a 1.5 m band along a 12 m fence, not half the yard
+  });
+});

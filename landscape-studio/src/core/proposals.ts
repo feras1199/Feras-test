@@ -72,8 +72,10 @@ function layoutOps(project: Project, t: TierSpec, inc: Set<string>, materials: M
     cursor = y.y0 + d;
   }
   const wallY = inc.has('wall') ? cursor + (y.y1 - cursor) * 0.45 : null;
+  // Without a wall, the garden is a band along the back fence and the lawn stops short of it.
+  const gardenTop = wallY != null ? wallY + 0.2 : inc.has('garden') ? Math.max(cursor + 1.5, y.y1 - 1.7) : y.y1;
   if (inc.has('turf')) {
-    const top = cursor + 0.3, bottom = (wallY ?? y.y1 - 1.5) - 0.2;
+    const top = cursor + 0.3, bottom = (wallY ?? (inc.has('garden') ? gardenTop - 0.2 : y.y1 - 0.5)) - (wallY != null ? 0.2 : 0);
     if (bottom - top > 0.8) { const o = obj('turf', 'Lawn', rectPoints(y.x0 + 1, top, y.w - 2, bottom - top), 'turf-sirwalter'); add(o, `Add ${fmt(polygonArea(o.points), 1)} m² turf (${m('turf-sirwalter')})`); }
   }
   if (wallY != null) {
@@ -82,9 +84,9 @@ function layoutOps(project: Project, t: TierSpec, inc: Set<string>, materials: M
     add(o, `Add ${fmt(y.w - 2, 1)} m retaining wall, 0.6 m exposed face (${WALL_SYSTEMS[w.system].label}). Height and loads to be measured.`);
   }
   if (inc.has('garden')) {
-    const top = (wallY ?? cursor + 2) + 0.2, bottom = y.y1 - 0.2;
+    const top = gardenTop, bottom = y.y1 - 0.2;
     if (bottom - top > 0.6) { const o = obj('garden', 'Garden bed', rectPoints(y.x0 + 1, top, y.w - 2, bottom - top), 'soil-garden-organic', { plantId: t.plant, plantSpacing: t.spacing }); add(o, `Add ${fmt(polygonArea(o.points), 1)} m² garden bed, ${m(t.plant)} at ${t.spacing} m centres`); }
-    if (t.edging && inc.has('turf')) { const ey = (wallY ?? cursor + 2) - 0.2; const o = obj('edging', 'Lawn edge', [{ x: y.x0 + 1, y: ey }, { x: y.x1 - 1, y: ey }], t.edging); add(o, `Add ${fmt(y.w - 2, 1)} m garden edging (${m(t.edging)})`); }
+    if (t.edging && inc.has('turf')) { const ey = gardenTop - 0.2; const o = obj('edging', 'Lawn edge', [{ x: y.x0 + 1, y: ey }, { x: y.x1 - 1, y: ey }], t.edging); add(o, `Add ${fmt(y.w - 2, 1)} m garden edging (${m(t.edging)})`); }
   }
   if (inc.has('deck')) { const o = obj('deck', 'Deck', rectPoints(y.x1 - 4, y.y0, 3, 3), 'deck-merbau-90', { height: 0.4 }); add(o, 'Add 9 m² deck (merbau). Framing must come from a verified span table.'); }
   if (inc.has('lighting')) {

@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore.ts';
 import { STATUS_LABEL } from '../../core/project.ts';
 import { Banner, Empty } from '../kit.tsx';
 import type { Project } from '../../core/types.ts';
+import { GALLERY, DEMO_PHOTOS } from '../../core/demoGallery.ts';
 
 export function Dashboard() {
   const s = useStore();
@@ -34,6 +35,16 @@ export function Dashboard() {
       </form>
       <small>Both demos are synthetic and labelled as such everywhere. Use "demo site" to try the photo → concepts → customer choice workflow.</small>
     </div>
+    <h2 style={{ marginTop: 22 }}>Demo gallery: three customers, three backyards</h2>
+    <p className="muted">Real "before" photos from Wikimedia Commons (free licences, credited). Customers, sizes, budgets and choices are synthetic. Each demo has already gone photo → three concepts → customer choice → plan, 3D, build layers, estimate and purchase list.</p>
+    <div className="cards" data-testid="gallery">{GALLERY.map(g => { const c = DEMO_PHOTOS[g.photo]; return <div className="card" key={g.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <img src={`./demo/${g.photo}`} alt={`Before photo for ${g.customer}`} style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 8 }} />
+      <h3 style={{ margin: 0 }}>{g.customer}</h3>
+      <div style={{ fontSize: '.86rem' }}>{g.story}</div>
+      <div className="row" style={{ gap: 6 }}><span className="badge info">Budget ${g.brief.budgetMax?.toLocaleString('en-AU')}</span><span className="badge">{g.brief.style}</span><span className="badge ok">Chose {g.pick}</span></div>
+      <small>Photo: {c.author}, {c.license}, <a href={c.source} target="_blank" rel="noreferrer">Wikimedia Commons</a></small>
+      <button className="btn primary" style={{ marginTop: 'auto' }} onClick={() => void s.loadGallery(g.id)}>Open this demo</button>
+    </div>; })}</div>
     <h2 style={{ marginTop: 22 }}>Projects</h2>
     {s.projects.length === 0 ? <Empty title="No projects yet"><p>Create a new site above, or open the demo project to see a complete worked example.</p></Empty> :
       <div className="cards">{s.projects.map(p => <div className="card" key={p.id}>

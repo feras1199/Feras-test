@@ -23,6 +23,7 @@ export function Concepts() {
   const hasDesign = p.objects.some(o => o.layer === 'proposed');
   const imgOn = !!s.storage?.health.image?.configured;
   const applied = props.find(x => x.id === p.activeProposalId);
+  const story = p.synthetic && p.brief.description;
   const generate = () => {
     const r = generateProposals(p, brief, s.materials, s.suppliers, s.settings);
     if (r.error) { setErr(r.error); return; }
@@ -34,6 +35,7 @@ export function Concepts() {
     <p className="muted">Three structured options the customer can choose from. Each option is a list of real geometry and material changes costed by the estimate engine. Pictures only illustrate them.</p>
     <Banner kind="warn"><b>{ILLUSTRATIVE_LABEL}</b> Concept pictures never create measurements, boundaries, drainage design or engineering.</Banner>
 
+    {story && <div className="card" data-testid="customer-story"><h2>What the customer asked for</h2><p style={{ margin: 0 }}>{p.brief.description}</p><small>{p.customer.name} · budget {p.brief.budgetMax ? money(p.brief.budgetMax, 0) : 'not set'} · synthetic demo</small></div>}
     <div className="card">
       <h2>Design brief</h2>
       <div className="grid g3">
@@ -71,6 +73,14 @@ export function Concepts() {
       </div>
     </div>}
   </>;
+}
+
+function BeforePhoto({ id, label }: { id: string; label: string }) {
+  const p = useStore(s => s.project!);
+  const { url } = useMediaUrl(p.id, id);
+  if (!url) return null;
+  return <figure style={{ margin: 0, position: 'relative' }}><img src={url} alt="Before photo of the site" style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+    <figcaption style={{ position: 'absolute', left: 6, bottom: 6, background: 'rgba(23,32,42,.82)', color: '#fff', fontSize: '.7rem', padding: '3px 6px', borderRadius: 6 }}>{label}</figcaption></figure>;
 }
 
 function RenderView({ r }: { r: RenderAsset }) {
@@ -123,7 +133,7 @@ function ConceptCard({ prop }: { prop: DesignProposal }) {
     <div className="row between"><span className="badge info">{prop.tier[0].toUpperCase() + prop.tier.slice(1)}</span>
       {prop.status === 'customer-selected' && <span className="badge ok">Customer selected</span>}{prop.status === 'applied' && <span className="badge ok">Applied</span>}</div>
     <h3 style={{ margin: '8px 0 4px' }}>{prop.title}</h3>
-    {last ? <RenderView r={last} /> : <div className="empty" style={{ padding: 18, fontSize: '.82rem' }}>No picture yet.<br />{ILLUSTRATIVE_LABEL}</div>}
+    {last ? <RenderView r={last} /> : prop.brief.sourceMediaIds[0] ? <BeforePhoto id={prop.brief.sourceMediaIds[0]} label="BEFORE photo. No concept picture yet: generate or import one." /> : <div className="empty" style={{ padding: 18, fontSize: '.82rem' }}>No picture yet.<br />{ILLUSTRATIVE_LABEL}</div>}
     <div className="row" style={{ marginTop: 8 }}>
       <button className="btn sm" disabled={busy} onClick={() => void ai()}><Sparkles size={14} /> {busy ? 'Working…' : 'Generate AI render'}</button>
       <button className="btn sm" disabled={busy} onClick={() => file.current?.click()}><ImagePlus size={14} /> Import render</button>
