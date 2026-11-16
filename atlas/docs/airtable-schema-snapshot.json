@@ -1,0 +1,3816 @@
+{
+ "baseId": "appygHLmJTH1ew5r6",
+ "capturedAt": "2026-11-02",
+ "tables": [
+  {
+   "id": "tblKmS0orbxLWZnz6",
+   "name": "Cost Library",
+   "fields": [
+    {
+     "id": "fldvqHPXhijpaW4Uu",
+     "name": "Item Name",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldhMfuszzv40TiYY",
+     "name": "Supplier",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldFyYupQ5wMOMn0G",
+     "name": "Unit",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldkMGbpvxiqHQJZ6",
+     "name": "Cost (inc GST)",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldTbuEoQ9T5REVVy",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldaiSy52fHT0esFj",
+     "name": "Photo",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldggE6cQN61g1RLZ",
+     "name": "Category",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldoWd9fs1adeinwC",
+     "name": "Legacy Price Month",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld5tukvMA51nt6sA",
+     "name": "Actual Costs",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldZYSsdo7HyYVyVG",
+     "name": "Recipe Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldr0RSNBDvIgqiKx",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldlwT1mjDtwq6EFz",
+     "name": "Legacy Cost Numeric",
+     "type": "formula"
+    },
+    {
+     "id": "fldRosvLo6TqWWbmL",
+     "name": "Current Unit Cost inc GST",
+     "type": "currency"
+    },
+    {
+     "id": "fldBK12GDmV6e3zMz",
+     "name": "Effective Unit Cost inc GST",
+     "type": "formula"
+    },
+    {
+     "id": "fldUOmph27w9UFQOr",
+     "name": "Active",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld1NAFcGCvK6BqeE",
+     "name": "Confidence",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldSWPuAzeaAvJMXL",
+     "name": "Price Updated Date",
+     "type": "date"
+    },
+    {
+     "id": "fldAHS407eG0i9lc7",
+     "name": "Cost Price History",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldkBv9R72loHBCqQ",
+     "name": "Needs Price Update",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldJsVjtpH2skQ27C",
+     "name": "Supplier SKU",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldglggRYeTW0upnq",
+     "name": "Price Source",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldhY2IWM5dbRgaX5",
+     "name": "Price Review Status",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tblfidIa2Us4eBzh8",
+   "name": "Lists",
+   "fields": [
+    {
+     "id": "fldFy2sYiHuSmavcj",
+     "name": "Categories",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldo6TcWF0rKOlB21",
+     "name": "Field 1",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldpYkvHCBDeAefbE",
+     "name": "Units",
+     "type": "multilineText"
+    }
+   ]
+  },
+  {
+   "id": "tblWFzM0mz4IxngiO",
+   "name": "Projects",
+   "fields": [
+    {
+     "id": "fldHDEYbokbKgqFTn",
+     "name": "Project Name",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldyeRmJG5EJsKBJW",
+     "name": "Service Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldNAeG9PKXanTjuq",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldEMOHEoOGUyBVEe",
+     "name": "Est. Value",
+     "type": "currency"
+    },
+    {
+     "id": "fldsyh82dfr3iJoS1",
+     "name": "Actual Value",
+     "type": "currency"
+    },
+    {
+     "id": "fldLGsZG5x3ZjPb75",
+     "name": "Estimated Profit",
+     "type": "currency"
+    },
+    {
+     "id": "fldnDsJuHKAaZ96Ew",
+     "name": "Actual Profit",
+     "type": "currency"
+    },
+    {
+     "id": "fldcJQW3CgXQUokag",
+     "name": "Start Date",
+     "type": "date"
+    },
+    {
+     "id": "fldF2l109oENBMu9S",
+     "name": "Completion Date",
+     "type": "date"
+    },
+    {
+     "id": "fldJQMaPga0FJfmY6",
+     "name": "Profit Variance",
+     "type": "currency"
+    },
+    {
+     "id": "fld669xJ99MlRStkt",
+     "name": "Delivery Timeliness",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldDbuzy9gjFkSQZg",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldBrGcEeySQ770EE",
+     "name": "Legacy Customer Link",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldo3s1cNqfcbqxC8",
+     "name": "Legacy Component Text",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldtdnpVFb34NDt0P",
+     "name": "Project Components",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldi9U3KQkXetZhXq",
+     "name": "Actual Costs",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldLUyDUkcBmgVKrc",
+     "name": "Timesheets",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "flds15lu3t0lcP6k3",
+     "name": "Site Inspections",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldA9XWiUPwJrezjz",
+     "name": "Payments",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldmxIcAsXkXVTlNL",
+     "name": "Estimates",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldgjAxDH4scuxYyM",
+     "name": "Site Address",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld5ye9qgHXnFtR3G",
+     "name": "Suburb",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldbCTI1qsJLV5ErG",
+     "name": "Project Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldR246RT2k6niS4g",
+     "name": "Project Schedule",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldEqRdWfCb8ZtYVj",
+     "name": "Communications",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld61SpLkjl3HvkRN",
+     "name": "Project Files",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld4c7YyNsseKoh4m",
+     "name": "Client Updates",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldyvZ11cuLvsEW15",
+     "name": "Customer Stated Budget (Optional)",
+     "type": "currency"
+    },
+    {
+     "id": "fldFIjpgJsQyir0ep",
+     "name": "Project Value Band",
+     "type": "formula"
+    },
+    {
+     "id": "fldlKVPUNR0I2qq4R",
+     "name": "Progress %",
+     "type": "percent"
+    },
+    {
+     "id": "fldGyvQuWuIDuEgZJ",
+     "name": "Project Health",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldEIZP5JNrA8HB9k",
+     "name": "Project Manager",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldBUfGnQQG8SgR0W",
+     "name": "Variations",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld4UfUfh9SrM3iVB",
+     "name": "Project Checklists",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldZ0au4InWYoz0bF",
+     "name": "Next Action",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldbYCrn2e26Wr6v6",
+     "name": "Next Action Date",
+     "type": "date"
+    },
+    {
+     "id": "fldbmeZjFsOTrOJvE",
+     "name": "Invoices & Claims",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldVRHbtfhZBdTxgN",
+     "name": "Ready for Handover",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld85JlyII0fFva7n",
+     "name": "Internal Priority",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldn19oR93VglnU6P",
+     "name": "Customer Update Due",
+     "type": "date"
+    },
+    {
+     "id": "fldkhCqzmMKzTpGpv",
+     "name": "Customer Update Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "flda7iRraD8DEs6NA",
+     "name": "Site Contact",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldSVZokmgPsCqVIP",
+     "name": "Site Access Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld29ch16zPLMWUer",
+     "name": "Crew Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldrE7Pg3MC0JWQWW",
+     "name": "Financials Reviewed",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldGtzwUPK9JDELgH",
+     "name": "Financial Review Date",
+     "type": "date"
+    },
+    {
+     "id": "fld1jXaH0ftaOzReT",
+     "name": "Financial Status",
+     "type": "formula"
+    },
+    {
+     "id": "fldD181qT6DuSVeDd",
+     "name": "Component Revenue Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fld49lMoLizuKouNy",
+     "name": "Component Actual Cost Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldDKSAuzXQWMdKLe",
+     "name": "Component Profit Snapshot",
+     "type": "formula"
+    },
+    {
+     "id": "fldWjquRtr9wDtZ8T",
+     "name": "Project Revenue Reconciliation Gap",
+     "type": "formula"
+    },
+    {
+     "id": "fldlFVJhzhYRxG5gO",
+     "name": "Project Profit Reconciliation Gap",
+     "type": "formula"
+    },
+    {
+     "id": "fld5IKTAcJsAyFx5z",
+     "name": "Project Financial Reconciliation Status",
+     "type": "formula"
+    },
+    {
+     "id": "fldbvBlvw4AuqP91Q",
+     "name": "Trusted Actual Revenue",
+     "type": "formula"
+    },
+    {
+     "id": "fld2PWS0NTVfOpzoT",
+     "name": "Trusted Actual Profit",
+     "type": "formula"
+    },
+    {
+     "id": "fld76mo2aeSEtPJJJ",
+     "name": "Trusted Actual Margin %",
+     "type": "formula"
+    },
+    {
+     "id": "fldi8rJC5iiGBZKvD",
+     "name": "Component Revenue Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "flddmzHGlXVKXwzkE",
+     "name": "Component Reconciled Cost Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "flddGA6L4Z4NJH7QT",
+     "name": "Reconciled Project Revenue",
+     "type": "formula"
+    },
+    {
+     "id": "fldcdUrqsZZK96luj",
+     "name": "Reconciled Project Actual Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldCZogTJfYTCvJRH",
+     "name": "Reconciled Project Actual Profit",
+     "type": "formula"
+    },
+    {
+     "id": "fldbQX3MavRxXJgHh",
+     "name": "Reconciled Project Actual Margin %",
+     "type": "formula"
+    },
+    {
+     "id": "fldAs4qpRiZTX8gra",
+     "name": "Enquiries",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldspCuXq1IVThhHH",
+     "name": "Site Measurements",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldsDL1zqutnAj8kv",
+     "name": "Atlas Tasks",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldbokhRI97WKYFDZ",
+     "name": "Project Manager User",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fld4FzW3ajoA0aHqs",
+     "name": "Open Site in Maps",
+     "type": "formula"
+    },
+    {
+     "id": "fld6lFRdnDnRNvNH9",
+     "name": "Project Operational Readiness",
+     "type": "formula"
+    },
+    {
+     "id": "fldn6d4XbWQhfYc4F",
+     "name": "Data Mode",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldogqTGPhZoua3A6",
+     "name": "Supporting Costs Verified",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld4dxqBRmY7AKeXL",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldRJGJydnegRNk59",
+     "name": "Estimated Project Cost Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldwwAGoQPshsXc5H",
+     "name": "Actual Cost Variance vs Estimate",
+     "type": "formula"
+    },
+    {
+     "id": "fldWmg7oNDRGsGoE8",
+     "name": "Actual Profit Variance vs Estimate",
+     "type": "formula"
+    },
+    {
+     "id": "fldaNYaG10sZdLmeq",
+     "name": "Final Project Performance Summary",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tblrFXtGoyY8e1QG2",
+   "name": "Customers",
+   "fields": [
+    {
+     "id": "fldTfZc9smpCQiMMb",
+     "name": "Customer Name",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld5gqnLb8ZDNH9Rs",
+     "name": "Lead Source",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldNaWoa862agsRIL",
+     "name": "Suburb",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldwor56hJ6zzCubQ",
+     "name": "Price or Value Driven",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldBh7GI30gKYp0uh",
+     "name": "Enquiry Date",
+     "type": "date"
+    },
+    {
+     "id": "fldRRRVaYOranegz9",
+     "name": "Customer Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldO9qAJjzNNX6t6z",
+     "name": "Lifetime Value",
+     "type": "currency"
+    },
+    {
+     "id": "fldBlL7LfGCmJA01G",
+     "name": "Repeat Customer",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldfdHBPDMTVgf6xw",
+     "name": "Linked Projects",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldSGdpQBCzvtBETp",
+     "name": "Legacy Projects Link",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldXmKlNi97tdXFw9",
+     "name": "Site Inspections",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldan9WacfNyLx50Y",
+     "name": "Estimates",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldwg1aHBH1BBpQzQ",
+     "name": "Legacy Campaign Text",
+     "type": "singleLineText"
+    },
+    {
+     "id": "flddNGufxtKqBW5UE",
+     "name": "Lead Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldyjfhbp9oNciJBM",
+     "name": "Service Requested",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldvGaTGP8NDrEdqV",
+     "name": "Customer Budget",
+     "type": "currency"
+    },
+    {
+     "id": "fldLi3LVMN9Qd8FEI",
+     "name": "Reason Won / Lost",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldqLkwDGzCWZzf1F",
+     "name": "Phone",
+     "type": "phoneNumber"
+    },
+    {
+     "id": "fldPgP5oAykjlZnXC",
+     "name": "Email",
+     "type": "email"
+    },
+    {
+     "id": "fldJyO9xQLH8cETsA",
+     "name": "Address",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldXpuiKTCZbeEcbo",
+     "name": "Site Visit Date",
+     "type": "date"
+    },
+    {
+     "id": "fldxFrfqG2YjI8Iz3",
+     "name": "Quote Sent Date",
+     "type": "date"
+    },
+    {
+     "id": "fldlXquO4OyykXaWn",
+     "name": "Decision Date",
+     "type": "date"
+    },
+    {
+     "id": "fldvo0UC8QVjwhotC",
+     "name": "Marketing Campaign",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldRTfxvNVWZC5rDC",
+     "name": "Communications",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldzBCsqXPjlKCk6l",
+     "name": "Project Files",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldhZCKZbHzvZh6HI",
+     "name": "Invoices & Claims",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldBWhTX9L2HiBQcb",
+     "name": "Next Follow-up",
+     "type": "date"
+    },
+    {
+     "id": "fldHPMPscHdNmjOJV",
+     "name": "Next Follow-up Action",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldtyhQfviJq2xQMY",
+     "name": "Preferred Contact Method",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldqaNHHQkRpxlHI6",
+     "name": "Do Not Contact",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldOK56cz017HKgl7",
+     "name": "Last Contact Date",
+     "type": "date"
+    },
+    {
+     "id": "fldz51QsE5yuG0nTZ",
+     "name": "Lead Quality",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldepqxESBz3UfuKZ",
+     "name": "Enquiries",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldyoDVD3CNrXrB3C",
+     "name": "Atlas Tasks",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldDBpW1TO1i8h9fI",
+     "name": "Open Address in Maps",
+     "type": "formula"
+    },
+    {
+     "id": "fldSeQkDieIqwRnsH",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tblVAv8831Byu4rkz",
+   "name": "Project Components",
+   "fields": [
+    {
+     "id": "fldFRFafPzkDvkIpK",
+     "name": "Project Component",
+     "type": "formula"
+    },
+    {
+     "id": "fldkcjgSjqUVbWMNV",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld2ws8NXMYXZNhaD",
+     "name": "Component Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldg1bbwZtKcvT6o2",
+     "name": "Actual Costs",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "flddVtemGyG3HOxfQ",
+     "name": "Timesheets",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldL9k3rMr1jRskNJ",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldjtNkEhnK2wQPl6",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldJ54TtNVdYQrJvr",
+     "name": "Quoted Revenue",
+     "type": "currency"
+    },
+    {
+     "id": "fld3eYsPymD1HXDcN",
+     "name": "Final Revenue",
+     "type": "currency"
+    },
+    {
+     "id": "fldG2EfAzgosfgEUR",
+     "name": "Estimated Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fldOu36EZPE6ZuQM9",
+     "name": "Actual Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fldCAAFFqZQfVJE17",
+     "name": "Estimated Labour Hours",
+     "type": "number"
+    },
+    {
+     "id": "fldMudDZWr7NvgOam",
+     "name": "Actual Labour Hours",
+     "type": "number"
+    },
+    {
+     "id": "fld9weKlJsNpmTwbr",
+     "name": "Estimated Days",
+     "type": "number"
+    },
+    {
+     "id": "fldX7ruXZXb1DhbSl",
+     "name": "Actual Days",
+     "type": "number"
+    },
+    {
+     "id": "fldaiVM0HzUkKs2SK",
+     "name": "Estimated Profit",
+     "type": "formula"
+    },
+    {
+     "id": "fldchnCoNNPr1vfsh",
+     "name": "Actual Profit",
+     "type": "formula"
+    },
+    {
+     "id": "fldtC91HY4hi67ZfI",
+     "name": "Actual Margin %",
+     "type": "formula"
+    },
+    {
+     "id": "fld0svbr85XWnvNTK",
+     "name": "Profit per Actual Day",
+     "type": "formula"
+    },
+    {
+     "id": "fldiZBqKXCU3t6wlY",
+     "name": "Estimated Margin %",
+     "type": "formula"
+    },
+    {
+     "id": "fldco0iTG9bXfWU3u",
+     "name": "Revenue per Labour Hour",
+     "type": "formula"
+    },
+    {
+     "id": "fldOaytXWmyMWB5ZP",
+     "name": "Cost Variance",
+     "type": "formula"
+    },
+    {
+     "id": "fldAQfjwjFqM8imst",
+     "name": "Cost Variance Reason",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldKpkX6LounjiCLC",
+     "name": "Scope Summary",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldzjIuCm8oGjyX6K",
+     "name": "Delivery Difficulty",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldELGNi7l3K9hZpg",
+     "name": "Risks / Constraints",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldfkJvTmbNjmNFHs",
+     "name": "Project Schedule",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "flde8R8dZiNb320Jm",
+     "name": "Project Files",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldFsOXITDuUPOQtN",
+     "name": "Variations",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldmBjOFmafInUrPC",
+     "name": "Project Checklists",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldM8JPUpyj3tT2nt",
+     "name": "Needs Cost Review",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld7dy8WZIuUtwpUV",
+     "name": "Crew Instructions",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldNyu6TSpyMFTtsY",
+     "name": "Customer Scope Description",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldFc0zM02HxjqqGW",
+     "name": "Ready for Construction",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld7I1uJcNXFXX38w",
+     "name": "Data Completeness",
+     "type": "formula"
+    },
+    {
+     "id": "fldKlCxJn490hOHZ0",
+     "name": "Proposal Section",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldXvZ104d2bdVquF",
+     "name": "Proposal Order",
+     "type": "number"
+    },
+    {
+     "id": "fld7ztWYNjFQNsxZN",
+     "name": "Provisional Allowance",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldjN3ioJT1IWHTrV",
+     "name": "Recorded Cost Detail",
+     "type": "currency"
+    },
+    {
+     "id": "fldeu9FS0kSPdA2NS",
+     "name": "Recorded Labour Cost Detail",
+     "type": "currency"
+    },
+    {
+     "id": "fldOzKz9UDWZFzQHP",
+     "name": "Recorded Person Hours Detail",
+     "type": "number"
+    },
+    {
+     "id": "fldknAkVpP7OndPVo",
+     "name": "Detailed Actual Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldz7d8PXTdwDA6c9",
+     "name": "Cost Reconciliation Gap",
+     "type": "formula"
+    },
+    {
+     "id": "fldYA7MaJ67IvuXdE",
+     "name": "Financial Reconciliation Status",
+     "type": "formula"
+    },
+    {
+     "id": "fldoSElBbpQALOGB3",
+     "name": "Unitemised Cost Adjustment",
+     "type": "currency"
+    },
+    {
+     "id": "fld7bS5VupQcOmJpP",
+     "name": "Reconciled Actual Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldpht9TjvNqc3JNV",
+     "name": "Unitemised Labour Hours Adjustment",
+     "type": "number"
+    },
+    {
+     "id": "fldYoqWy9CULiB1XS",
+     "name": "Reconciled Person Hours",
+     "type": "formula"
+    },
+    {
+     "id": "fldAIJOgxvc9vT4Xi",
+     "name": "Actual Cost Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "fldFXnEme7vdiAaok",
+     "name": "Submitted Labour Cost Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "fldrHeAcgJbq1S7rH",
+     "name": "Submitted Person Hours Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "fldGzvIvg6qGrOo9A",
+     "name": "Site Measurements",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldiDRQk2zojvejDN",
+     "name": "Area / Zone",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldhS7r1QgdvKplMP",
+     "name": "Markup Override %",
+     "type": "percent"
+    },
+    {
+     "id": "fldtJWFE4WKJzFrK4",
+     "name": "Effective Markup %",
+     "type": "formula"
+    },
+    {
+     "id": "fldFlx5Pkn6frikXc",
+     "name": "Recommended Component Price",
+     "type": "formula"
+    },
+    {
+     "id": "fld1q1PgxTzsAyyq9",
+     "name": "Estimated Site Manager Hours",
+     "type": "number"
+    },
+    {
+     "id": "fldgOsvfc5qV0bkoC",
+     "name": "Site Manager Rate Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldlbwF3W2Ayb1dAj",
+     "name": "Estimated Site Manager Cost",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tbl5D9ej9XoxsLLvl",
+   "name": "Actual Costs",
+   "fields": [
+    {
+     "id": "fldFUSb6mEH3HXS92",
+     "name": "Cost Entry",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldNkexclwDIfkkk9",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldC5IvVCkAi1LwVd",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldzBFd79niIh79Ha",
+     "name": "Cost Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldZ5g0ZVzQwHDdS5",
+     "name": "Cost Library Item",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldJq9ldzlOcKl0xa",
+     "name": "Supplier",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldqvXaIh9OE9DoPT",
+     "name": "Quantity",
+     "type": "number"
+    },
+    {
+     "id": "fldWhO8EEudcUW7wQ",
+     "name": "Unit Cost inc GST",
+     "type": "currency"
+    },
+    {
+     "id": "fldkyyY5ddYhVYa6C",
+     "name": "Cost Date",
+     "type": "date"
+    },
+    {
+     "id": "fldNUU7cnDrrRDK7O",
+     "name": "Invoice / Receipt Ref",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldG6PMbRPojz9Xlq",
+     "name": "Receipt / Invoice",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldbpfmljobPZsVFW",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldAXezDullN2DztA",
+     "name": "Total Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldeMhjZgbH2IgDYr",
+     "name": "Reviewed",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldJCAHeXcl5R3JyM",
+     "name": "Unplanned Cost",
+     "type": "checkbox"
+    },
+    {
+     "id": "flde20K0G7iKgmvyD",
+     "name": "Cost Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fld4gcENspqyT27kF",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld5PgHaOkBvZaSxZ",
+     "name": "Acquisition / Marketing Cost",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "id": "tblqMcCHvxdTTr8KG",
+   "name": "Timesheets",
+   "fields": [
+    {
+     "id": "fld8nmLf2gcdMaGMe",
+     "name": "Timesheet Entry",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldbvPb4mqo7imdD2",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldaAqL9lUjp1jxn5",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld78WP9wMPbFDXN9",
+     "name": "Staff Name",
+     "type": "singleLineText"
+    },
+    {
+     "id": "flddHUJoXONMYgVYB",
+     "name": "Work Date",
+     "type": "date"
+    },
+    {
+     "id": "fldTBfltvD3LKizb3",
+     "name": "Start Time",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldAdmbFrNVi5XQA9",
+     "name": "Finish Time",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldWlpxVEC8pWyXXP",
+     "name": "Break Minutes",
+     "type": "number"
+    },
+    {
+     "id": "fldWlczCBl09hoRQ4",
+     "name": "Labour Cost Rate",
+     "type": "currency"
+    },
+    {
+     "id": "fldhwuCPWvUEKGoev",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldLsmglMlehQtIFl",
+     "name": "Labour Hours",
+     "type": "formula"
+    },
+    {
+     "id": "fld8krUZsylZxhAdw",
+     "name": "Labour Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldAsVIUQLBR8LCJx",
+     "name": "Submitted",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldLinanBk62mGJTU",
+     "name": "Work Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldfF5R789BCGRr5X",
+     "name": "Rework Reason",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldBJRLHuY2PzNMh4",
+     "name": "Crew Size",
+     "type": "number"
+    },
+    {
+     "id": "fldDO7aylBruV5Dfg",
+     "name": "Rate Basis",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldFef0pAZuKsJvo1",
+     "name": "Person Hours",
+     "type": "formula"
+    },
+    {
+     "id": "fld24Q0Wwj9dbTR4Q",
+     "name": "Timesheet Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldOdZw6KLy7Hr8dt",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tblJiONOCG5A78W4G",
+   "name": "Site Inspections",
+   "fields": [
+    {
+     "id": "fldo14SrEwNKaj87P",
+     "name": "Inspection",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldE4EUJ4ttPfJZXU",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldhvVmuS5zhsq5Ey",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldvxw0tjOwAtlHvf",
+     "name": "Inspector",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldVjzRMSbXQkuBV3",
+     "name": "Inspection Date",
+     "type": "date"
+    },
+    {
+     "id": "fldQBPtPDyZIR0HZi",
+     "name": "Site Address",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldoV8TJAsVkq2qCw",
+     "name": "Customer Stated Maximum Budget (Optional)",
+     "type": "currency"
+    },
+    {
+     "id": "fldTxhGtKw9nfZAX0",
+     "name": "Desired Start Date",
+     "type": "date"
+    },
+    {
+     "id": "fldbwPMj8ndHyPjKi",
+     "name": "Scope",
+     "type": "richText"
+    },
+    {
+     "id": "fld7ImYbAEijnmCBI",
+     "name": "Measurements",
+     "type": "richText"
+    },
+    {
+     "id": "fldjxnGXEsWb2GNv2",
+     "name": "Access Difficulty",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldHyzNsBcn4xZWpK",
+     "name": "Risks / Constraints",
+     "type": "richText"
+    },
+    {
+     "id": "fldfKuVJ4puLFephJ",
+     "name": "Customer Priorities",
+     "type": "richText"
+    },
+    {
+     "id": "fld5lFp7DAOhYpUoH",
+     "name": "Photos",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldFkU2Q39ExXu1Sn",
+     "name": "Notes",
+     "type": "richText"
+    },
+    {
+     "id": "fldLWcdSbDbxf9WQo",
+     "name": "Inspection Complete",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldZXaJnjloilA0aF",
+     "name": "Follow-up Required",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldIJgeUy1Jzjhv2I",
+     "name": "Customer Decision Maker Present",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldA18xgP1BL7Ae7d",
+     "name": "Indicative Price Discussed",
+     "type": "currency"
+    },
+    {
+     "id": "fldSzhmGKl684ozlD",
+     "name": "Budget Fit",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldYNrh1jaljhiaF2",
+     "name": "Estimate Ready to Start",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldYnavkTHPAaUt7S",
+     "name": "Site Measurements",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldzeEA4ItMvS0eYF",
+     "name": "AI Design Brief",
+     "type": "richText"
+    },
+    {
+     "id": "fldzfEGO6wldW8dKE",
+     "name": "AI Suggested Scope",
+     "type": "richText"
+    },
+    {
+     "id": "fldRd5Dp8vuBjwKSJ",
+     "name": "AI Omission Check",
+     "type": "richText"
+    },
+    {
+     "id": "fldKuodDSkII1brjA",
+     "name": "Preliminary Estimate Low",
+     "type": "currency"
+    },
+    {
+     "id": "fldA08flKBFGgqPQX",
+     "name": "Preliminary Estimate High",
+     "type": "currency"
+    },
+    {
+     "id": "fldyYt6Xt5P0OD9NL",
+     "name": "Preliminary Estimate Basis",
+     "type": "richText"
+    },
+    {
+     "id": "flddJSFqJjCnU9zvM",
+     "name": "Enquiry",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldp71JEqPnxtO86G",
+     "name": "Estimate Handoff Task Created",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldMxsN7zgtY0YELO",
+     "name": "Neighbourhood / Site Context",
+     "type": "richText"
+    },
+    {
+     "id": "fldjLAfYAd68tbW2f",
+     "name": "Existing Conditions",
+     "type": "richText"
+    },
+    {
+     "id": "fldj2q0NvXurnI8qw",
+     "name": "Slope / Levels",
+     "type": "richText"
+    },
+    {
+     "id": "fldR5CWVGZk7ZyHGQ",
+     "name": "Drainage Observations",
+     "type": "richText"
+    },
+    {
+     "id": "fldR2bc2OGLdNGsMc",
+     "name": "Access Width m",
+     "type": "number"
+    },
+    {
+     "id": "fldo0DHY9cQ6f3z6W",
+     "name": "Services / Utilities",
+     "type": "richText"
+    },
+    {
+     "id": "fldXxF2P6BO6EKEiy",
+     "name": "Customer Style / Plant Preferences",
+     "type": "richText"
+    },
+    {
+     "id": "fld3Qxm3rhsX4Vo5P",
+     "name": "Site Visit Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldUxIa2KSx0dHLy2",
+     "name": "Inspector User",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fldQC1Azdo0BXUJPG",
+     "name": "Open Site in Maps",
+     "type": "formula"
+    },
+    {
+     "id": "fldlc5zHOPANjoL9H",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld6aReVVg9p4LcxR",
+     "name": "Site Conversation Transcript",
+     "type": "richText"
+    },
+    {
+     "id": "fld2JCHrpIQbP2cU0",
+     "name": "Site Recording / Transcript File",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldFlnuplVwYA5yx1",
+     "name": "Transcript Reviewed",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "id": "tblMue03aIk5A4MrR",
+   "name": "Payments",
+   "fields": [
+    {
+     "id": "fldcQlcJvKDLuuGl0",
+     "name": "Payment",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldFdD1I1GI2bP4h0",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldU2NbsQeLTg6Tp4",
+     "name": "Legacy Stage",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldcRsu2kpXPR6oHp",
+     "name": "Amount",
+     "type": "currency"
+    },
+    {
+     "id": "flddGlEwX5JDaJGpf",
+     "name": "Due Date",
+     "type": "date"
+    },
+    {
+     "id": "fldgLfpPd8WvBcCgk",
+     "name": "Received Date",
+     "type": "date"
+    },
+    {
+     "id": "fldqbTucZngqzis0o",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldz2KAxNS15Enrge",
+     "name": "Invoice Reference",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldQvhgcCrfU5Bjkd",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldp2knPDzYFdPWqS",
+     "name": "Invoice / Claim",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldAjaeMjMwPsMmHk",
+     "name": "Customer Notified",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldMmKnGg0GZSvKqp",
+     "name": "Overdue Follow-up",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldtzHR8FADT47wIC",
+     "name": "Payment Method",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldBHiJtkzTAEwHMM",
+     "name": "Payment Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldbkl6iweoha8EpP",
+     "name": "Archived",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldPQPB4o5gbM0Cfb",
+     "name": "Payment Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldq7N0xwhC5HYH9n",
+     "name": "Stage Label",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldoPkFzxp8n6JyBv",
+     "name": "Stage %",
+     "type": "percent"
+    },
+    {
+     "id": "fldrJK63NYRjqUeuy",
+     "name": "Contract Value Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldubyHI3PFyWUWNv",
+     "name": "Expected Stage Amount",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tbl9lV9k5yJImxx4x",
+   "name": "Recipes",
+   "fields": [
+    {
+     "id": "fldEGsX3h5t0BoZt6",
+     "name": "Recipe Name",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld1JFqPDI1F1RzLQ",
+     "name": "Component Type",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldySWZiCkKKekxL1",
+     "name": "Description",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldLKRiQLMrK2LkML",
+     "name": "Primary Unit",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldZ7QDCtLp5NLoCy",
+     "name": "Version",
+     "type": "number"
+    },
+    {
+     "id": "fldoCpN4Zoe0JeRtp",
+     "name": "Active",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldQBnUoiCAhQtzbD",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldO7x1iL7LlFx03j",
+     "name": "Recipe Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldtPy2AH4XaWs9HY",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldXVHfKnCTYuTOvn",
+     "name": "Validated on Real Job",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldIq53rZIaaCO17u",
+     "name": "Omission Rules",
+     "type": "multipleRecordLinks"
+    }
+   ]
+  },
+  {
+   "id": "tblLp5IlOZrxxyfQV",
+   "name": "Recipe Items",
+   "fields": [
+    {
+     "id": "fldHUenihvyLPhyAF",
+     "name": "Recipe Item",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld0gfRvuLGbWDTk4",
+     "name": "Recipe",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldP6IqoJK1okUzjC",
+     "name": "Cost Library Item",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld03dP0UYCDgg7JZ",
+     "name": "Cost Category",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldNfiz4aXRK1neeE",
+     "name": "Quantity Rule",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld6TAMCrORjne2Zc",
+     "name": "Waste %",
+     "type": "percent"
+    },
+    {
+     "id": "fldDr48v1aKHmBi6Q",
+     "name": "Mandatory",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld6P2DasiZU4sgej",
+     "name": "Conditional Rule",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldVFXvu9NzILi8be",
+     "name": "Default Quantity",
+     "type": "number"
+    },
+    {
+     "id": "fldvxrZtAuzZwG4VV",
+     "name": "Sequence",
+     "type": "number"
+    },
+    {
+     "id": "fldLM70lBqetdHdKr",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldpTu8sHlWlKXSDg",
+     "name": "Rule Tested",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld4563ycuI4JoiLT",
+     "name": "Structured Quantity Basis",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldVq2kcjFQxlZKLN",
+     "name": "Quantity Multiplier",
+     "type": "number"
+    },
+    {
+     "id": "fldYkZGWA8Q1lCLeD",
+     "name": "Requires Human Input",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldDC3Hxdc3T3o05H",
+     "name": "Executable Rule Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "flduK5HvJTk4ooKs6",
+     "name": "Productivity Rule",
+     "type": "multipleRecordLinks"
+    }
+   ]
+  },
+  {
+   "id": "tblWKROF80bYzybeF",
+   "name": "Estimates",
+   "fields": [
+    {
+     "id": "fldVySg2hPkMCAbL5",
+     "name": "Estimate",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldypViNYjd9I8kgk",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldV7a5TxvfEU2M3a",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldn6d4DrrqU8UM28",
+     "name": "Estimate Date",
+     "type": "date"
+    },
+    {
+     "id": "fld4LitcHGvXDorRK",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldkiSSgRXfLQrjPc",
+     "name": "Legacy Target Margin %",
+     "type": "percent"
+    },
+    {
+     "id": "fldVa8RZZso40XmA8",
+     "name": "Estimated Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fldqsEvQOkNs3qujG",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldojBsHTmc1SSttN",
+     "name": "Legacy Selling Price (Old Margin Method)",
+     "type": "formula"
+    },
+    {
+     "id": "fldTiBSVpE6V12ZN6",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldx9rP0euczNCdr3",
+     "name": "Quote Number",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld9eqMRig6j0D0F9",
+     "name": "Customer Scope",
+     "type": "richText"
+    },
+    {
+     "id": "fld8cZrNuPe6ZirVt",
+     "name": "Valid Until",
+     "type": "date"
+    },
+    {
+     "id": "fldMaw39uVRg20gmc",
+     "name": "Proposal PDF",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fld5IQw48mNP8puxE",
+     "name": "Sent Date",
+     "type": "date"
+    },
+    {
+     "id": "fldpR0IWPY3lqI4on",
+     "name": "Accepted Date",
+     "type": "date"
+    },
+    {
+     "id": "fldgXAllg9zbKSWF1",
+     "name": "Export Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld1uBlRosqneIiMf",
+     "name": "QuickBooks Reference",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldc5pn6YDpucIgbR",
+     "name": "Revision / Version",
+     "type": "number"
+    },
+    {
+     "id": "fldCq1lSNmZK6qWwZ",
+     "name": "Customer Approval Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldbV731cAUl8ujb3",
+     "name": "Ready to Send",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldRUR80dTUrDy73j",
+     "name": "Internal Review Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldaJTJ9HIuBk85vh",
+     "name": "Selected Customer Total",
+     "type": "currency"
+    },
+    {
+     "id": "fldFnL7En7wrFneLQ",
+     "name": "Deposit Required",
+     "type": "currency"
+    },
+    {
+     "id": "fldg131Wzvlytsqct",
+     "name": "Payment Terms Summary",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldUy0QO7rgWUSblC",
+     "name": "Quote Review Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldeoWJztWVay5V5h",
+     "name": "Pricing Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldvJHJSdtRaTrieK",
+     "name": "Scope Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldX5PFiDEACVJTPr",
+     "name": "Quote Ready Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldhYeIB5CNBwITbQ",
+     "name": "Action Plan Title",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldIITjUnyAJBnPbQ",
+     "name": "Proposal Introduction",
+     "type": "richText"
+    },
+    {
+     "id": "fldM6wz2lHPg8JeRX",
+     "name": "Terms / Service Agreement",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldsoCzNBBeqNOihF",
+     "name": "Overhead Allowance",
+     "type": "currency"
+    },
+    {
+     "id": "fldLdmOCaipYj9VU7",
+     "name": "Contingency %",
+     "type": "percent"
+    },
+    {
+     "id": "flddDJ1Itjggk7MMv",
+     "name": "Contingency Amount",
+     "type": "formula"
+    },
+    {
+     "id": "flda27qR0HeDZDGYj",
+     "name": "Legacy Sales Commission %",
+     "type": "percent"
+    },
+    {
+     "id": "fldBDraWhmBzjJt2W",
+     "name": "Pricing Cost Base",
+     "type": "formula"
+    },
+    {
+     "id": "fld7j1sdkZbU5EnQD",
+     "name": "Commission Amount",
+     "type": "formula"
+    },
+    {
+     "id": "fld7uZtL9pPzz8qrb",
+     "name": "Target Profit Amount",
+     "type": "formula"
+    },
+    {
+     "id": "flddKLskqSQZlVeyH",
+     "name": "Legacy 50% Deposit Amount",
+     "type": "formula"
+    },
+    {
+     "id": "fldah65QcKYoWt6jv",
+     "name": "Legacy 25% Progress Amount",
+     "type": "formula"
+    },
+    {
+     "id": "fldeUBIX6MKHldjgU",
+     "name": "Legacy 15% Progress Amount",
+     "type": "formula"
+    },
+    {
+     "id": "fldB8SIfCrPYoeWTe",
+     "name": "Legacy 10% Final Amount",
+     "type": "formula"
+    },
+    {
+     "id": "fldZqgXuTkEmM292h",
+     "name": "Recorded Estimate Line Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fld2Dlshl6roUOReu",
+     "name": "Estimate Reconciliation Gap",
+     "type": "formula"
+    },
+    {
+     "id": "fldeA1DKhHTLsnfCx",
+     "name": "Estimate Reconciliation Status",
+     "type": "formula"
+    },
+    {
+     "id": "fldaTs8XiUFV2h4gW",
+     "name": "Unitemised Estimate Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fldR1BQYNXv1VldjF",
+     "name": "Reconciled Estimate Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldme5M9Hko2kbv1S",
+     "name": "Unitemised Cost Reviewed",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldEPaYAj8rPHSqki",
+     "name": "Estimate Line Cost Rollup",
+     "type": "rollup"
+    },
+    {
+     "id": "fldRF0jxQQg6KypvA",
+     "name": "Estimate Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldEjmTVZkvijIFGO",
+     "name": "Estimate Explanation",
+     "type": "richText"
+    },
+    {
+     "id": "fldxhXEJsrW2EVZ6M",
+     "name": "Missing Information / Assumptions",
+     "type": "richText"
+    },
+    {
+     "id": "fldlm77ONEglyyqjK",
+     "name": "AI / Preliminary Estimate Reviewed",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldhZdpaBpJmy0GT5",
+     "name": "Enquiry",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldTCpfyHOq12Hp1G",
+     "name": "Scope & Omission Review Complete",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldvgV4Y7afO3GU5G",
+     "name": "Cost & Labour Audit Complete",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldOn0EXDkfbP6iZa",
+     "name": "Assumptions Resolved / Accepted",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldzuC1Gg0VCUY22g",
+     "name": "Formal Quote Readiness",
+     "type": "formula"
+    },
+    {
+     "id": "fldCozH2sqNIADV7L",
+     "name": "Agreed Price Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldxqyqkdFUTSdz6A",
+     "name": "Quote Locked",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldEkFYCk9AsoZOmD",
+     "name": "Quote Snapshot JSON",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldEg3tO2ZaqxEaP3",
+     "name": "Pricing Basis",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldQQZ8JjfJdKvlIf",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldh8hSgDqqNvj7c6",
+     "name": "Payment Creation Ready",
+     "type": "formula"
+    },
+    {
+     "id": "fldIAU8OFvcNMocsW",
+     "name": "Standard Markup %",
+     "type": "formula"
+    },
+    {
+     "id": "fldkgdWS049I0ndRN",
+     "name": "Markup Override %",
+     "type": "percent"
+    },
+    {
+     "id": "fldDykanmyzKnu6gd",
+     "name": "Effective Markup %",
+     "type": "formula"
+    },
+    {
+     "id": "fldMLDwCBRZ87grMr",
+     "name": "Recommended Price - Cost Plus Markup",
+     "type": "formula"
+    },
+    {
+     "id": "fldQPcia5bGzlVnUS",
+     "name": "Manager Price Override",
+     "type": "currency"
+    },
+    {
+     "id": "fldRCz9BWCKIvXneo",
+     "name": "Proposed Customer Price",
+     "type": "formula"
+    },
+    {
+     "id": "fldXCH6uhDfV2Q3NF",
+     "name": "Deposit % Override",
+     "type": "percent"
+    },
+    {
+     "id": "fldm5KrHuzB7URaSB",
+     "name": "Progress 1 % Override",
+     "type": "percent"
+    },
+    {
+     "id": "fld0S49TNZD3FeWbn",
+     "name": "Progress 2 % Override",
+     "type": "percent"
+    },
+    {
+     "id": "fld7t0gOsuddfCbwz",
+     "name": "Progress 3 % Override",
+     "type": "percent"
+    },
+    {
+     "id": "fldeyw5Zt4dyUBvRg",
+     "name": "Final % Override",
+     "type": "percent"
+    },
+    {
+     "id": "fldpqLEA30BXRremK",
+     "name": "Payment Schedule Total %",
+     "type": "formula"
+    },
+    {
+     "id": "fld9eI1PpKRumsahX",
+     "name": "Payment Schedule Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldOd3WwzGTP91ry2",
+     "name": "Marketing Agent Commission %",
+     "type": "percent"
+    },
+    {
+     "id": "fldjnlvdLinPuC2LY",
+     "name": "Marketing Commission Base Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldzLBis0NINNZaez",
+     "name": "Expected Marketing Commission",
+     "type": "formula"
+    },
+    {
+     "id": "fldtdvT9uPo0wZM4G",
+     "name": "Deposit Amount - New Schedule",
+     "type": "formula"
+    },
+    {
+     "id": "fldQDuDvVjWHPT4kS",
+     "name": "Progress 1 Amount - New Schedule",
+     "type": "formula"
+    },
+    {
+     "id": "fldy2aye1vXQ4VgDq",
+     "name": "Progress 2 Amount - New Schedule",
+     "type": "formula"
+    },
+    {
+     "id": "fldiVqY6Z3ArNx59Y",
+     "name": "Progress 3 Amount - New Schedule",
+     "type": "formula"
+    },
+    {
+     "id": "fldupo0QJf0lfiEFK",
+     "name": "Final Amount - New Schedule",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tblFRho3EoOcm85zB",
+   "name": "Estimate Items",
+   "fields": [
+    {
+     "id": "fldNvoWuP6GtcYj9P",
+     "name": "Estimate Item",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldt1MKhBscGKVANA",
+     "name": "Estimate",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld3fVL1YYLjix4vU",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldfrVHKiwK8XKCow",
+     "name": "Recipe",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldYNEmP5IQ7gbjJl",
+     "name": "Cost Library Item",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldh64xUHb8ZU24Iu",
+     "name": "Cost Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldHEEHWz77wF0mu8",
+     "name": "Quantity",
+     "type": "number"
+    },
+    {
+     "id": "flddXJRyksbxOS4bK",
+     "name": "Waste %",
+     "type": "percent"
+    },
+    {
+     "id": "fldt6FD1wmZA1JoXq",
+     "name": "Unit Cost Snapshot inc GST",
+     "type": "currency"
+    },
+    {
+     "id": "fldsNgD7nyBUBrKp4",
+     "name": "Supplier Snapshot",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldBhoIwwiEUGXAqd",
+     "name": "Unit Snapshot",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldyignXYekkg83jE",
+     "name": "Assumptions / Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldbq3Z7PscRTFFBc",
+     "name": "Line Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldWnyfC2FGAItjmN",
+     "name": "Proposal Option",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldAHIDOADEuski3O",
+     "name": "Customer Description",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldRX79mijjxOaV3J",
+     "name": "Checked",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldS1QvaBO59v7kcn",
+     "name": "Included in Customer Total",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld4xYU3jLZP7vEEW",
+     "name": "Estimate Omission Risk",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldLA9PQEDcYIhh2H",
+     "name": "Site Measurement",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "flderxpw30BV0tTa0",
+     "name": "Quantity Basis",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldReaazJbxP5H5JO",
+     "name": "Calculation Explanation",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldLUaQowFpJsqkPO",
+     "name": "AI Suggested",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldnhyNU3mwqJ445H",
+     "name": "Quantity Verified",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld58BKG04xzg42Mr",
+     "name": "Estimate Line Audit Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldKmVbOxUY4v52BO",
+     "name": "Productivity Rule",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldb68Uej5QtZcgpz",
+     "name": "Estimated Labour Hours",
+     "type": "number"
+    },
+    {
+     "id": "fld3cmgN0zVwDGsEe",
+     "name": "Labour Rate Snapshot",
+     "type": "currency"
+    },
+    {
+     "id": "fldJEmJDFsI1Nv5Na",
+     "name": "Estimated Labour Cost",
+     "type": "formula"
+    },
+    {
+     "id": "fldK6cWPenHcYxmzg",
+     "name": "Labour Calculation Explanation",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldR6gm7utoECY0uA",
+     "name": "Labour Estimate Audit Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldVIRGOooDydE3Tu",
+     "name": "Input GST Rate",
+     "type": "percent"
+    },
+    {
+     "id": "fldb9J629xdWIVQVn",
+     "name": "Net Cost Pricing",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldzK0TrWlqRugTnd",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldJhUctVb1Ux35je",
+     "name": "Expected Spend Date",
+     "type": "date"
+    }
+   ]
+  },
+  {
+   "id": "tbl5O8V6v9qLJs5jH",
+   "name": "Cost Price History",
+   "fields": [
+    {
+     "id": "fldHehMWRNuYVPYVW",
+     "name": "Price Record",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldfviIbAweHNUocA",
+     "name": "Cost Library Item",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldMu2mtruoaD3lSf",
+     "name": "Supplier",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld513hp9W5dApwdh",
+     "name": "Unit Cost inc GST",
+     "type": "currency"
+    },
+    {
+     "id": "fldmysOYvg9yBOury",
+     "name": "Effective Date",
+     "type": "date"
+    },
+    {
+     "id": "fldXqVwEMskAKSyIe",
+     "name": "Source",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldGGWoOfwdxIFAyp",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldmQi970RL5VGMCh",
+     "name": "Verified",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld48fcOVVgdEkMuO",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tbl9uF1CSxs3iaP16",
+   "name": "Marketing Campaigns",
+   "fields": [
+    {
+     "id": "fldu4SeRjOpGAiSzv",
+     "name": "Campaign Name",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld2NeAsqtggciu2Z",
+     "name": "Platform",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldxz4UvpymP5SJOS",
+     "name": "Agency / Owner",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldavwkHNLu6ay0ZV",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldAFpj7AueCAQS6I",
+     "name": "Start Date",
+     "type": "date"
+    },
+    {
+     "id": "fldXdqDeAJMl41kLJ",
+     "name": "End Date",
+     "type": "date"
+    },
+    {
+     "id": "fld7DHMA8cL7cGAhL",
+     "name": "Budget",
+     "type": "currency"
+    },
+    {
+     "id": "fld265IP5nYEyPJkM",
+     "name": "Actual Spend",
+     "type": "currency"
+    },
+    {
+     "id": "fldqSL4RUMq995Cqs",
+     "name": "Leads",
+     "type": "number"
+    },
+    {
+     "id": "fldy9kSuXSUGwunHM",
+     "name": "Qualified Leads",
+     "type": "number"
+    },
+    {
+     "id": "fldAUFkzxxGTRe87t",
+     "name": "Quotes Sent",
+     "type": "number"
+    },
+    {
+     "id": "fldsSGv7oasqQS7e3",
+     "name": "Jobs Won",
+     "type": "number"
+    },
+    {
+     "id": "fld3elwjlu8TLOsnw",
+     "name": "Revenue Won",
+     "type": "currency"
+    },
+    {
+     "id": "fld9MzIOhJtEf2uWJ",
+     "name": "Gross Profit Won",
+     "type": "currency"
+    },
+    {
+     "id": "fld8oTsIt7OqmdBjM",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldAmTQt5BQEClVvZ",
+     "name": "Cost per Lead",
+     "type": "formula"
+    },
+    {
+     "id": "fldHUkf29LQXPxx1Q",
+     "name": "Cost per Won Job",
+     "type": "formula"
+    },
+    {
+     "id": "fld8oHok4ly1nwcmf",
+     "name": "Lead to Win %",
+     "type": "formula"
+    },
+    {
+     "id": "fldftCpBTxg4nvIud",
+     "name": "Revenue ROAS",
+     "type": "formula"
+    },
+    {
+     "id": "fldAPdkZ97x15SasG",
+     "name": "Marketing ROI",
+     "type": "formula"
+    },
+    {
+     "id": "fldwMQocGqmFOhGgn",
+     "name": "Customers",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldTcd4UMtZm27DQ5",
+     "name": "Data Updated Date",
+     "type": "date"
+    },
+    {
+     "id": "fldB95skYP76X1Feq",
+     "name": "Enquiries",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld2b3SximKki7Xrn",
+     "name": "Agency Retainer per Month",
+     "type": "currency"
+    },
+    {
+     "id": "fldE4aViIQYuILGrM",
+     "name": "Agency Success Commission %",
+     "type": "percent"
+    }
+   ]
+  },
+  {
+   "id": "tblTrPolDETkB0pwo",
+   "name": "Project Schedule",
+   "fields": [
+    {
+     "id": "fldyCCgpB2QZBTJeG",
+     "name": "Schedule Item",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldY2ByjPvxgKZIA3",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldQZH2yy6sPyNMmI",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldbKixs3ALtAElxE",
+     "name": "Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldXk1iyH5PxORFcT",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld9kLtC2ymiI2y5w",
+     "name": "Assigned To",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldzV3AnRMMeYG3Pd",
+     "name": "Planned Start",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldF3CAwjZtpL4UnV",
+     "name": "Planned Finish",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldVXhLhlgUAhKgtS",
+     "name": "Actual Start",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldaVhWVf6PVoemnV",
+     "name": "Actual Finish",
+     "type": "dateTime"
+    },
+    {
+     "id": "fldYLnlZ0gtGhh2rR",
+     "name": "Priority",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldQrBFWocd9ejIvN",
+     "name": "Customer Visible",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldC9lD6MhsiIoroP",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldiPmLwdpGtxkJmS",
+     "name": "Schedule Conflict / Issue",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldHRKtq6U9SbDzGy",
+     "name": "Send Customer Update",
+     "type": "checkbox"
+    },
+    {
+     "id": "flddxU5zr6Jh6Pa6L",
+     "name": "Assigned User",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fldwdq8pjRPai9BI5",
+     "name": "Calendar Provider",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldPndm2INZnwzJbB",
+     "name": "External Calendar Event ID",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldRDfWFcXQ8PyqoX",
+     "name": "Calendar Sync Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldEBw6KFLpJADa0A",
+     "name": "Calendar Event Link",
+     "type": "url"
+    },
+    {
+     "id": "fldoC3KphQPitXTbd",
+     "name": "Conflict Check",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldkuQqa7euyoACyq",
+     "name": "Schedule Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldhgnfbVC4OsqzgM",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tblqGbrf7RTJTEhRk",
+   "name": "Communications",
+   "fields": [
+    {
+     "id": "fldFieF7oTk03ZHal",
+     "name": "Communication",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldPBvpMSXihOiEl7",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldAa58M92OGAyMSr",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldERNOS79a3yowxX",
+     "name": "Date / Time",
+     "type": "dateTime"
+    },
+    {
+     "id": "fld9F0ksuaabTkmoP",
+     "name": "Channel",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldGCGud1vLmbxOKo",
+     "name": "Direction",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldmx8QgOQQIXXduT",
+     "name": "Subject",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld7IdTOPemnBEvAW",
+     "name": "Message / Summary",
+     "type": "richText"
+    },
+    {
+     "id": "fld7bE4X5bHYBELyp",
+     "name": "Attachments",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fld9EpqM8MJlAbwW5",
+     "name": "Sent / Logged By",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldk808lBSzPg8aI7",
+     "name": "Follow-up Date",
+     "type": "date"
+    },
+    {
+     "id": "fldYDYckHe6G7Fciv",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldBTdGC8nnTit1Bf",
+     "name": "Customer Visible",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldvljytth2DEnp1H",
+     "name": "External Message ID",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldQe1pKDoeZA1eO9",
+     "name": "Needs Reply",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld57LTDMBWbuEvz2",
+     "name": "External Thread ID",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldGUphgTqYyODI9a",
+     "name": "Email Provider",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldTwevJ0ejBBuVhs",
+     "name": "Email Sync Status",
+     "type": "singleSelect"
+    }
+   ]
+  },
+  {
+   "id": "tbltkZuK9Pza50K0G",
+   "name": "Project Files",
+   "fields": [
+    {
+     "id": "fldcrN7rHKB1v4CO1",
+     "name": "File Record",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldM5SrtsKRmB4lJT",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldZDx73xBaryKjBR",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldTsJqNSm56ANHbE",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldgNQuxuBSzLratG",
+     "name": "File Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldtlOPjQbB6vIbPI",
+     "name": "Files",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldjLLGioRj0Sjx6d",
+     "name": "Date",
+     "type": "date"
+    },
+    {
+     "id": "fldi1yUFtzEKLbaev",
+     "name": "Description",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldFmJyqv2gvjfOiZ",
+     "name": "Customer Visible",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldhiz9R228w9DIhB",
+     "name": "Uploaded By",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld0i1gYTh68bLjWi",
+     "name": "Needs Review",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldqkAe033JZNMVHz",
+     "name": "Cloud Provider",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldurkiWs9gMn1bbI",
+     "name": "External File ID",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldRLcUdqcN7ZtHP9",
+     "name": "External File Link",
+     "type": "url"
+    },
+    {
+     "id": "fldWSNSa2VCAwRFSO",
+     "name": "Cloud Sync Status",
+     "type": "singleSelect"
+    }
+   ]
+  },
+  {
+   "id": "tblIYqLlhGosFxSPQ",
+   "name": "Client Updates",
+   "fields": [
+    {
+     "id": "fldP1sPIT42ujeIRM",
+     "name": "Update Title",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld4NtljQnFBdBwOx",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldxvFJAsvY2EIUSd",
+     "name": "Update Date",
+     "type": "date"
+    },
+    {
+     "id": "fldS7TtssKP5Ywgrq",
+     "name": "Project Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldE4pc4xO07Btj4E",
+     "name": "Progress %",
+     "type": "percent"
+    },
+    {
+     "id": "fldB0HR26Z1HbODui",
+     "name": "Update Summary",
+     "type": "richText"
+    },
+    {
+     "id": "fldbaQYivBiWQvXbG",
+     "name": "Next Steps",
+     "type": "richText"
+    },
+    {
+     "id": "fldj7jHqMXKlIhaaU",
+     "name": "Photos",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldqCXQ0xiTq2oLWd",
+     "name": "Customer Visible",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldn3GyHjG6nFQpVR",
+     "name": "Email Sent",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldoi5aTAyCcgQROC",
+     "name": "Internal Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldDOcYqQhKr4zG5Q",
+     "name": "Ready to Send",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldhsIQAtJBaG8GGA",
+     "name": "Email Subject",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldt2ufPi0rchTFjH",
+     "name": "Email Message",
+     "type": "multilineText"
+    }
+   ]
+  },
+  {
+   "id": "tblMciYUEfxOcilh0",
+   "name": "Atlas Guide",
+   "fields": [
+    {
+     "id": "fldL75OIm9XlXJJ4D",
+     "name": "Section",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldDBrSndAMfXuTth",
+     "name": "Step",
+     "type": "number"
+    },
+    {
+     "id": "fldK9PH93VjapiqgB",
+     "name": "Purpose",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldSsNNXUphytpxHN",
+     "name": "What To Do",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldtxuRTMI6WyJD8p",
+     "name": "When To Use It",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldn4QNecDtuPO2oP",
+     "name": "Tip",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld4TanywpV1PtaY1",
+     "name": "Common Mistake",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldW3mwzd98LrWBSi",
+     "name": "Fastest Way",
+     "type": "multilineText"
+    }
+   ]
+  },
+  {
+   "id": "tblgvtHDYZd0S3LIx",
+   "name": "Variations",
+   "fields": [
+    {
+     "id": "fldXgU0azkOtnFZXS",
+     "name": "Variation",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld82uPF9jls5jYqR",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldhpP4mtT4PUXoBr",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldi3YyY1nKjA5Dnx",
+     "name": "Requested By",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldRlDIk5umJQh7aw",
+     "name": "Request Date",
+     "type": "date"
+    },
+    {
+     "id": "fldlJhHp0GLNGufbu",
+     "name": "Description",
+     "type": "richText"
+    },
+    {
+     "id": "fldCSZZoc7hLkYWxl",
+     "name": "Estimated Extra Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fld8khChSpcp0v6DQ",
+     "name": "Customer Price",
+     "type": "currency"
+    },
+    {
+     "id": "fldrpWgqIfMueWTWV",
+     "name": "Schedule Impact Days",
+     "type": "number"
+    },
+    {
+     "id": "fldS5Yii9IQOyj8G6",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldxNIx5pT9DNxEPn",
+     "name": "Approved Date",
+     "type": "date"
+    },
+    {
+     "id": "fldKTuCF96t8FY1Ku",
+     "name": "Approval / Files",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldiff0RW18SnxhVJ",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld1zpgn1WpmrJIF4",
+     "name": "Revenue Impact Applied",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldd7BZ8XYi4GJRjV",
+     "name": "Cost Impact Applied",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldvRx5Sbj1u5sY4A",
+     "name": "Customer Approved",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "id": "tblv8Wts2xPzDHjBd",
+   "name": "Project Checklists",
+   "fields": [
+    {
+     "id": "fldljPqzXWnRGsrvq",
+     "name": "Checklist Item",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldeXcqeGU1qYcoPp",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldM0kMbT4dvZpkoP",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldmzc8JfCIGStDqD",
+     "name": "Stage",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldogd1RQJRrHdMHe",
+     "name": "Required",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldwiLNUl0ZyDlPyK",
+     "name": "Completed",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldrZiRzwb67OFQKr",
+     "name": "Completed By",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldqnJ6zqcsxDKqtS",
+     "name": "Completed Date",
+     "type": "date"
+    },
+    {
+     "id": "fldrnTipwVzMU2g1T",
+     "name": "Photo Evidence",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fldz8tjaUBfR7Y1pQ",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldhNcCXpI7G3BRUE",
+     "name": "Blocked / Issue",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld9ICzgdBwsOvQVG",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tbly3GrJBKHk2tbwS",
+   "name": "Invoices & Claims",
+   "fields": [
+    {
+     "id": "fldVVIwDBERim4qaQ",
+     "name": "Invoice / Claim",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldilNtkm8L7e1KGj",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld6dK9xpUEhH0Ewl",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldXvDwQUWOwjXDmh",
+     "name": "Payment Stage",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldAEv0BwjexENIBs",
+     "name": "Invoice Number",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldpvyL9VMLMT5FS8",
+     "name": "Issue Date",
+     "type": "date"
+    },
+    {
+     "id": "fld4LBPqbEr1avoNX",
+     "name": "Due Date",
+     "type": "date"
+    },
+    {
+     "id": "fldDX3FXv3Dp5xs6o",
+     "name": "Amount inc GST",
+     "type": "currency"
+    },
+    {
+     "id": "fldhGFuJ2HPTpgmI0",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldu6ZgVFAoEfgkDY",
+     "name": "QuickBooks Reference",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldk779gJgv8yWkuR",
+     "name": "Invoice PDF",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "flddjmdSd5vpq28Ir",
+     "name": "Sent Date",
+     "type": "date"
+    },
+    {
+     "id": "fldq0XfIS2UZDB80E",
+     "name": "Paid Date",
+     "type": "date"
+    },
+    {
+     "id": "fldC6OlxSZBNPv9fV",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldSDYijTAxSmIKSZ",
+     "name": "Payments",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldeSA8iGc7nOgTGA",
+     "name": "Ready to Send",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldx8GNftznjXB2Um",
+     "name": "Customer Email",
+     "type": "email"
+    },
+    {
+     "id": "fldKcR01WswCtw94i",
+     "name": "Email Subject",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldyxe5WPjIkUh1EO",
+     "name": "Email Message",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldEjpoGnaHQlvIea",
+     "name": "Invoice Ready Check",
+     "type": "formula"
+    },
+    {
+     "id": "fldUNlbqgd9cf3WTG",
+     "name": "Accounting Provider",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldPmmdswuvNXwpU0",
+     "name": "External Accounting ID",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldxEpv0QGLrD3tq3",
+     "name": "Accounting Sync Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldwHvfeED1tMIFKd",
+     "name": "Stage Label",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldXSbA6qwOdJdSHV",
+     "name": "Stage %",
+     "type": "percent"
+    }
+   ]
+  },
+  {
+   "id": "tblCNv10QlNwwJ4dc",
+   "name": "Enquiries",
+   "fields": [
+    {
+     "id": "fldfbIZTJ6eviArgG",
+     "name": "Enquiry",
+     "type": "singleLineText"
+    },
+    {
+     "id": "flduzfEeu845lviqI",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "flda6y8hq0DUzpivR",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldq2DfMccygOMd55",
+     "name": "Marketing Campaign",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldAbOu3KneTaeOyl",
+     "name": "Enquiry Date",
+     "type": "date"
+    },
+    {
+     "id": "fldWAFrUFUTeuBmag",
+     "name": "Lead Source",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldmzNGgWbLwyCggL",
+     "name": "Service Requested",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldaSQl47fefw1VoA",
+     "name": "Customer Stated Maximum Budget (Optional)",
+     "type": "currency"
+    },
+    {
+     "id": "fldA2OhwmY93D2t19",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldMYOahtf4NEUf6u",
+     "name": "Assigned To",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldQtSJAodjUykgwf",
+     "name": "Next Action",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldqFcPxebuiWMzX1",
+     "name": "Next Follow-up",
+     "type": "date"
+    },
+    {
+     "id": "fldlFY5vQioh532KA",
+     "name": "Last Contact Date",
+     "type": "date"
+    },
+    {
+     "id": "fldEhgJqdiYC3OVb5",
+     "name": "Lead Quality",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldD7vxtgBybXzjnl",
+     "name": "Reason Won / Lost",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld11CCwELTbDx4nX",
+     "name": "Estimated Lead Cost",
+     "type": "currency"
+    },
+    {
+     "id": "fld7hwdf3Qgvof5er",
+     "name": "Lead at Risk",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldFoIutgqyMOHDpL",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldjzXZjDHQakDmvq",
+     "name": "Atlas Tasks",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldonfAqf2nsOCXZ3",
+     "name": "Site Inspections",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldMlMZCWblZZCxwQ",
+     "name": "Estimates",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fld3Ma0sUemkYIvgH",
+     "name": "Owner",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fldkTJgEYdpKX6ZPi",
+     "name": "Enquiry Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fld8G7JA8NCE7PxNY",
+     "name": "Follow-up Status",
+     "type": "formula"
+    },
+    {
+     "id": "fldMPBH7MghHVUuaq",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tblrO3cXQQFKuCUyW",
+   "name": "Site Measurements",
+   "fields": [
+    {
+     "id": "fldjNB9u2b7ADWZ2N",
+     "name": "Measurement",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld7L3Ll4ikis46aC",
+     "name": "Site Inspection",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldSZ9uau2QiWOCoo",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldmXh2uGvW3diNKQ",
+     "name": "Project Component",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldbItLMCZizkpXyE",
+     "name": "Area / Zone",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldQUfa9AfA1Bd5xj",
+     "name": "Work Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldegaOrhby2KFxsp",
+     "name": "Measurement Method",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldZ2jijahTHdfS6k",
+     "name": "Length m",
+     "type": "number"
+    },
+    {
+     "id": "fldzUc6yiqBxQEamo",
+     "name": "Width m",
+     "type": "number"
+    },
+    {
+     "id": "fldAiWCCgM0umP8Nt",
+     "name": "Height / Depth m",
+     "type": "number"
+    },
+    {
+     "id": "fld8VwA3pkL67ypGC",
+     "name": "Measured Quantity",
+     "type": "number"
+    },
+    {
+     "id": "fldwIEM7y01HxU8eA",
+     "name": "Unit",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldo1nIIS7QNBPA6y",
+     "name": "Confidence",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldsbSWOEtjexVcbT",
+     "name": "Photo / Evidence",
+     "type": "multipleAttachments"
+    },
+    {
+     "id": "fld9rWHgoVpYDP40N",
+     "name": "Customer Request",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldGBisqvJzYnxjmI",
+     "name": "Estimator Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "flduDfg58AOcIcwy0",
+     "name": "Verified",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldoblyzqFrkRAIvg",
+     "name": "Calculated Area m\u00b2",
+     "type": "formula"
+    },
+    {
+     "id": "fld413u7aSFoyMgS1",
+     "name": "Calculated Volume m\u00b3",
+     "type": "formula"
+    },
+    {
+     "id": "fldLCOCBZPI7u9Ogr",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldtOgmOE9Z1xbc9i",
+     "name": "Preferred Quantity",
+     "type": "formula"
+    },
+    {
+     "id": "fldfPbu59pTttwGcl",
+     "name": "Measurement Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fld9S9pGFzupAgJLk",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tbl7WbRZIuzBiaIFI",
+   "name": "Atlas Tasks",
+   "fields": [
+    {
+     "id": "fldr4gsIRtldR2nUM",
+     "name": "Task",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldlgdO8NpMlhz7P0",
+     "name": "Customer",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldgR6sCcwVE6tN8P",
+     "name": "Enquiry",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldpoDGwToe1U8zbm",
+     "name": "Project",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldkShNOjaM7sfu4z",
+     "name": "Assigned To",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldcwmkfPVkvWOrnJ",
+     "name": "Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldstV9lCvQIYMPah",
+     "name": "Priority",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldNfhGNKij8xP5HK",
+     "name": "Due Date",
+     "type": "date"
+    },
+    {
+     "id": "flds7MiX0KjAy4UWB",
+     "name": "Due Time / Appointment",
+     "type": "dateTime"
+    },
+    {
+     "id": "fld3fs1yZubPx3czm",
+     "name": "Task Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldevpCkSkjwDLGUn",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld2E5Z9PytNGkxBg",
+     "name": "Completed Date",
+     "type": "date"
+    },
+    {
+     "id": "fldCJevW6i7TdIPDx",
+     "name": "Needs Attention",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldNKsv6B71BILy6Y",
+     "name": "Assignee",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fldYJguSQFdRlPRnV",
+     "name": "Task Data Check",
+     "type": "formula"
+    },
+    {
+     "id": "fld30ePhAug9DjcKq",
+     "name": "Atlas Key",
+     "type": "singleLineText"
+    }
+   ]
+  },
+  {
+   "id": "tblnlsYsEDxEkJdFY",
+   "name": "Business Targets",
+   "fields": [
+    {
+     "id": "fldvXwjd1q4ZCuHsx",
+     "name": "Target Period",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldBNYbp6MVLOPk9h",
+     "name": "Month Start",
+     "type": "date"
+    },
+    {
+     "id": "fldpLhxmJZYnnZjLd",
+     "name": "Revenue Target",
+     "type": "currency"
+    },
+    {
+     "id": "fldr6SEf8mun3Z0D8",
+     "name": "Average Job Value Target",
+     "type": "currency"
+    },
+    {
+     "id": "fldGycRT4nBwyJsGb",
+     "name": "Lead to Win Target %",
+     "type": "percent"
+    },
+    {
+     "id": "fld8y24tAijuEOcRk",
+     "name": "Quote to Win Target %",
+     "type": "percent"
+    },
+    {
+     "id": "fldePlSjuNl7Iwc4v",
+     "name": "Active Target",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldp9MlNSlmtF8AcW",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldp5VCHkOKyE4HwI",
+     "name": "Jobs Required",
+     "type": "formula"
+    },
+    {
+     "id": "fldLJhyXygtxSl4oN",
+     "name": "Qualified Leads Required",
+     "type": "formula"
+    },
+    {
+     "id": "fldH8QWr6hbrrk94W",
+     "name": "Target Leads per Week",
+     "type": "formula"
+    },
+    {
+     "id": "fldQtJBjaLDVlm4Xi",
+     "name": "Actual Qualified Leads",
+     "type": "number"
+    },
+    {
+     "id": "fldnvrh2JR6uOty8Q",
+     "name": "Actual Quotes Sent",
+     "type": "number"
+    },
+    {
+     "id": "fld35tkyydavacHdA",
+     "name": "Actual Jobs Won",
+     "type": "number"
+    },
+    {
+     "id": "fld3aheJaFVWKVxXX",
+     "name": "Actual Revenue Won",
+     "type": "currency"
+    },
+    {
+     "id": "fldIYRchTHWCGtSUT",
+     "name": "Revenue Target Progress %",
+     "type": "formula"
+    }
+   ]
+  },
+  {
+   "id": "tblUHl1xrzloR9Hkc",
+   "name": "Productivity Library",
+   "fields": [
+    {
+     "id": "fldVe3CVU3c2m9Ppd",
+     "name": "Productivity Rule",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldMJgeln4qRh9fMi",
+     "name": "Work Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldS7m9he68DTzohP",
+     "name": "Basis Unit",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld7JLAiCWYjyipjF",
+     "name": "Labour Hours per Unit",
+     "type": "number"
+    },
+    {
+     "id": "fldMguaM2u9ChybkI",
+     "name": "Typical Crew Size",
+     "type": "number"
+    },
+    {
+     "id": "fldBJYQRbMFFly0RN",
+     "name": "Difficulty",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldcxT7IoL78wFHhQ",
+     "name": "Access Assumption",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld5XnnX7noK8VByb",
+     "name": "Minimum Labour Hours",
+     "type": "number"
+    },
+    {
+     "id": "fldjY0etExYTmuCdM",
+     "name": "Source / Basis",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldNLk3k81EgFzLsc",
+     "name": "Notes / Conditions",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldJBVadjrq1wykft",
+     "name": "Validated on Real Job",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldhE1dLGTP9AfHsN",
+     "name": "Active",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld2xhAv09Hdnr9Wk",
+     "name": "Recipe Items",
+     "type": "multipleRecordLinks"
+    },
+    {
+     "id": "fldhrWZNDFnWMahlg",
+     "name": "Estimate Items",
+     "type": "multipleRecordLinks"
+    }
+   ]
+  },
+  {
+   "id": "tblgpYEEDrUQikAt6",
+   "name": "Omission Rules",
+   "fields": [
+    {
+     "id": "fldqH0k6oOzHzxHKv",
+     "name": "Omission Rule",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fld8apNYd0sDoZmGU",
+     "name": "Work Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fld33L0s40jnXtiLC",
+     "name": "Check Category",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldKqX818s5s0IgxW",
+     "name": "Prompt / Question",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldyQUIm7tHHS4DeA",
+     "name": "Default Action",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldpgnMlWMpmLaS75",
+     "name": "Trigger Condition",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld9sVVtSmK2nLWbg",
+     "name": "Severity",
+     "type": "singleSelect"
+    },
+    {
+     "id": "flde6QWsDX1TQoSja",
+     "name": "Active",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldounQXaFLWfNUYQ",
+     "name": "Validated on Real Job",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldtyyou4m1jguJjq",
+     "name": "Notes",
+     "type": "multilineText"
+    },
+    {
+     "id": "fld9NGkOvxOnXvQON",
+     "name": "Recipes",
+     "type": "multipleRecordLinks"
+    }
+   ]
+  },
+  {
+   "id": "tblrzaAbBQBrQdR30",
+   "name": "Integration Settings",
+   "fields": [
+    {
+     "id": "fldG76ooIT8w5Czl3",
+     "name": "Integration",
+     "type": "singleLineText"
+    },
+    {
+     "id": "fldGkS7y3dmolHHLS",
+     "name": "Integration Type",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldS0Gykzih4Codbq",
+     "name": "Provider",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldkO1A5nFVm2HEEc",
+     "name": "Active",
+     "type": "checkbox"
+    },
+    {
+     "id": "fldZASbrxRSlTGM8n",
+     "name": "Default Integration",
+     "type": "checkbox"
+    },
+    {
+     "id": "fld2PypPUPcNNPtKb",
+     "name": "Connection Status",
+     "type": "singleSelect"
+    },
+    {
+     "id": "fldTXsjc2bZWIEc0n",
+     "name": "Owner",
+     "type": "singleCollaborator"
+    },
+    {
+     "id": "fldpwTlniapJggZnF",
+     "name": "Last Tested Date",
+     "type": "date"
+    },
+    {
+     "id": "fldWeGercJuqYJmuf",
+     "name": "Test Result",
+     "type": "multilineText"
+    },
+    {
+     "id": "fldIpeJslLO2SxRY1",
+     "name": "Notes",
+     "type": "multilineText"
+    }
+   ]
+  }
+ ]
+}

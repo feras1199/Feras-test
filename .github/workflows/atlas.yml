@@ -1,0 +1,61 @@
+# Checks every change to ATLAS before it can reach the live site:
+# type check, unit tests (including the database ones), production build,
+# then every browser test suite against that build.
+name: ATLAS checks
+
+on:
+  pull_request:
+    paths: ["atlas/**", "render.yaml", ".github/workflows/atlas.yml"]
+  push:
+    branches: [main, whispering-leaf-concept]
+    paths: ["atlas/**", "render.yaml", ".github/workflows/atlas.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: atlas
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas
+          POSTGRES_DB: atlas_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U atlas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://atlas:atlas@localhost:5432/atlas_test
+      E2E_DATABASE_URL: postgres://atlas:atlas@localhost:5432/atlas_test
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: atlas/package-lock.json
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests
+        run: npm run e2e:all

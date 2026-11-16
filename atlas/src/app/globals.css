@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-paper text-forest-950 antialiased; }
+  :focus-visible { @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-paper; }
+}
+
+@layer components {
+  .card { @apply rounded-2xl border border-stone-200 bg-white shadow-card; }
+  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-forest-700 text-white hover:bg-forest-800; }
+  .btn-secondary { @apply btn border border-stone-300 bg-white text-forest-900 hover:bg-stone-50; }
+  .btn-gold { @apply btn bg-gold-500 text-forest-950 hover:bg-gold-400; }
+  .input { @apply min-h-[44px] w-full rounded-xl border border-stone-300 bg-white px-3 text-base text-forest-950 placeholder:text-stone-400 focus:border-forest-500; }
+  .label { @apply mb-1 block text-sm font-medium text-stone-700; }
+  .chip { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+  .h1 { @apply font-display text-2xl font-semibold tracking-tight text-forest-900 sm:text-3xl; }
+  .muted { @apply text-sm text-stone-600; }
+}

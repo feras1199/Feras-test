@@ -1,0 +1,249 @@
+## Cost Library
+  L Actual Costs -> Actual Costs
+  L Recipe Items -> Recipe Items
+  L Estimate Items -> Estimate Items
+  F Legacy Cost Numeric = IF({Cost (inc GST)},VALUE(SUBSTITUTE(TRIM({Cost (inc GST)}&''),'$','')),BLANK())
+  F Effective Unit Cost inc GST = IF({Current Unit Cost inc GST}&""!="",{Current Unit Cost inc GST},{Legacy Cost Numeric})
+  S Confidence : ['Confirmed', 'Estimate', 'Needs Review']
+  L Cost Price History -> Cost Price History
+  F Price Review Status = IF(NOT({Item Name}),"Incomplete item",IF({Needs Price Update},"Review price",IF(NOT({Price Updated Date}),"Date needs review",IF(DATETIME_DIFF(TODAY(),{Price Updated Date},"days")>365,"Price over 1 year old","Date current – confirm source"))))
+## Projects
+  S Service Type : ['Landscaping', 'Retaining Wall', 'Tiling/Paving', 'Driveway', 'Pergola', 'Decking']
+  S Status : ['Proposed', 'In Progress', 'On Hold', 'Completed', 'Cancelled', 'Accepted / Pre-start']
+  S Delivery Timeliness : ['On Time', 'Late', 'Early', 'Delayed']
+  L Customer -> Customers
+  L Legacy Customer Link -> Customers
+  L Project Components -> Project Components
+  L Actual Costs -> Actual Costs
+  L Timesheets -> Timesheets
+  L Site Inspections -> Site Inspections
+  L Payments -> Payments
+  L Estimates -> Estimates
+  L Project Schedule -> Project Schedule
+  L Communications -> Communications
+  L Project Files -> Project Files
+  L Client Updates -> Client Updates
+  F Project Value Band = IF(IF({Actual Value},{Actual Value},{Est. Value})<=5000,"$0-$5k",IF(IF({Actual Value},{Actual Value},{Est. Value})<=10000,"$5k-$10k",IF(IF({Actual Value},{Actual Value},{Est. Value})<=25000,"$10k-$25k",IF(IF({Actual Value},{Actual Value},{Est. Value})<=50000,"$25k-$50k",IF(IF({Actual Value},{Actual Value},{Est. Value})<=100000,"$50k-$100k","$100k+")))))
+  S Project Health : ['On Track', 'At Risk', 'Delayed', 'Completed']
+  L Variations -> Variations
+  L Project Checklists -> Project Checklists
+  L Invoices & Claims -> Invoices & Claims
+  S Internal Priority : ['Low', 'Normal', 'High', 'Urgent']
+  S Customer Update Status : ['Not Required', 'Due Soon', 'Due Now', 'Sent']
+  F Financial Status = IF({Data Mode}!="Live","Practice / setup – excluded from business reporting",IF({Project Financial Reconciliation Status}!="OK",{Project Financial Reconciliation Status},IF(AND({Financials Reviewed},{Supporting Costs Verified}),"Reviewed","Provisional – supporting costs need review")))
+  F Component Profit Snapshot = {Component Revenue Rollup}-{Component Reconciled Cost Rollup}
+  F Project Revenue Reconciliation Gap = {Actual Value}-{Component Revenue Rollup}
+  F Project Profit Reconciliation Gap = {Actual Profit}-{Component Profit Snapshot}
+  F Project Financial Reconciliation Status = IF(AND({Component Revenue Rollup}=0,{Component Reconciled Cost Rollup}=0),"⚠ No component financial detail",IF(OR(ABS({Project Revenue Reconciliation Gap})>0.01,ABS({Project Profit Reconciliation Gap})>0.01),"⚠ Reconciliation mismatch","OK"))
+  F Trusted Actual Revenue = IF(AND({Data Mode}="Live",{Financials Reviewed},{Supporting Costs Verified},{Project Financial Reconciliation Status}="OK"),{Component Revenue Rollup},BLANK())
+  F Trusted Actual Profit = IF(AND({Data Mode}="Live",{Financials Reviewed},{Supporting Costs Verified},{Project Financial Reconciliation Status}="OK"),{Component Profit Snapshot},BLANK())
+  F Trusted Actual Margin % = IF({Trusted Actual Revenue}>0,{Trusted Actual Profit}/{Trusted Actual Revenue})
+  R Component Revenue Rollup {"isValid": true, "recordLinkFieldId": "fldtdnpVFb34NDt0P", "fieldIdInLinkedTable": "fld3eYsPymD1HXDcN", "referencedFieldIds": [], "result": {"type": "currency", "options": {"precision": 2, "symbol": "$"}}}
+  R Component Reconciled Cost Rollup {"isValid": true, "recordLinkFieldId": "fldtdnpVFb34NDt0P", "fieldIdInLinkedTable": "fld7bS5VupQcOmJpP", "referencedFieldIds": [], "result": {"type": "number", "options": {"precision": 0}}}
+  F Reconciled Project Revenue = {Component Revenue Rollup}
+  F Reconciled Project Actual Cost = {Component Reconciled Cost Rollup}
+  F Reconciled Project Actual Profit = {Component Revenue Rollup}-{Component Reconciled Cost Rollup}
+  F Reconciled Project Actual Margin % = IF({Component Revenue Rollup}>0,({Component Revenue Rollup}-{Component Reconciled Cost Rollup})/{Component Revenue Rollup})
+  L Enquiries -> Enquiries
+  L Site Measurements -> Site Measurements
+  L Atlas Tasks -> Atlas Tasks
+  F Open Site in Maps = IF({Site Address},"https://www.google.com/maps/search/?api=1&query=" & ENCODE_URL_COMPONENT({Site Address}),BLANK())
+  F Project Operational Readiness = IF(OR({Status}="Completed",{Status}="Cancelled"),"Closed",IF(COUNTA({Customer})=0,"⚠ Missing customer",IF(NOT({Site Address}),"⚠ Missing site address",IF(AND(COUNTA({Project Manager User})=0,NOT({Project Manager})),"⚠ Missing project manager",IF(NOT({Next Action}),"⚠ Missing next action",IF(NOT({Next Action Date}),"⚠ Missing next action date",IF(AND(OR({Status}="Accepted / Pre-start",{Status}="In Progress"),NOT({Project Health})),"⚠ Missing project health",IF(AND({Status}="In Progress",NOT({Start Date})),"⚠ Missing start date","OK – project operationally ready"))))))))
+  S Data Mode : ['Live', 'Practice', 'Setup']
+  F Actual Cost Variance vs Estimate = IF(AND({Estimated Project Cost Snapshot}>0,{Reconciled Project Actual Cost}>=0),ROUND({Reconciled Project Actual Cost}-{Estimated Project Cost Snapshot},2),BLANK())
+  F Actual Profit Variance vs Estimate = IF(AND({Estimated Profit}&""!="",{Reconciled Project Actual Profit}&""!=""),ROUND({Reconciled Project Actual Profit}-{Estimated Profit},2),BLANK())
+  F Final Project Performance Summary = IF({Status}!="Completed","In progress – final report not available",IF({Reconciled Project Actual Cost}&""="","⚠ Reconciled actual cost missing","Revenue $"&ROUND({Reconciled Project Revenue},2)&" | Cost $"&ROUND({Reconciled Project Actual Cost},2)&" | Profit $"&ROUND({Reconciled Project Actual Profit},2)&" | Margin "&ROUND({Reconciled Project Actual Margin %}*100,1)&"%"&IF({Estimated Project Cost Snapshot}>0," | Cost variance $"&ROUND({Actual Cost Variance vs Estimate},2),"")&IF({Estimated Profit}&""!=""," | Profit variance $"&ROUND({Actual Profit Variance vs Estimate},2),"")))
+## Customers
+  S Lead Source : ['Word of Mouth', 'Hi Pages', 'Meta Advertising', 'Website', 'Google', 'Referral', 'Social Media']
+  S Price or Value Driven : ['Price Driven', 'Value Driven', 'Unsure', 'Both']
+  S Customer Type : ['Residential', 'Commercial', 'Government', 'Other', 'Couple', 'Family', 'Single']
+  S Repeat Customer : ['Yes', 'No']
+  L Linked Projects -> Projects
+  L Legacy Projects Link -> Projects
+  L Site Inspections -> Site Inspections
+  L Estimates -> Estimates
+  S Lead Status : ['New Enquiry', 'Contacted', 'Site Visit Booked', 'Site Inspected', 'Estimate Preparing', 'Proposal Sent', 'Follow-up', 'Won', 'Lost', 'On Hold', 'Project Active', 'Completed', 'In Progress']
+  S Reason Won / Lost : ['Price', 'Budget', 'Timing', 'Competitor', 'No Decision', 'Scope Mismatch', 'Trust / Relationship', 'Project Cancelled', 'Other']
+  L Marketing Campaign -> Marketing Campaigns
+  L Communications -> Communications
+  L Project Files -> Project Files
+  L Invoices & Claims -> Invoices & Claims
+  S Preferred Contact Method : ['Phone', 'Email', 'SMS', 'WhatsApp', 'No Preference']
+  S Lead Quality : ['Low', 'Medium', 'High', 'Unknown']
+  L Enquiries -> Enquiries
+  L Atlas Tasks -> Atlas Tasks
+  F Open Address in Maps = IF({Address},"https://www.google.com/maps/search/?api=1&query=" & ENCODE_URL_COMPONENT({Address}),BLANK())
+## Project Components
+  F Project Component = IF(AND({Project},{Component Type}),{Project}&" – "&{Component Type}&IF({Area / Zone}," – "&{Area / Zone},""),"")
+  L Project -> Projects
+  S Component Type : ['Retaining Wall', 'Paving', 'Excavation', 'Turfing', 'Driveway (Concrete)', 'Drainage (Ag Pipe)', 'Pathway (Pebbles)', 'Lighting', 'Planting', 'Pergola', 'Fencing', 'Maintenance', 'Driveway (Crusty Dust)', 'Drainage ', 'Shared Project Costs']
+  L Actual Costs -> Actual Costs
+  L Timesheets -> Timesheets
+  L Estimate Items -> Estimate Items
+  S Status : ['Quoted', 'Won', 'Active', 'Completed', 'Lost', 'On Hold']
+  F Estimated Profit = IF({Quoted Revenue},{Quoted Revenue}-{Estimated Cost},0)
+  F Actual Profit = IF(AND({Status}="Completed",OR({Final Revenue}&""!="",{Component Type}="Shared Project Costs")),{Final Revenue}-{Reconciled Actual Cost},BLANK())
+  F Actual Margin % = IF(AND({Status}="Completed",{Final Revenue}>0),({Final Revenue}-{Reconciled Actual Cost})/{Final Revenue},BLANK())
+  F Profit per Actual Day = IF(AND({Status}="Completed",{Actual Days}>0,{Actual Profit}&""!=""),{Actual Profit}/{Actual Days},BLANK())
+  F Estimated Margin % = IF({Quoted Revenue}>0,{Estimated Profit}/{Quoted Revenue},0)
+  F Revenue per Labour Hour = IF(AND({Status}="Completed",{Final Revenue},{Reconciled Person Hours}>0),{Final Revenue}/{Reconciled Person Hours},BLANK())
+  F Cost Variance = IF(AND({Estimated Cost},{Reconciled Actual Cost}>=0),{Reconciled Actual Cost}-{Estimated Cost},BLANK())
+  S Cost Variance Reason : ['Material price change', 'Access issue', 'Rework', 'Variation / Change order', 'Estimating error', 'Weather / Delay', 'Labour productivity', 'Other']
+  S Delivery Difficulty : ['Easy', 'Moderate', 'Difficult', 'Unknown', 'Standard']
+  L Project Schedule -> Project Schedule
+  L Project Files -> Project Files
+  L Variations -> Variations
+  L Project Checklists -> Project Checklists
+  F Data Completeness = IF({Financial Reconciliation Status}!="OK",{Financial Reconciliation Status},IF(AND({Status}="Completed",{Final Revenue}&""="",{Component Type}!="Shared Project Costs"),"⚠ Missing final revenue",IF(AND({Status}="Completed",{Reconciled Person Hours}=0,{Component Type}!="Shared Project Costs"),"⚠ Missing labour hours","OK")))
+  S Proposal Section : ['Landscape Solutions', 'Carpentry', 'Concrete', 'Paving / Stone', 'Planting / Garden', 'Drainage / Irrigation', 'Lighting', 'Waste / Skip Bin', 'Other']
+  F Detailed Actual Cost = SUM({Actual Cost Rollup}, {Submitted Labour Cost Rollup})
+  F Cost Reconciliation Gap = IF(AND({Actual Cost},{Detailed Actual Cost}>=0),{Actual Cost}-{Detailed Actual Cost},BLANK())
+  F Financial Reconciliation Status = IF(NOT({Reconciled Actual Cost}),"⚠ No reconciled actual cost",IF(OR(IF({Unitemised Cost Adjustment},{Unitemised Cost Adjustment},0)>0,IF({Unitemised Labour Hours Adjustment},{Unitemised Labour Hours Adjustment},0)>0),"⚠ Unitemised detail remains","OK"))
+  F Reconciled Actual Cost = SUM({Detailed Actual Cost}, {Unitemised Cost Adjustment})
+  F Reconciled Person Hours = SUM({Submitted Person Hours Rollup}, {Unitemised Labour Hours Adjustment})
+  R Actual Cost Rollup {"isValid": true, "recordLinkFieldId": "fldg1bbwZtKcvT6o2", "fieldIdInLinkedTable": "fldAXezDullN2DztA", "referencedFieldIds": [], "result": {"type": "number", "options": {"precision": 0}}}
+  R Submitted Labour Cost Rollup {"isValid": true, "recordLinkFieldId": "flddVtemGyG3HOxfQ", "fieldIdInLinkedTable": "fld8krUZsylZxhAdw", "referencedFieldIds": [], "filters": {"operator": "and", "operands": [{"operator": "=", "operands": ["fldAsVIUQLBR8LCJx", true]}]}, "result": {"type": "number", "options": {"precision": 0}}}
+  R Submitted Person Hours Rollup {"isValid": true, "recordLinkFieldId": "flddVtemGyG3HOxfQ", "fieldIdInLinkedTable": "fldFef0pAZuKsJvo1", "referencedFieldIds": [], "filters": {"operator": "and", "operands": [{"operator": "=", "operands": ["fldAsVIUQLBR8LCJx", true]}]}, "result": {"type": "number", "options": {"precision": 0}}}
+  L Site Measurements -> Site Measurements
+  F Effective Markup % = IF({Markup Override %}&""!="",{Markup Override %},0.30)
+  F Recommended Component Price = IF({Estimated Cost}>0,ROUND({Estimated Cost}*(1+{Effective Markup %}),2),BLANK())
+  F Estimated Site Manager Cost = IF(AND({Estimated Site Manager Hours}>0,{Site Manager Rate Snapshot}>0),ROUND({Estimated Site Manager Hours}*{Site Manager Rate Snapshot},2),BLANK())
+## Actual Costs
+  L Project -> Projects
+  L Project Component -> Project Components
+  S Cost Type : ['Material', 'Labour', 'Equipment', 'Subcontractor', 'Delivery', 'Disposal', 'Permit', 'Consumable', 'Other']
+  L Cost Library Item -> Cost Library
+  F Total Cost = IF(AND({Quantity},{Unit Cost inc GST}),{Quantity}*{Unit Cost inc GST},0)
+  F Cost Data Check = IF(COUNTA({Project})=0,"⚠ Missing project",IF(COUNTA({Project Component})=0,"⚠ Missing component",IF(NOT({Cost Type}),"⚠ Missing cost type",IF(NOT({Quantity}),"⚠ Missing quantity",IF(NOT({Unit Cost inc GST}),"⚠ Missing unit cost",IF(NOT({Cost Date}),"⚠ Missing cost date",IF(NOT({Reviewed}),"⚠ Awaiting review","OK – cost ready")))))))
+## Timesheets
+  L Project -> Projects
+  L Project Component -> Project Components
+  F Labour Hours = IF(AND({Start Time},{Finish Time}),MAX(0,(DATETIME_DIFF({Finish Time},{Start Time},'minutes')-{Break Minutes})/60),0)
+  F Labour Cost = IF(AND({Labour Cost Rate},{Labour Hours}),IF({Rate Basis}="Per Person",{Person Hours}*{Labour Cost Rate},{Labour Hours}*{Labour Cost Rate}),BLANK())
+  S Work Type : ['Construction', 'Travel / Pickup', 'Site Setup', 'Rework', 'Variation', 'Management / Supervision', 'Other']
+  S Rate Basis : ['Per Person', 'Crew Total']
+  F Person Hours = IF({Labour Hours}, {Labour Hours} * IF({Crew Size}>0,{Crew Size},1), BLANK())
+  F Timesheet Data Check = IF(COUNTA({Project})=0,"⚠ Missing project",IF(COUNTA({Project Component})=0,"⚠ Missing component",IF(NOT({Staff Name}),"⚠ Missing staff name",IF(NOT({Work Date}),"⚠ Missing work date",IF(NOT({Start Time}),"⚠ Missing start time",IF(NOT({Finish Time}),"⚠ Missing finish time",IF(NOT({Rate Basis}),"⚠ Missing rate basis",IF(NOT({Labour Cost Rate}),"⚠ Missing labour rate",IF(NOT({Submitted}),"⚠ Not submitted","OK – timesheet ready")))))))))
+## Payments
+  L Project -> Projects
+  S Legacy Stage : ['50% Deposit', '25% Progress', '15% Progress', '10% Final', 'Other']
+  S Status : ['Pending', 'Due', 'Paid', 'Overdue']
+  L Invoice / Claim -> Invoices & Claims
+  S Payment Method : ['Bank Transfer', 'Card', 'Cash', 'Cheque', 'Other']
+  F Payment Data Check = IF({Archived},"Archived – excluded",IF(COUNTA({Project})!=1,"⚠ Choose one project",IF(AND(NOT({Legacy Stage}),NOT({Stage Label})),"⚠ Missing payment stage",IF(AND({Stage Label},{Stage %}<=0),"⚠ Missing stage %",IF({Amount}<=0,"⚠ Missing or invalid amount",IF(AND({Expected Stage Amount}>0,ABS({Amount}-{Expected Stage Amount})>0.01),"⚠ Amount differs from stage schedule",IF(AND({Status}="Paid",NOT({Received Date})),"⚠ Missing received date",IF(AND({Status}!="Paid",NOT({Due Date})),"Not yet scheduled","OK – payment record ready"))))))))
+  F Expected Stage Amount = IF(AND({Contract Value Snapshot}>0,{Stage %}>0),ROUND({Contract Value Snapshot}*{Stage %},2),BLANK())
+## Estimates
+  L Customer -> Customers
+  L Project -> Projects
+  S Status : ['Draft', 'Ready', 'Quoted', 'Accepted', 'Declined', 'Superseded']
+  F Legacy Selling Price (Old Margin Method) = IF(AND({Quote Locked},{Agreed Price Snapshot}&""!=""),{Agreed Price Snapshot},IF(AND({Pricing Cost Base}>0,{Legacy Target Margin %}>=0,({Legacy Target Margin %}+IF({Legacy Sales Commission %},{Legacy Sales Commission %},0)*IF({Pricing Basis}="Net costs + GST",1.1,1))<1),ROUND({Pricing Cost Base}*IF({Pricing Basis}="Net costs + GST",1.1,1)/(1-{Legacy Target Margin %}-IF({Legacy Sales Commission %},{Legacy Sales Commission %},0)*IF({Pricing Basis}="Net costs + GST",1.1,1)),2),BLANK()))
+  L Estimate Items -> Estimate Items
+  S Export Status : ['Draft', 'Ready to Export', 'Exported', 'Sent', 'Accepted']
+  S Customer Approval Status : ['Not Sent', 'Awaiting Customer', 'Accepted', 'Declined', 'Revision Requested']
+  S Quote Review Status : ['Needs Estimating', 'Needs Review', 'Approved to Send', 'Sent', 'Customer Revision']
+  F Pricing Check = IF({Quote Locked},IF({Agreed Price Snapshot}>0,"OK","⚠ Locked quote missing agreed price"),IF(NOT({Pricing Cost Base}>0),"⚠ Add itemised costs",IF(NOT({Proposed Customer Price}>0),"⚠ Missing proposed customer price",IF({Proposed Customer Price}<{Pricing Cost Base},"⚠ Proposed price below cost",IF(AND({Unitemised Estimate Cost}>0,NOT({Unitemised Cost Reviewed})),"⚠ Unitemised estimate cost needs review","OK")))))
+  F Scope Check = IF({Customer Scope},"OK","⚠ Customer scope missing")
+  F Quote Ready Check = IF(AND({Pricing Check}="OK",{Scope Check}="OK",{Quote Number},{Valid Until}),"Ready for review","⚠ Incomplete")
+  F Contingency Amount = IF({Contingency %}>0,({Reconciled Estimate Cost}+IF({Overhead Allowance},{Overhead Allowance},0))*{Contingency %},0)
+  F Pricing Cost Base = IF({Reconciled Estimate Cost},{Reconciled Estimate Cost}+IF({Overhead Allowance},{Overhead Allowance},0)+IF({Contingency Amount},{Contingency Amount},0),BLANK())
+  F Commission Amount = IF(AND({Legacy Selling Price (Old Margin Method)},{Legacy Sales Commission %}>0),ROUND({Legacy Selling Price (Old Margin Method)}*{Legacy Sales Commission %},2),0)
+  F Target Profit Amount = IF(AND({Legacy Selling Price (Old Margin Method)},{Legacy Target Margin %}>=0),ROUND({Legacy Selling Price (Old Margin Method)}/IF({Pricing Basis}="Net costs + GST",1.1,1)*{Legacy Target Margin %},2),BLANK())
+  F Legacy 50% Deposit Amount = IF({Legacy Selling Price (Old Margin Method)}>0,ROUND({Legacy Selling Price (Old Margin Method)}*0.5,2),BLANK())
+  F Legacy 25% Progress Amount = IF({Legacy Selling Price (Old Margin Method)}>0,ROUND({Legacy Selling Price (Old Margin Method)}*0.25,2),BLANK())
+  F Legacy 15% Progress Amount = IF({Legacy Selling Price (Old Margin Method)}>0,ROUND({Legacy Selling Price (Old Margin Method)}*0.15,2),BLANK())
+  F Legacy 10% Final Amount = IF({Legacy Selling Price (Old Margin Method)}>0,ROUND({Legacy Selling Price (Old Margin Method)}-{Legacy 50% Deposit Amount}-{Legacy 25% Progress Amount}-{Legacy 15% Progress Amount},2),BLANK())
+  F Estimate Reconciliation Gap = IF(AND({Estimated Cost},{Reconciled Estimate Cost}>=0),{Estimated Cost}-{Reconciled Estimate Cost},BLANK())
+  F Estimate Reconciliation Status = IF(NOT({Reconciled Estimate Cost}),"⚠ No reconciled estimate cost",IF(ABS(IF({Estimate Reconciliation Gap},{Estimate Reconciliation Gap},0))>=0.01,"⚠ Estimate total mismatch",IF(IF({Unitemised Estimate Cost},{Unitemised Estimate Cost},0)>0,"⚠ Unitemised estimate cost remains","OK")))
+  F Reconciled Estimate Cost = SUM({Estimate Line Cost Rollup}, {Unitemised Estimate Cost})
+  R Estimate Line Cost Rollup {"isValid": true, "recordLinkFieldId": "fldTiBSVpE6V12ZN6", "fieldIdInLinkedTable": "fldbq3Z7PscRTFFBc", "referencedFieldIds": [], "result": {"type": "number", "options": {"precision": 0}}}
+  S Estimate Type : ['Preliminary ±10%', 'Detailed Estimate', 'Formal Quote']
+  L Enquiry -> Enquiries
+  F Formal Quote Readiness = IF({Estimate Type}!="Formal Quote","N/A – not formal quote",IF(COUNTA({Customer})=0,"⚠ Missing customer",IF(COUNTA({Project})=0,"⚠ Missing project",IF(NOT({Proposed Customer Price}),"⚠ Missing proposed customer price",IF({Pricing Check}!="OK","⚠ Pricing check incomplete",IF({Payment Schedule Check}!="OK - payment schedule totals 100%","⚠ Payment schedule must total 100%",IF({Scope Check}!="OK","⚠ Customer scope incomplete",IF(NOT({Quote Number}),"⚠ Missing quote number",IF(NOT({Valid Until}),"⚠ Missing quote validity date",IF(NOT({Estimate Explanation}),"⚠ Missing estimate explanation",IF(NOT({Scope & Omission Review Complete}),"⚠ Scope/omission review incomplete",IF(NOT({Cost & Labour Audit Complete}),"⚠ Cost/labour audit incomplete",IF(NOT({Assumptions Resolved / Accepted}),"⚠ Assumptions not resolved/accepted",IF(AND({AI / Preliminary Estimate Reviewed}=0,{Missing Information / Assumptions}),"⚠ Preliminary/AI assumptions need review","OK – ready for manager quote approval"))))))))))))))
+  S Pricing Basis : ['Legacy – review', 'Net costs + GST']
+  F Payment Creation Ready = IF(AND({Status}="Accepted",{Quote Locked},{Agreed Price Snapshot}>0,COUNTA({Project})=1),1,0)
+  F Standard Markup % = 0.30
+  F Effective Markup % = IF({Markup Override %}&""!="",{Markup Override %},0.30)
+  F Recommended Price - Cost Plus Markup = IF({Pricing Cost Base}>0,ROUND({Pricing Cost Base}*(1+{Effective Markup %}),2),BLANK())
+  F Proposed Customer Price = IF(AND({Quote Locked},{Agreed Price Snapshot}>0),{Agreed Price Snapshot},IF({Manager Price Override}>0,{Manager Price Override},{Recommended Price - Cost Plus Markup}))
+  F Payment Schedule Total % = IF({Deposit % Override}&""!="",{Deposit % Override},0.10)+IF({Progress 1 % Override}&""!="",{Progress 1 % Override},0.30)+IF({Progress 2 % Override}&""!="",{Progress 2 % Override},0.30)+IF({Progress 3 % Override}&""!="",{Progress 3 % Override},0.20)+IF({Final % Override}&""!="",{Final % Override},0.10)
+  F Payment Schedule Check = IF(ABS({Payment Schedule Total %}-1)<0.0001,"OK - payment schedule totals 100%","⚠ Payment schedule does not total 100%")
+  F Expected Marketing Commission = IF(AND({Marketing Commission Base Snapshot}>0,{Marketing Agent Commission %}>0),ROUND({Marketing Commission Base Snapshot}*{Marketing Agent Commission %},2),0)
+  F Deposit Amount - New Schedule = IF({Proposed Customer Price}>0,ROUND({Proposed Customer Price}*IF({Deposit % Override}&""!="",{Deposit % Override},0.10),2),BLANK())
+  F Progress 1 Amount - New Schedule = IF({Proposed Customer Price}>0,ROUND({Proposed Customer Price}*IF({Progress 1 % Override}&""!="",{Progress 1 % Override},0.30),2),BLANK())
+  F Progress 2 Amount - New Schedule = IF({Proposed Customer Price}>0,ROUND({Proposed Customer Price}*IF({Progress 2 % Override}&""!="",{Progress 2 % Override},0.30),2),BLANK())
+  F Progress 3 Amount - New Schedule = IF({Proposed Customer Price}>0,ROUND({Proposed Customer Price}*IF({Progress 3 % Override}&""!="",{Progress 3 % Override},0.20),2),BLANK())
+  F Final Amount - New Schedule = IF({Proposed Customer Price}>0,ROUND({Proposed Customer Price}*IF({Final % Override}&""!="",{Final % Override},0.10),2),BLANK())
+## Estimate Items
+  L Estimate -> Estimates
+  L Project Component -> Project Components
+  L Recipe -> Recipes
+  L Cost Library Item -> Cost Library
+  S Cost Type : ['Material', 'Labour', 'Equipment', 'Subcontractor', 'Delivery', 'Disposal', 'Permit', 'Consumable', 'Other']
+  F Line Cost = IF(AND({Quantity}>0,{Unit Cost Snapshot inc GST}&""!=""),ROUND({Quantity}*(1+{Waste %})*{Unit Cost Snapshot inc GST}/IF({Net Cost Pricing},1+{Input GST Rate},1),2),0)
+  S Proposal Option : ['Included', 'Optional Upgrade', 'Alternative', 'Internal Only']
+  L Site Measurement -> Site Measurements
+  S Quantity Basis : ['Manual quantity', 'Measured area', 'Measured length', 'Measured volume', 'Count / each', 'Allowance', 'Recipe-derived', 'AI suggested - verify', 'Other']
+  F Estimate Line Audit Check = IF(NOT({Quantity}),"⚠ Missing quantity",IF(NOT({Unit Cost Snapshot inc GST}),"⚠ Missing unit cost snapshot",IF(NOT({Quantity Verified}),IF({AI Suggested},"⚠ AI quantity not verified","⚠ Quantity not verified"),"OK – line auditable")))
+  L Productivity Rule -> Productivity Library
+  F Estimated Labour Cost = IF(AND({Estimated Labour Hours},{Labour Rate Snapshot}),{Estimated Labour Hours}*{Labour Rate Snapshot},BLANK())
+  F Labour Estimate Audit Check = IF({Cost Type}!="Labour","N/A",IF(NOT({Estimated Labour Hours}),"⚠ Missing labour hours",IF(NOT({Labour Rate Snapshot}),"⚠ Missing labour rate snapshot",IF(NOT({Labour Calculation Explanation}),"⚠ Missing labour explanation","OK – labour auditable"))))
+## Enquiries
+  L Customer -> Customers
+  L Project -> Projects
+  L Marketing Campaign -> Marketing Campaigns
+  S Lead Source : ['Word of Mouth', 'Hi Pages', 'Meta Advertising', 'Website', 'Google', 'Referral', 'Social Media', 'Other']
+  S Status : ['New Enquiry', 'Contacted', 'Site Visit Booked', 'Site Inspected', 'Estimate Preparing', 'Preliminary Estimate Ready', 'Proposal Sent', 'Follow-up', 'Won', 'Lost', 'On Hold', '']
+  S Lead Quality : ['High', 'Medium', 'Low', 'Unknown']
+  S Reason Won / Lost : ['Budget too low', 'Price', 'No response', 'Competitor selected', 'Timing', 'Scope changed', 'Customer postponed', 'Not suitable for Whispering Leaf', 'Outside service area', 'Appointment issue', 'Estimate / quote delay', 'Other', 'Good fit / value']
+  L Atlas Tasks -> Atlas Tasks
+  L Site Inspections -> Site Inspections
+  L Estimates -> Estimates
+  F Enquiry Data Check = IF(COUNTA({Customer})=0,"⚠ Missing customer",IF(NOT({Enquiry Date}),"⚠ Missing enquiry date",IF(NOT({Lead Source}),"⚠ Missing lead source",IF(NOT({Service Requested}),"⚠ Missing service requested",IF(AND(COUNTA({Owner})=0,NOT({Assigned To})),"⚠ Missing owner",IF(AND(OR({Status}="Contacted",{Status}="Site Visit Booked",{Status}="Site Inspected",{Status}="Estimate Preparing",{Status}="Preliminary Estimate Ready",{Status}="Proposal Sent",{Status}="Follow-up"),NOT({Next Follow-up})),"⚠ Missing follow-up date","OK – core enquiry data captured"))))))
+  F Follow-up Status = IF(OR({Status}="Won",{Status}="Lost"),"Closed",IF(NOT({Next Follow-up}),"Set follow-up date",IF(IS_BEFORE({Next Follow-up},TODAY()),"Overdue",IF(IS_SAME({Next Follow-up},TODAY(),"day"),"Due today","Scheduled"))))
+## Site Measurements
+  L Site Inspection -> Site Inspections
+  L Project -> Projects
+  L Project Component -> Project Components
+  S Work Type : ['Paving', 'Retaining Wall', 'Excavation', 'Turfing', 'Planting', 'Drainage', 'Concrete Driveway', 'Pergola / Fencing', 'Lighting', 'Other']
+  S Measurement Method : ['Manual onsite', 'Google Earth', 'Plan / Drawing', 'AI-assisted', 'Other']
+  S Unit : ['m²', 'lm', 'm³', 'each', 'hours', 'allowance', 'other']
+  S Confidence : ['Confirmed onsite', 'High', 'Medium', 'Low / Verify']
+  F Calculated Area m² = IF(AND({Length m}>0,{Width m}>0),{Length m}*{Width m},BLANK())
+  F Calculated Volume m³ = IF(AND({Length m}>0,{Width m}>0,{Height / Depth m}>0),{Length m}*{Width m}*{Height / Depth m},BLANK())
+  L Estimate Items -> Estimate Items
+  F Preferred Quantity = IF({Measured Quantity}&""!="",{Measured Quantity},IF({Unit}="m²",{Calculated Area m²},IF({Unit}="m³",{Calculated Volume m³},IF(AND({Unit}="lm",{Length m}>0),{Length m},BLANK()))))
+  F Measurement Data Check = IF(AND(COUNTA({Project})=0,COUNTA({Site Inspection})=0),"⚠ Link site visit or project",IF(NOT({Work Type}),"⚠ Missing work type",IF(NOT({Unit}),"⚠ Missing unit",IF(OR({Preferred Quantity}&""="",{Preferred Quantity}<=0),"⚠ Enter a quantity greater than zero",IF(AND({Measurement Method}="AI-assisted",NOT({Verified})),"⚠ AI measurement not verified",IF(NOT({Verified}),"⚠ Quantity not verified","OK – measurement ready"))))))
+## Timesheets
+  F Labour Hours = IF(AND({Start Time},{Finish Time}),MAX(0,(DATETIME_DIFF({Finish Time},{Start Time},'minutes')-{Break Minutes})/60),0)
+  F Labour Cost = IF(AND({Labour Cost Rate},{Labour Hours}),IF({Rate Basis}="Per Person",{Person Hours}*{Labour Cost Rate},{Labour Hours}*{Labour Cost Rate}),BLANK())
+  F Person Hours = IF({Labour Hours}, {Labour Hours} * IF({Crew Size}>0,{Crew Size},1), BLANK())
+  F Timesheet Data Check = IF(COUNTA({Project})=0,"⚠ Missing project",IF(COUNTA({Project Component})=0,"⚠ Missing component",IF(NOT({Staff Name}),"⚠ Missing staff name",IF(NOT({Work Date}),"⚠ Missing work date",IF(NOT({Start Time}),"⚠ Missing start time",IF(NOT({Finish Time}),"⚠ Missing finish time",IF(NOT({Rate Basis}),"⚠ Missing rate basis",IF(NOT({Labour Cost Rate}),"⚠ Missing labour rate",IF(NOT({Submitted}),"⚠ Not submitted","OK – timesheet ready")))))))))
+## Site Inspections
+  F Site Visit Data Check = IF(NOT({Scope}),"⚠ Missing scope",IF(COUNTA({Site Measurements})=0,"⚠ Missing structured measurements",IF(COUNTA({Photos})=0,"⚠ Missing photos",IF(NOT({Customer Priorities}),"⚠ Missing customer priorities",IF(NOT({Access Difficulty}),"⚠ Missing access assessment","OK – core site data captured")))))
+  F Open Site in Maps = IF({Site Address},"https://www.google.com/maps/search/?api=1&query=" & ENCODE_URL_COMPONENT({Site Address}),BLANK())
+## Recipe Items
+## Marketing Campaigns
+  F Cost per Lead = IF({Leads}>0,{Actual Spend}/{Leads},0)
+  F Cost per Won Job = IF({Jobs Won}>0,{Actual Spend}/{Jobs Won},0)
+  F Lead to Win % = IF({Leads}>0,{Jobs Won}/{Leads},0)
+  F Revenue ROAS = IF({Actual Spend}>0,{Revenue Won}/{Actual Spend},0)
+  F Marketing ROI = IF({Actual Spend}>0,({Gross Profit Won}-{Actual Spend})/{Actual Spend},0)
+## Project Schedule
+  F Schedule Data Check = IF(NOT({Planned Start}),"⚠ Missing planned start",IF(NOT({Planned Finish}),"⚠ Missing planned finish",IF(AND(COUNTA({Assigned User})=0,NOT({Assigned To})),"⚠ Missing assignee",IF(NOT({Calendar Provider}),"⚠ Choose calendar provider","OK – schedule ready"))))
+## Communications
+## Project Files
+## Client Updates
+## Variations
+## Project Checklists
+## Invoices & Claims
+  F Invoice Ready Check = IF(AND({Customer},{Project},{Payment Stage},{Invoice Number},{Issue Date},{Due Date},{Amount inc GST}),"Ready for review","⚠ Incomplete")
+## Atlas Tasks
+  F Task Data Check = IF(OR({Status}="Done",{Status}="Cancelled"),"Closed",IF(AND(COUNTA({Assignee})=0,NOT({Assigned To})),"⚠ Missing assignee",IF(AND(NOT({Due Date}),NOT({Due Time / Appointment})),"⚠ Missing due date / appointment","OK – task actionable")))
+## Business Targets
+  F Jobs Required = IF(AND({Revenue Target}>0,{Average Job Value Target}>0),ROUNDUP({Revenue Target}/{Average Job Value Target},0),BLANK())
+  F Qualified Leads Required = IF(AND({Jobs Required}>0,{Lead to Win Target %}>0),ROUNDUP({Jobs Required}/{Lead to Win Target %},0),BLANK())
+  F Target Leads per Week = IF({Qualified Leads Required}>0,ROUNDUP({Qualified Leads Required}/4.33,1),BLANK())
+  F Revenue Target Progress % = IF({Revenue Target}>0,{Actual Revenue Won}/{Revenue Target},BLANK())
+## Productivity Library
+## Omission Rules
+## Integration Settings

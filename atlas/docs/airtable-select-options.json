@@ -1,0 +1,759 @@
+{
+ "Cost Library": {
+  "Confidence": [
+   "Confirmed",
+   "Estimate",
+   "Needs Review"
+  ]
+ },
+ "Projects": {
+  "Service Type": [
+   "Landscaping",
+   "Retaining Wall",
+   "Tiling/Paving",
+   "Driveway",
+   "Pergola",
+   "Decking"
+  ],
+  "Status": [
+   "Proposed",
+   "In Progress",
+   "On Hold",
+   "Completed",
+   "Cancelled",
+   "Accepted / Pre-start"
+  ],
+  "Delivery Timeliness": [
+   "On Time",
+   "Late",
+   "Early",
+   "Delayed"
+  ],
+  "Project Health": [
+   "On Track",
+   "At Risk",
+   "Delayed",
+   "Completed"
+  ],
+  "Internal Priority": [
+   "Low",
+   "Normal",
+   "High",
+   "Urgent"
+  ],
+  "Customer Update Status": [
+   "Not Required",
+   "Due Soon",
+   "Due Now",
+   "Sent"
+  ],
+  "Data Mode": [
+   "Live",
+   "Practice",
+   "Setup"
+  ]
+ },
+ "Customers": {
+  "Lead Source": [
+   "Word of Mouth",
+   "Hi Pages",
+   "Meta Advertising",
+   "Website",
+   "Google",
+   "Referral",
+   "Social Media"
+  ],
+  "Price or Value Driven": [
+   "Price Driven",
+   "Value Driven",
+   "Unsure",
+   "Both"
+  ],
+  "Customer Type": [
+   "Residential",
+   "Commercial",
+   "Government",
+   "Other",
+   "Couple",
+   "Family",
+   "Single"
+  ],
+  "Repeat Customer": [
+   "Yes",
+   "No"
+  ],
+  "Lead Status": [
+   "New Enquiry",
+   "Contacted",
+   "Site Visit Booked",
+   "Site Inspected",
+   "Estimate Preparing",
+   "Proposal Sent",
+   "Follow-up",
+   "Won",
+   "Lost",
+   "On Hold",
+   "Project Active",
+   "Completed",
+   "In Progress"
+  ],
+  "Reason Won / Lost": [
+   "Price",
+   "Budget",
+   "Timing",
+   "Competitor",
+   "No Decision",
+   "Scope Mismatch",
+   "Trust / Relationship",
+   "Project Cancelled",
+   "Other"
+  ],
+  "Preferred Contact Method": [
+   "Phone",
+   "Email",
+   "SMS",
+   "WhatsApp",
+   "No Preference"
+  ],
+  "Lead Quality": [
+   "Low",
+   "Medium",
+   "High",
+   "Unknown"
+  ]
+ },
+ "Project Components": {
+  "Component Type": [
+   "Retaining Wall",
+   "Paving",
+   "Excavation",
+   "Turfing",
+   "Driveway (Concrete)",
+   "Drainage (Ag Pipe)",
+   "Pathway (Pebbles)",
+   "Lighting",
+   "Planting",
+   "Pergola",
+   "Fencing",
+   "Maintenance",
+   "Driveway (Crusty Dust)",
+   "Drainage ",
+   "Shared Project Costs"
+  ],
+  "Status": [
+   "Quoted",
+   "Won",
+   "Active",
+   "Completed",
+   "Lost",
+   "On Hold"
+  ],
+  "Cost Variance Reason": [
+   "Material price change",
+   "Access issue",
+   "Rework",
+   "Variation / Change order",
+   "Estimating error",
+   "Weather / Delay",
+   "Labour productivity",
+   "Other"
+  ],
+  "Delivery Difficulty": [
+   "Easy",
+   "Moderate",
+   "Difficult",
+   "Unknown",
+   "Standard"
+  ],
+  "Proposal Section": [
+   "Landscape Solutions",
+   "Carpentry",
+   "Concrete",
+   "Paving / Stone",
+   "Planting / Garden",
+   "Drainage / Irrigation",
+   "Lighting",
+   "Waste / Skip Bin",
+   "Other"
+  ]
+ },
+ "Actual Costs": {
+  "Cost Type": [
+   "Material",
+   "Labour",
+   "Equipment",
+   "Subcontractor",
+   "Delivery",
+   "Disposal",
+   "Permit",
+   "Consumable",
+   "Other"
+  ]
+ },
+ "Timesheets": {
+  "Work Type": [
+   "Construction",
+   "Travel / Pickup",
+   "Site Setup",
+   "Rework",
+   "Variation",
+   "Management / Supervision",
+   "Other"
+  ],
+  "Rate Basis": [
+   "Per Person",
+   "Crew Total"
+  ]
+ },
+ "Payments": {
+  "Legacy Stage": [
+   "50% Deposit",
+   "25% Progress",
+   "15% Progress",
+   "10% Final",
+   "Other"
+  ],
+  "Status": [
+   "Pending",
+   "Due",
+   "Paid",
+   "Overdue"
+  ],
+  "Payment Method": [
+   "Bank Transfer",
+   "Card",
+   "Cash",
+   "Cheque",
+   "Other"
+  ]
+ },
+ "Estimates": {
+  "Status": [
+   "Draft",
+   "Ready",
+   "Quoted",
+   "Accepted",
+   "Declined",
+   "Superseded"
+  ],
+  "Export Status": [
+   "Draft",
+   "Ready to Export",
+   "Exported",
+   "Sent",
+   "Accepted"
+  ],
+  "Customer Approval Status": [
+   "Not Sent",
+   "Awaiting Customer",
+   "Accepted",
+   "Declined",
+   "Revision Requested"
+  ],
+  "Quote Review Status": [
+   "Needs Estimating",
+   "Needs Review",
+   "Approved to Send",
+   "Sent",
+   "Customer Revision"
+  ],
+  "Estimate Type": [
+   "Preliminary \u00b110%",
+   "Detailed Estimate",
+   "Formal Quote"
+  ],
+  "Pricing Basis": [
+   "Legacy \u2013 review",
+   "Net costs + GST"
+  ]
+ },
+ "Estimate Items": {
+  "Cost Type": [
+   "Material",
+   "Labour",
+   "Equipment",
+   "Subcontractor",
+   "Delivery",
+   "Disposal",
+   "Permit",
+   "Consumable",
+   "Other"
+  ],
+  "Proposal Option": [
+   "Included",
+   "Optional Upgrade",
+   "Alternative",
+   "Internal Only"
+  ],
+  "Quantity Basis": [
+   "Manual quantity",
+   "Measured area",
+   "Measured length",
+   "Measured volume",
+   "Count / each",
+   "Allowance",
+   "Recipe-derived",
+   "AI suggested - verify",
+   "Other"
+  ]
+ },
+ "Enquiries": {
+  "Lead Source": [
+   "Word of Mouth",
+   "Hi Pages",
+   "Meta Advertising",
+   "Website",
+   "Google",
+   "Referral",
+   "Social Media",
+   "Other"
+  ],
+  "Status": [
+   "New Enquiry",
+   "Contacted",
+   "Site Visit Booked",
+   "Site Inspected",
+   "Estimate Preparing",
+   "Preliminary Estimate Ready",
+   "Proposal Sent",
+   "Follow-up",
+   "Won",
+   "Lost",
+   "On Hold",
+   ""
+  ],
+  "Lead Quality": [
+   "High",
+   "Medium",
+   "Low",
+   "Unknown"
+  ],
+  "Reason Won / Lost": [
+   "Budget too low",
+   "Price",
+   "No response",
+   "Competitor selected",
+   "Timing",
+   "Scope changed",
+   "Customer postponed",
+   "Not suitable for Whispering Leaf",
+   "Outside service area",
+   "Appointment issue",
+   "Estimate / quote delay",
+   "Other",
+   "Good fit / value"
+  ]
+ },
+ "Site Measurements": {
+  "Work Type": [
+   "Paving",
+   "Retaining Wall",
+   "Excavation",
+   "Turfing",
+   "Planting",
+   "Drainage",
+   "Concrete Driveway",
+   "Pergola / Fencing",
+   "Lighting",
+   "Other"
+  ],
+  "Measurement Method": [
+   "Manual onsite",
+   "Google Earth",
+   "Plan / Drawing",
+   "AI-assisted",
+   "Other"
+  ],
+  "Unit": [
+   "m\u00b2",
+   "lm",
+   "m\u00b3",
+   "each",
+   "hours",
+   "allowance",
+   "other"
+  ],
+  "Confidence": [
+   "Confirmed onsite",
+   "High",
+   "Medium",
+   "Low / Verify"
+  ]
+ },
+ "Site Inspections": {
+  "Access Difficulty": [
+   "Easy",
+   "Moderate",
+   "Difficult",
+   "Unknown"
+  ],
+  "Budget Fit": [
+   "Likely Fits",
+   "May Need Scope Change",
+   "Budget Mismatch",
+   "Unknown",
+   "Good Fit"
+  ]
+ },
+ "Recipe Items": {
+  "Cost Category": [
+   "Material",
+   "Labour",
+   "Equipment",
+   "Subcontractor",
+   "Delivery",
+   "Disposal",
+   "Permit",
+   "Consumable",
+   "Other"
+  ],
+  "Structured Quantity Basis": [
+   "Per m\u00b2",
+   "Per lm",
+   "Per m\u00b3",
+   "Per each",
+   "Fixed allowance",
+   "Per labour hour",
+   "Manual input",
+   "Conditional / custom"
+  ],
+  "Executable Rule Status": [
+   "Descriptive only",
+   "Structured draft",
+   "Tested",
+   "Blocked / custom logic"
+  ]
+ },
+ "Marketing Campaigns": {
+  "Platform": [
+   "Meta",
+   "Google Ads",
+   "HiPages",
+   "Referral",
+   "Organic Search",
+   "Website",
+   "Letterbox / Print",
+   "Other"
+  ],
+  "Status": [
+   "Planned",
+   "Active",
+   "Paused",
+   "Completed"
+  ]
+ },
+ "Project Schedule": {
+  "Type": [
+   "Work",
+   "Milestone",
+   "Site Visit",
+   "Material Delivery",
+   "Inspection",
+   "Client Meeting",
+   "Payment",
+   "Other"
+  ],
+  "Status": [
+   "Not Started",
+   "Ready",
+   "In Progress",
+   "Waiting",
+   "Completed",
+   "Delayed",
+   "Cancelled"
+  ],
+  "Priority": [
+   "Low",
+   "Normal",
+   "High",
+   "Critical"
+  ],
+  "Calendar Provider": [
+   "Google Calendar",
+   "Microsoft Outlook",
+   "Not Synced"
+  ],
+  "Calendar Sync Status": [
+   "Not Synced",
+   "Ready to Sync",
+   "Synced",
+   "Needs Update",
+   "Error"
+  ],
+  "Conflict Check": [
+   "Not Checked",
+   "No Conflict",
+   "Conflict Found",
+   "Needs Review"
+  ]
+ },
+ "Communications": {
+  "Channel": [
+   "Email",
+   "Phone",
+   "SMS",
+   "WhatsApp",
+   "In Person",
+   "Client Portal",
+   "Internal Note"
+  ],
+  "Direction": [
+   "Outgoing",
+   "Incoming",
+   "Internal"
+  ],
+  "Status": [
+   "Complete",
+   "Follow-up Required",
+   "Waiting on Customer",
+   "Waiting on Us"
+  ],
+  "Email Provider": [
+   "Gmail",
+   "Microsoft Outlook",
+   "Other / Not Synced"
+  ],
+  "Email Sync Status": [
+   "Not Synced",
+   "Ready to Sync",
+   "Synced",
+   "Needs Update",
+   "Error"
+  ]
+ },
+ "Project Files": {
+  "File Type": [
+   "Before Photo",
+   "Progress Photo",
+   "After Photo",
+   "Site Plan",
+   "Design / Drawing",
+   "Quote / Proposal",
+   "Contract",
+   "Supplier Quote",
+   "Invoice / Receipt",
+   "Compliance / Permit",
+   "Customer Document",
+   "Other"
+  ],
+  "Cloud Provider": [
+   "Google Drive",
+   "Microsoft OneDrive",
+   "Dropbox",
+   "Other / Airtable only"
+  ],
+  "Cloud Sync Status": [
+   "Not Synced",
+   "Ready to Sync",
+   "Synced",
+   "Needs Update",
+   "Error"
+  ]
+ },
+ "Client Updates": {
+  "Project Status": [
+   "Planning",
+   "Pre-start",
+   "In Progress",
+   "Waiting",
+   "Near Completion",
+   "Completed"
+  ]
+ },
+ "Variations": {
+  "Requested By": [
+   "Customer",
+   "Whispering Leaf",
+   "Site Condition",
+   "Consultant / Authority",
+   "Other"
+  ],
+  "Status": [
+   "Draft",
+   "Sent for Approval",
+   "Approved",
+   "Declined",
+   "Completed"
+  ]
+ },
+ "Project Checklists": {
+  "Stage": [
+   "Pre-start",
+   "Set-out",
+   "Construction",
+   "Quality Check",
+   "Completion",
+   "Handover"
+  ]
+ },
+ "Invoices & Claims": {
+  "Payment Stage": [
+   "50% Deposit",
+   "25% Progress",
+   "15% Progress",
+   "10% Final",
+   "Variation",
+   "Other"
+  ],
+  "Status": [
+   "Draft",
+   "Ready to Export",
+   "Sent",
+   "Part Paid",
+   "Paid",
+   "Overdue",
+   "Cancelled"
+  ],
+  "Accounting Provider": [
+   "QuickBooks",
+   "Xero",
+   "MYOB",
+   "Other / Not Synced"
+  ],
+  "Accounting Sync Status": [
+   "Not Synced",
+   "Ready to Sync",
+   "Synced",
+   "Needs Update",
+   "Error"
+  ]
+ },
+ "Atlas Tasks": {
+  "Status": [
+   "Backlog",
+   "Today",
+   "Doing",
+   "Waiting",
+   "Done",
+   "Delayed",
+   "Cancelled"
+  ],
+  "Priority": [
+   "Critical",
+   "High",
+   "Normal",
+   "Low"
+  ],
+  "Task Type": [
+   "Lead Follow-up",
+   "Site Visit",
+   "Estimate",
+   "Quote Review",
+   "Customer Call",
+   "Material / Supplier",
+   "Construction",
+   "Payment",
+   "Variation",
+   "Customer Update",
+   "Management",
+   "Other"
+  ]
+ },
+ "Productivity Library": {
+  "Work Type": [
+   "Paving",
+   "Retaining Wall",
+   "Excavation",
+   "Turfing",
+   "Planting",
+   "Drainage",
+   "Concrete Driveway",
+   "Pergola/Fencing",
+   "Lighting",
+   "Other"
+  ],
+  "Basis Unit": [
+   "m\u00b2",
+   "lm",
+   "m\u00b3",
+   "each",
+   "allowance",
+   "other"
+  ],
+  "Difficulty": [
+   "Easy",
+   "Standard",
+   "Difficult",
+   "Very Difficult"
+  ],
+  "Access Assumption": [
+   "Easy",
+   "Moderate",
+   "Difficult",
+   "Any / not specific"
+  ]
+ },
+ "Omission Rules": {
+  "Work Type": [
+   "Paving",
+   "Retaining Wall",
+   "Excavation",
+   "Turfing",
+   "Planting",
+   "Drainage",
+   "Concrete Driveway",
+   "Pergola/Fencing",
+   "Lighting",
+   "General / Any"
+  ],
+  "Check Category": [
+   "Demolition / Removal",
+   "Excavation / Base",
+   "Drainage",
+   "Edge / Retaining",
+   "Access / Handling",
+   "Delivery",
+   "Disposal",
+   "Equipment",
+   "Labour",
+   "Services / Utilities",
+   "Engineering / Compliance",
+   "Protection / Cleanup",
+   "Material Allowance",
+   "Other"
+  ],
+  "Default Action": [
+   "Must confirm",
+   "Usually include",
+   "Include if condition applies",
+   "Advisory only"
+  ],
+  "Severity": [
+   "Critical",
+   "High",
+   "Medium",
+   "Low"
+  ]
+ },
+ "Integration Settings": {
+  "Integration Type": [
+   "Calendar",
+   "Email",
+   "Maps",
+   "Accounting",
+   "Cloud Files",
+   "Other"
+  ],
+  "Provider": [
+   "Google Calendar",
+   "Microsoft Outlook Calendar",
+   "Gmail",
+   "Microsoft Outlook Email",
+   "Google Maps",
+   "Google Drive",
+   "Microsoft OneDrive",
+   "Dropbox",
+   "QuickBooks",
+   "Xero",
+   "MYOB",
+   "Other"
+  ],
+  "Connection Status": [
+   "Not Connected",
+   "Needs Setup",
+   "Connected - Not Tested",
+   "Tested",
+   "Error / Needs Attention"
+  ]
+ }
+}

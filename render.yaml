@@ -1,0 +1,48 @@
+# ATLAS on Render with its own Postgres database (live business data).
+# Deploying this creates a paid database (plan 0.1c-256mb, US$6/month plus about US$0.30 per GB
+# of storage) and an always-on web service (starter = 0.5c-512mb, US$7/month). You'll be asked for the owner email and password during setup.
+# After the first deploy: sign in, open Settings > Backup and import, and
+# import your Airtable export file.
+services:
+  - type: web
+    name: atlas
+    runtime: node
+    rootDir: atlas
+    plan: starter         # always on (US$7/month); the free plan sleeps after 15 idle minutes
+    region: singapore     # closest Render region to Sydney
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ATLAS_DATA_SOURCE
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: atlas-db
+          property: connectionString
+      - key: ATLAS_SESSION_SECRET
+        generateValue: true
+      - key: ATLAS_OWNER_EMAIL
+        sync: false
+      - key: ATLAS_OWNER_PASSWORD
+        sync: false
+      # AI is optional. Leave these blank at setup if you don't have keys yet;
+      # ATLAS runs without them and the AI buttons say "not set up". Add them
+      # later in Render > atlas > Environment.
+      - key: ATLAS_AI_MODEL
+        value: claude-haiku-5-5    # cheapest; change to claude-sonnet-5-5 if write-ups or estimates aren't good enough
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+
+databases:
+  - name: atlas-db
+    plan: 0.1c-256mb      # paid; the free plan is deleted after 30 days and has no backups
+    region: singapore
+    diskSizeGB: 5         # Render's default for this plan is 15 GB, billed per GB; 5 GB is plenty to start and can be raised later (never lowered)
+    databaseName: atlas
+    user: atlas
+    ipAllowList: []       # only the ATLAS web service can reach it
