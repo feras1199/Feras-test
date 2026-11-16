@@ -8,12 +8,18 @@ import { MemoryRepository } from "../data/memory/repository";
 import { PostgresRepository } from "../data/postgres/repository";
 import { setAuditStore } from "./audit";
 import type { Repository } from "../data/repository";
-import { resolveSettings, type Settings } from "../config/settings";
+import { mergeSettings, resolveSettings, type Settings } from "../config/settings";
 import { SESSION_COOKIE, verifySession, type SessionPayload } from "../auth/session";
 import { can, type Permission } from "../auth/roles";
 import { setUserStore, stillAuthorised, type AtlasUser } from "../auth/users";
 
-const g = globalThis as unknown as { __atlasRepo?: Repository; __atlasSettings?: Settings };
+const g = globalThis as unknown as {
+  __atlasRepo?: Repository;
+  __atlasBaseSettings?: Settings;
+  __atlasSettingsOverride?: Settings;
+  __atlasSettingsMeta?: { updatedTime: string; updatedBy: string };
+  __atlasSettingsCache?: { at: number; value: { settings: Settings; meta: SettingsMeta } };
+};
 
 export type DataSource = "postgres" | "airtable" | "memory";
 
@@ -50,16 +56,70 @@ export function getRepo(): Repository {
   return g.__atlasRepo;
 }
 
-export function getSettings(): Settings {
-  if (g.__atlasSettings) return g.__atlasSettings;
+/**
+ * The settings ATLAS started with: ATLAS_SETTINGS_JSON, else data/settings.json,
+ * else the built-in defaults. With ATLAS's own database these only seed the
+ * stored settings on first run; after that the owner edits them in the app.
+ */
+export function baseSettings(): Settings {
+  if (g.__atlasBaseSettings) return g.__atlasBaseSettings;
   let overrides: unknown = undefined;
   if (process.env.ATLAS_SETTINGS_JSON) overrides = JSON.parse(process.env.ATLAS_SETTINGS_JSON);
   else {
     const f = path.join(process.cwd(), "data", "settings.json");
     if (fs.existsSync(f)) overrides = JSON.parse(fs.readFileSync(f, "utf8"));
   }
-  g.__atlasSettings = resolveSettings(overrides);
-  return g.__atlasSettings;
+  g.__atlasBaseSettings = resolveSettings(overrides);
+  return g.__atlasBaseSettings;
+}
+
+const SETTINGS_KEY = "business";
+/** Re-read from the database at most this often, so a save on another server instance shows up soon. */
+const SETTINGS_TTL_MS = 15_000;
+
+export interface SettingsMeta { stored: boolean; updatedTime?: string; updatedBy?: string }
+
+async function loadSettings(): Promise<{ settings: Settings; meta: SettingsMeta }> {
+  const repo = getRepo();
+  if (repo instanceof PostgresRepository) {
+    let doc = await repo.getSettingsDoc(SETTINGS_KEY);
+    if (!doc) {
+      await repo.putSettingsDoc(SETTINGS_KEY, baseSettings(), "ATLAS (first start)", { onlyIfMissing: true });
+      doc = await repo.getSettingsDoc(SETTINGS_KEY);
+    }
+    try {
+      // Merged over the start-up settings so a field added to ATLAS later gets its default.
+      return { settings: resolveSettings(mergeSettings(baseSettings(), doc?.data)), meta: { stored: true, updatedTime: doc?.updatedTime, updatedBy: doc?.updatedBy } };
+    } catch (e) {
+      console.error(JSON.stringify({ type: "atlas.settings", error: `stored settings invalid, using start-up settings: ${String(e)}` }));
+      return { settings: baseSettings(), meta: { stored: false } };
+    }
+  }
+  // Demo and Airtable modes keep edits in memory until the server restarts.
+  return { settings: g.__atlasSettingsOverride ?? baseSettings(), meta: { stored: false, updatedTime: g.__atlasSettingsMeta?.updatedTime, updatedBy: g.__atlasSettingsMeta?.updatedBy } };
+}
+
+/** Business rules for every calculation. Owner edits are stored in ATLAS's database. */
+export async function getSettings(): Promise<Settings> {
+  return (await getSettingsWithMeta()).settings;
+}
+
+export async function getSettingsWithMeta(): Promise<{ settings: Settings; meta: SettingsMeta }> {
+  const c = g.__atlasSettingsCache;
+  if (c && Date.now() - c.at < SETTINGS_TTL_MS) return c.value;
+  const value = await loadSettings();
+  g.__atlasSettingsCache = { at: Date.now(), value };
+  return value;
+}
+
+export async function saveSettings(next: Settings, by: string): Promise<void> {
+  const repo = getRepo();
+  if (repo instanceof PostgresRepository) await repo.putSettingsDoc(SETTINGS_KEY, next, by);
+  else {
+    g.__atlasSettingsOverride = next;
+    g.__atlasSettingsMeta = { updatedTime: new Date().toISOString(), updatedBy: by };
+  }
+  g.__atlasSettingsCache = undefined;
 }
 
 export function sessionSecret(): string {

@@ -134,6 +134,21 @@ export interface QuoteSnapshot {
   schedule: ScheduledPayment[];
   lines: { id: string; description: string; costType: string; quantity: number; unit: string; costExGst: Cents; customerDescription: string; option: string }[];
   optionalExtras: EstimateSummary["optionalExtras"];
+  /** The pricing rules in force when the quote was approved, so later Settings changes never reprice it. */
+  rules?: Pick<Settings, "pricing" | "commission"> & { maxDepositRate: number };
+}
+
+/**
+ * Settings to price an estimate with. A locked (approved) estimate keeps the
+ * rules it was approved under: from its snapshot, or for quotes approved before
+ * snapshots carried them, the start-up settings (the only ones that existed then).
+ */
+export function settingsForEstimate(e: Partial<Rec<"estimates">>, current: Settings, startUp: Settings): Settings {
+  if (!e.quoteLocked) return current;
+  let snap: QuoteSnapshot | null = null;
+  try { snap = e.snapshotJson ? (JSON.parse(e.snapshotJson) as QuoteSnapshot) : null; } catch { snap = null; }
+  const rules = snap?.rules ?? { pricing: startUp.pricing, commission: startUp.commission, maxDepositRate: startUp.payments.maxDepositRate };
+  return { ...current, pricing: rules.pricing, commission: rules.commission, payments: { ...current.payments, maxDepositRate: rules.maxDepositRate } };
 }
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);

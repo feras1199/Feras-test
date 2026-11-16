@@ -12,7 +12,7 @@ export const POST = route("crm.edit", async ({ req, session }) => {
   const repo = getRepo();
   const customer = await repo.get("customers", input.customerId);
   if (!customer) throw new HttpError(400, "That customer no longer exists");
-  const today = todayIn(getSettings().business.timezone);
+  const today = todayIn((await getSettings()).business.timezone);
   const short = input.serviceRequested.split(/[.,\n]/)[0]!.slice(0, 60);
   const rec = await repo.create("enquiries", {
     title: `${customer.name} – ${short}`,

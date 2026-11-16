@@ -16,7 +16,7 @@ export const metadata = { title: "Finance" };
 export default async function FinancePage() {
   const s = await requirePage("finance.view");
   const repo = getRepo();
-  const settings = getSettings();
+  const settings = (await getSettings());
   const today = todayIn(settings.business.timezone);
   const [payments, projects, estimates, components, costs, timesheets, variations] = await Promise.all([repo.list("payments"), repo.list("projects"), repo.list("estimates"), repo.list("components"), repo.list("actualCosts"), repo.list("timesheets"), repo.list("variations")]);
   const projName = new Map(projects.map((p) => [p.id, p.name]));

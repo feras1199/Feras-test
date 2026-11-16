@@ -14,7 +14,7 @@ export default async function PortalQuotePage({ params }: { params: Promise<{ id
   const { id } = await params;
   const q = await portalQuote(getRepo(), s.customerId!, id);
   if (!q) notFound();
-  const expired = q.validUntil < todayIn(getSettings().business.timezone);
+  const expired = q.validUntil < todayIn((await getSettings()).business.timezone);
   return (
     <article className="card space-y-6 p-6">
       <Link href="/portal" className="text-sm text-forest-700 underline">Back</Link>

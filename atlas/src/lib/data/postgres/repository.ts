@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS atlas_files (
 );
 CREATE INDEX IF NOT EXISTS atlas_files_record ON atlas_files (entity, record_id);
 ALTER TABLE atlas_files ADD COLUMN IF NOT EXISTS transcript text;
+CREATE TABLE IF NOT EXISTS atlas_settings (
+  key          text        PRIMARY KEY,
+  data         jsonb       NOT NULL,
+  updated_time timestamptz NOT NULL DEFAULT now(),
+  updated_by   text        NOT NULL
+);
 `;
 
 const PAYMENT_KEY_INDEX_SQL = `CREATE UNIQUE INDEX IF NOT EXISTS atlas_payment_key ON atlas_records ((data->>'paymentKey')) WHERE entity = 'payments' AND coalesce(data->>'paymentKey', '') <> ''`;
@@ -239,6 +245,22 @@ export class PostgresRepository implements Repository, FileStore {
     await this.ensureSchema();
     const { rows } = await this.db.query<{ entry: T }>("SELECT entry FROM atlas_audit ORDER BY seq DESC LIMIT $1", [limit]);
     return rows.map((r) => r.entry);
+  }
+
+  /** A stored settings document (business rules the owner edits), or null if none yet. */
+  async getSettingsDoc(key: string): Promise<{ data: unknown; updatedTime: string; updatedBy: string } | null> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<{ data: unknown; updated_time: Date; updated_by: string }>("SELECT data, updated_time, updated_by FROM atlas_settings WHERE key = $1", [key]);
+    return rows[0] ? { data: rows[0].data, updatedTime: rows[0].updated_time.toISOString(), updatedBy: rows[0].updated_by } : null;
+  }
+
+  /** Saves a settings document. With onlyIfMissing, an existing one is left as it is (first-run seeding). */
+  async putSettingsDoc(key: string, data: unknown, by: string, opts: { onlyIfMissing?: boolean } = {}): Promise<void> {
+    await this.ensureSchema();
+    await this.db.query(
+      `INSERT INTO atlas_settings (key, data, updated_by) VALUES ($1, $2::jsonb, $3) ON CONFLICT (key) DO ${opts.onlyIfMissing ? "NOTHING" : "UPDATE SET data = EXCLUDED.data, updated_by = EXCLUDED.updated_by, updated_time = now()"}`,
+      [key, JSON.stringify(data), by],
+    );
   }
 
   async listUsers(): Promise<DbUser[]> {

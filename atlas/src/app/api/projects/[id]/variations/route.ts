@@ -13,7 +13,7 @@ export const POST = route<{ id: string }>("variations.edit", async ({ req, param
   const componentIds = await assertComponent(repo, p.id, i.componentId);
   const rec = await repo.create("variations", {
     title: i.title, description: i.description, projectIds: [p.id], componentIds, requestedBy: i.requestedBy,
-    requestDate: todayIn(getSettings().business.timezone), estimatedCost: i.estimatedCostCents, customerPrice: i.customerPriceIncGstCents,
+    requestDate: todayIn((await getSettings()).business.timezone), estimatedCost: i.estimatedCostCents, customerPrice: i.customerPriceIncGstCents,
     scheduleImpactDays: i.scheduleImpactDays, status: "Draft", customerApproved: false, revenueApplied: false, costApplied: false,
   });
   audit(session, { action: "variation.create", entity: "variations", recordId: rec.id, summary: `${p.name}: variation "${i.title}" ${formatAud(i.customerPriceIncGstCents)} inc GST (draft)` });
