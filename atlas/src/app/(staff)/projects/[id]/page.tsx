@@ -10,6 +10,7 @@ import { actualCostExGst, projectFinancials, timesheetCost, COST_TYPES } from "@
 import { can } from "@/lib/auth/roles";
 import { getRepo, getSettings, requirePage } from "@/lib/server/context";
 import { loadSuggestions } from "@/lib/server/suggestions";
+import { DeleteButton } from "@/components/DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +35,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const live = ["In Progress", "Accepted / Pre-start"].includes(p.status ?? "");
   const compOptions = components.map((c) => ({ value: c.id, label: String(c.label ?? c.componentType).split("·").pop()!.trim() }));
   schedule.sort((a, b) => (a.plannedStart ?? "").localeCompare(b.plannedStart ?? ""));
+  // Stages in the order they're paid (the key ends in the stage number), not the order they were saved.
+  const stageNo = (k?: string | null) => Number(k?.split(":").pop() ?? NaN);
+  payments.sort((a, b) => (stageNo(a.paymentKey) || 0) - (stageNo(b.paymentKey) || 0) || (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"));
   const myTime = timesheets.filter((t) => costsV || t.staffName === s.name).sort((a, b) => (b.workDate ?? "").localeCompare(a.workDate ?? ""));
 
   return (
     <>
-      <PageHeader title={p.name ?? "Project"} subtitle={[customer?.name, p.siteAddress, p.suburb].filter(Boolean).join(" · ")} actions={<><Chip tone={statusTone(p.status)}>{p.status}</Chip>{p.health && <Chip tone={statusTone(p.health)}>{p.health}</Chip>}</>} />
+      <PageHeader title={p.name ?? "Project"} subtitle={[customer?.name, p.siteAddress, p.suburb].filter(Boolean).join(" · ")} actions={<><Chip tone={statusTone(p.status)}>{p.status}</Chip>{p.health && <Chip tone={statusTone(p.health)}>{p.health}</Chip>}{customer && <Link href={`/customers/${customer.id}`} className="btn-secondary">{customer.name}</Link>}{p.estimateIds?.[0] && can(s.role, "estimates.view") && <Link href={`/estimates/${p.estimateIds[0]}`} className="btn-secondary">Quote</Link>}{can(s.role, "records.delete") && <DeleteButton entity="projects" id={p.id} noun="project" />}</>} />
+      {p.status === "Cancelled" && <p className="mb-4 rounded-xl bg-stone-100 p-3 text-sm text-stone-800">This job is cancelled. Payment stages not yet received were taken off Finance; they come back if you change the status again.</p>}
       <div className="mb-4"><ContactButtons phone={customer?.phone} email={customer?.email} address={p.siteAddress} suburb={p.suburb} doNotContact={!!customer?.doNotContact} /></div>
 
       {financeV && (
@@ -76,7 +81,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           {schedule.length === 0 ? <p className="text-sm text-stone-500">Nothing scheduled yet.</p> : (
             <ul className="mb-4 divide-y divide-stone-100 text-sm">{schedule.map((x) => (
               <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 py-2"><span><span className="font-medium">{x.title}</span><span className="block text-xs text-stone-500">{x.type} · {formatDate(x.plannedStart)}{x.plannedFinish && x.plannedFinish !== x.plannedStart ? ` – ${formatDate(x.plannedFinish)}` : ""}{x.assignedTo ? ` · ${x.assignedTo}` : ""}</span></span>
-                <span className="flex items-center gap-2"><Chip tone={statusTone(x.status)}>{x.status}</Chip>{can(s.role, "schedule.edit") && x.status !== "Completed" && <ActionButton endpoint={`/api/schedule/${x.id}`} body={{ status: x.status === "In Progress" ? "Completed" : "In Progress" }} label={x.status === "In Progress" ? "Done" : "Start"} />}</span></li>
+                <span className="flex items-center gap-2"><Chip tone={statusTone(x.status)}>{x.status}</Chip>{can(s.role, "schedule.edit") && x.status !== "Completed" && <ActionButton endpoint={`/api/schedule/${x.id}`} body={{ status: x.status === "In Progress" ? "Completed" : "In Progress" }} label={x.status === "In Progress" ? "Done" : "Start"} />}{can(s.role, "schedule.edit") && <DeleteButton entity="schedule" id={x.id} noun={`schedule entry ${x.title ?? ""}`} small />}</span></li>
             ))}</ul>
           )}
           {can(s.role, "schedule.edit") && <details><summary className="cursor-pointer text-sm font-medium text-forest-700">Add to schedule</summary><div className="mt-3"><QuickForm endpoint={`/api/projects/${p.id}/schedule`} submitLabel="Add" fields={[{ name: "title", label: "What", type: "text", required: true, full: true }, { name: "type", label: "Type", type: "select", required: true, defaultValue: "Work", options: ["Work", "Milestone", "Site Visit", "Material Delivery", "Inspection", "Client Meeting", "Payment", "Other"] }, { name: "assignedTo", label: "Who", type: "text", suggest: suggest.people }, { name: "plannedStart", label: "Start", type: "date", required: true }, { name: "plannedFinish", label: "Finish", type: "date" }, { name: "customerVisible", label: "Show to customer", type: "checkbox" }]} /></div></details>}
@@ -157,7 +162,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">Payments</h2><Link href="/finance" className="text-sm text-forest-700 underline">Finance</Link></div>
             {payments.length === 0 ? <p className="text-sm text-stone-500">No payment schedule.</p> : (
               <ul className="divide-y divide-stone-100 text-sm">{payments.filter((x) => !x.archived).map((x) => (
-                <li key={x.id} className="flex flex-wrap justify-between gap-2 py-2"><span>{x.stageLabel || x.title}<span className="block text-xs text-stone-500">{x.dueDate ? `Due ${formatDate(x.dueDate)}` : "Raise at milestone"}{x.receivedDate ? ` · received ${formatDate(x.receivedDate)}` : ""}</span></span><span className="flex items-center gap-2">{formatAud(x.amount ?? 0)}<Chip tone={x.status === "Paid" ? "green" : x.dueDate && x.dueDate < today ? "red" : "stone"}>{x.status === "Paid" ? "Paid" : x.dueDate && x.dueDate < today ? "Overdue" : x.status}</Chip></span></li>
+                <li key={x.id} className="flex flex-wrap justify-between gap-2 py-2"><span>{x.stageLabel || x.title}<span className="block text-xs text-stone-500">{x.dueDate ? `Due ${formatDate(x.dueDate)}` : "Raise at milestone"}{x.receivedDate ? ` · received ${formatDate(x.receivedDate)}` : ""}</span></span><span className="flex items-center gap-2">{formatAud(x.amount ?? 0)}<Chip tone={x.status === "Paid" ? "green" : x.dueDate && x.dueDate < today ? "red" : "stone"}>{x.status === "Paid" ? "Paid" : x.dueDate && x.dueDate < today ? "Overdue" : x.status}</Chip>{x.status === "Paid" && can(s.role, "finance.edit") && <ActionButton endpoint={`/api/payments/${x.id}`} body={{ action: "undo-received", confirm: true }} label="Undo" ariaLabel={`Undo received for ${x.stageLabel || x.title}`} confirmText={`Mark ${x.stageLabel || x.title} as NOT received? Use this only if it was marked received by mistake.`} />}</span></li>
               ))}</ul>
             )}
           </section>

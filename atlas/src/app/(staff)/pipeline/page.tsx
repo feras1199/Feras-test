@@ -53,7 +53,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
           </>
         }
       />
-      <Pipeline columns={columns} cards={cards} canEdit={can(s.role, "crm.edit")} today={today} suggest={can(s.role, "crm.edit") ? await loadSuggestions(getRepo(), ["nextActions", "contactNotes"]) : undefined} />
+      <Pipeline columns={columns} cards={cards} canEdit={can(s.role, "crm.edit")} canDelete={can(s.role, "records.delete")} today={today} suggest={can(s.role, "crm.edit") ? await loadSuggestions(getRepo(), ["nextActions", "contactNotes"]) : undefined} />
     </>
   );
 }

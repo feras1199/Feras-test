@@ -7,6 +7,7 @@ import type { EstimateSummary } from "@/lib/domain/estimates";
 import { searchCostItems, type CostOption } from "@/lib/domain/costLibrary";
 import { SuggestInput } from "../ui/SuggestInput";
 import { STARTERS } from "@/lib/domain/suggestions";
+import { DeleteButton } from "../DeleteButton";
 
 type Line = { id: string; description: string; costType: string; quantity: number; unit: string; wasteRate: number; unitCostCents: number; priceIncludesGst: boolean; proposalOption: string; customerDescription: string; quantityVerified: boolean; measurementId: string | null; costExGst: number };
 type Est = { id: string; title: string; status: string; locked: boolean; quoteNumber: string; customerScope: string; assumptions: string; assumptionsResolved: boolean; markupOverride: number | null; managerOverride: number | null; commissionRate: number | null; validUntil: string | null; internalReviewNotes: string; projectId: string | null };
@@ -18,7 +19,7 @@ type Props = {
   settings: { defaultMarkup: number; commissionRate: number; commissionEnabled: boolean; schedules: Record<string, { name: string; stages: { label: string; rate: number }[] }>; gstRate: number };
   costItems: CostOption[];
   measurements: { id: string; label: string; quantity: number; unit: string }[];
-  perms: { edit: boolean; approve: boolean; owner: boolean };
+  perms: { edit: boolean; approve: boolean; owner: boolean; delete?: boolean };
 };
 
 const aud = (c: number | null | undefined) => (typeof c === "number" ? (c / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" }) : "–");
@@ -87,10 +88,11 @@ export function EstimateBuilder({ estimate: e, customer, lines, summary, setting
           {perms.approve && (e.status === "Quoted" || e.status === "Ready") && <button className="btn-gold" disabled={busy} onClick={() => setDialog("accept")}>Record acceptance</button>}
           {perms.edit && e.status === "Quoted" && <button className="btn-secondary" disabled={busy} onClick={() => setDialog("decline")}>Declined</button>}
           {perms.edit && e.locked && e.status !== "Accepted" && e.status !== "Superseded" && <button className="btn-secondary" disabled={busy} onClick={() => action({ action: "revise" })}>Revise</button>}
+          {perms.delete && <DeleteButton entity="estimates" id={e.id} noun="estimate" />}
         </div>
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-      {e.status === "Accepted" && e.projectId && <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-900">Accepted. The project and payment schedule have been created.</p>}
+      {e.status === "Accepted" && e.projectId && <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-900">Accepted. The project and payment schedule have been created. <Link href={`/projects/${e.projectId}`} className="font-semibold underline">Open the project</Link></p>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] [&>*]:min-w-0">
         <div className="space-y-6">

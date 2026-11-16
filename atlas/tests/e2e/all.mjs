@@ -25,6 +25,7 @@ const suites = [
   { file: "media.mjs", env: database, db: true },
   { file: "safety.mjs", env: database, db: true },
   { file: "settings.mjs", env: database, db: true },
+  { file: "deleting.mjs", env: database, db: true },
 ];
 
 const only = process.argv.slice(2);
@@ -33,7 +34,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function resetDatabase() {
   const { Pool } = createRequire(import.meta.url)("pg");
   const pool = new Pool({ connectionString: DB });
-  await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files");
+  await pool.query("DROP TABLE IF EXISTS atlas_records, atlas_audit, atlas_imports, atlas_users, atlas_files, atlas_settings, atlas_deleted");
   await pool.end();
 }
 

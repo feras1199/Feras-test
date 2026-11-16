@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/dates";
 import { can } from "@/lib/auth/roles";
 import { loadSuggestions } from "@/lib/server/suggestions";
 import { getRepo, requirePage } from "@/lib/server/context";
+import { DeleteButton } from "@/components/DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
       <PageHeader title={insp.title ?? "Site inspection"} subtitle={[insp.inspectionDate ? `${formatDate(insp.inspectionDate)}${insp.inspectionTime ? `, ${formatTime(insp.inspectionTime)}` : ""}` : "", insp.siteAddress].filter(Boolean).join(" · ") || undefined} actions={<>
         {insp.complete && <Chip tone="green">Complete</Chip>}
         {can(s.role, "estimates.edit") && insp.customerIds?.[0] && <Link className="btn-primary" href={`/estimates/new?customer=${insp.customerIds[0]}${insp.enquiryIds?.[0] ? `&enquiry=${insp.enquiryIds[0]}` : ""}`}>Start estimate</Link>}
+        {customer && <Link className="btn-secondary" href={`/customers/${customer.id}`}>{customer.name}</Link>}
+        {can(s.role, "records.delete") && <DeleteButton entity="inspections" id={insp.id} noun="inspection" />}
       </>} />
       <div className="mb-4"><ContactButtons phone={customer?.phone} email={customer?.email} address={insp.siteAddress || customer?.address} suburb={insp.siteAddress ? null : customer?.suburb} doNotContact={!!customer?.doNotContact} /></div>
       <div className="mb-6">
@@ -38,7 +41,7 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
         key={insp.aiFilledJson ?? "manual"}
         areas={(await loadSuggestions(repo, ["areas"])).areas}
         editable={can(s.role, "inspections.edit")}
-        inspection={{ id: insp.id, complete: !!insp.complete, scope: insp.scope ?? "", accessDifficulty: insp.accessDifficulty ?? "", accessWidthM: insp.accessWidthM ?? null, existingConditions: insp.existingConditions ?? "", slopeLevels: insp.slopeLevels ?? "", drainage: insp.drainage ?? "", services: insp.services ?? "", risks: insp.risks ?? "", priorities: insp.priorities ?? "", notes: insp.notes ?? "", budgetFit: insp.budgetFit ?? "" }}
+        inspection={{ id: insp.id, inspectionDate: insp.inspectionDate ?? "", inspectionTime: insp.inspectionTime ?? "", complete: !!insp.complete, scope: insp.scope ?? "", accessDifficulty: insp.accessDifficulty ?? "", accessWidthM: insp.accessWidthM ?? null, existingConditions: insp.existingConditions ?? "", slopeLevels: insp.slopeLevels ?? "", drainage: insp.drainage ?? "", services: insp.services ?? "", risks: insp.risks ?? "", priorities: insp.priorities ?? "", notes: insp.notes ?? "", budgetFit: insp.budgetFit ?? "" }}
         measurements={measurements.map((m) => ({ id: m.id, zone: m.zone ?? "", workType: m.workType ?? "Other", unit: m.unit ?? "m²", method: m.method ?? "Manual onsite", lengthM: m.lengthM ?? null, widthM: m.widthM ?? null, heightM: m.heightM ?? null, measuredQuantity: m.measuredQuantity ?? null, confidence: m.confidence ?? "Confirmed onsite", verified: !!m.verified, quantity: measurementQuantity(m) }))}
       />
     </>

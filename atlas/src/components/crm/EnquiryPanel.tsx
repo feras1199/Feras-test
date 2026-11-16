@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Card } from "./Pipeline";
 import { SuggestInput } from "@/components/ui/SuggestInput";
+import { DeleteButton } from "@/components/DeleteButton";
 import { STARTERS } from "@/lib/domain/suggestions";
 
 const ALL = ["New Enquiry", "Contacted", "Site Visit Booked", "Site Inspected", "Estimate Preparing", "Preliminary Estimate Ready", "Proposal Sent", "Follow-up", "Won", "Lost", "On Hold"];
 const LOST = ["Budget too low", "Price", "No response", "Competitor selected", "Timing", "Scope changed", "Customer postponed", "Not suitable for Whispering Leaf", "Outside service area", "Appointment issue", "Estimate / quote delay", "Other"];
 
-export function EnquiryPanel({ card, canEdit, onClose, suggest }: { card: Card; statuses: string[]; canEdit: boolean; onClose: () => void; suggest?: { nextActions: string[]; contactNotes: string[] } }) {
+export function EnquiryPanel({ card, canEdit, canDelete, onClose, suggest }: { card: Card; statuses: string[]; canEdit: boolean; canDelete?: boolean; onClose: () => void; suggest?: { nextActions: string[]; contactNotes: string[] } }) {
   const router = useRouter();
   const [status, setStatus] = useState(card.status);
   const [busy, setBusy] = useState(false);
@@ -63,6 +64,7 @@ export function EnquiryPanel({ card, canEdit, onClose, suggest }: { card: Card; 
           {card.customerId && <Link href={`/customers/${card.customerId}`} className="btn-secondary">Customer record</Link>}
           {canEdit && card.customerId && <Link href={`/inspections/new?enquiry=${card.id}`} className="btn-secondary">Book inspection</Link>}
           {canEdit && card.customerId && <Link href={`/estimates/new?enquiry=${card.id}`} className="btn-secondary">Start estimate</Link>}
+          {canDelete && <DeleteButton entity="enquiries" id={card.id} noun="enquiry" onDeleted={() => { onClose(); router.refresh(); }} />}
         </div>
         {card.flags.length > 0 && <ul className="mb-4 list-inside list-disc text-sm text-red-800">{card.flags.map((f) => <li key={f}>{f}</li>)}</ul>}
         {!canEdit ? <p className="muted">You can view this enquiry but not change it.</p> : (

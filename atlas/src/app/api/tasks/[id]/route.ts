@@ -16,7 +16,12 @@ export const PATCH = route<{ id: string }>("dashboard.view", async ({ req, param
     if (before.assignedTo !== session.name) throw new HttpError(403, "You can only update your own tasks");
     if (Object.keys(input).some((k) => k !== "status" && k !== "notes")) throw new HttpError(403, "You can only change the status");
   }
-  const patch: Partial<Rec<"tasks">> = { ...input };
+  const { customerId, ...rest } = input;
+  const patch: Partial<Rec<"tasks">> = { ...rest };
+  if (customerId !== undefined) {
+    if (customerId && !(await repo.get("customers", customerId))) throw new HttpError(400, "Customer not found");
+    patch.customerIds = customerId ? [customerId] : [];
+  }
   if (input.status === "Done" && before.status !== "Done") patch.completedDate = todayIn((await getSettings()).business.timezone);
   if (input.status && input.status !== "Done") patch.completedDate = null;
   const after = await repo.update("tasks", params.id, patch);

@@ -91,6 +91,7 @@ export default async function SettingsPage() {
           <div className="mt-3 flex flex-wrap gap-2">
             {can(s.role, "users.manage") && <Link href="/settings/people" className="btn-secondary inline-flex">People and logins</Link>}
             {can(s.role, "settings.edit") && <Link href="/settings/data" className="btn-secondary inline-flex">Backup and import data</Link>}
+            {can(s.role, "records.delete") && <Link href="/settings/deleted" className="btn-secondary inline-flex">Recently deleted</Link>}
           </div>
         </section>
         {can(s.role, "settings.edit") && (

@@ -37,6 +37,7 @@ export const PERMISSIONS = [
   "settings.edit",
   "users.manage",
   "audit.view",
+  "records.delete", // delete customers, enquiries, inspections, estimates, projects (to the recycle bin) and restore them
   "ai.use",
   "portal.view",
 ] as const;
@@ -46,7 +47,7 @@ const STAFF_BASE: Permission[] = ["dashboard.view", "projects.view", "checklists
 
 export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   owner: new Set(PERMISSIONS.filter((p) => p !== "portal.view")),
-  manager: new Set(PERMISSIONS.filter((p) => !["portal.view", "settings.edit", "users.manage"].includes(p))),
+  manager: new Set(PERMISSIONS.filter((p) => !["portal.view", "settings.edit", "users.manage", "records.delete"].includes(p))),
   sales: new Set<Permission>([...STAFF_BASE, "crm.view", "crm.edit", "inspections.view", "inspections.edit", "estimates.view", "estimates.edit", "costs.view", "profit.view", "variations.edit"]),
   supervisor: new Set<Permission>([...STAFF_BASE, "crm.view", "inspections.view", "schedule.edit", "timesheets.viewAll", "costs.create", "variations.edit"]),
   worker: new Set<Permission>([...STAFF_BASE]),

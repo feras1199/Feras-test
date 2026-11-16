@@ -11,7 +11,8 @@ export interface ListOptions<E extends EntityName> {
  * The only way the app reads or writes business data. Implementations:
  * PostgresRepository (ATLAS's own database), AirtableRepository (the old base) and
  * MemoryRepository (tests and demo, fictional data).
- * There is deliberately no hard delete: records are archived by status.
+ * Records are not deleted through this interface. Deleting goes through the
+ * recycle bin (RecycleBin below), which keeps a full copy so it can be undone.
  */
 export interface Repository {
   readonly source: "airtable" | "memory" | "postgres";
@@ -117,4 +118,51 @@ export function fileStoreOf(repo: Repository): FileStore | null {
 
 export function newFileId(): string {
   return "fil" + newRecordId().slice(3);
+}
+
+/** A record as it was when it was deleted, so it can be put back exactly. */
+export interface DeletedRecord { entity: EntityName; id: string; createdTime: string; data: Record<string, unknown> }
+/** A link removed from a record that was kept, because it pointed at a deleted record. */
+export interface RemovedLink { entity: EntityName; id: string; field: string; ids: string[] }
+/** One delete: the record someone deleted and everything that went with it. */
+export interface DeletedBatch {
+  id: string;
+  at: string;
+  by: string;
+  /** What was deleted, in words, e.g. "Customer Jane Smith". */
+  label: string;
+  rootEntity: EntityName;
+  rootId: string;
+  records: DeletedRecord[];
+  unlinks: RemovedLink[];
+  /** Photos and recordings that were hidden with the records. */
+  fileIds: string[];
+  /** Customer portal logins switched off with the customer. */
+  userIds: string[];
+  restoredAt?: string;
+  restoredBy?: string;
+}
+export type NewDeletedBatch = Omit<DeletedBatch, "id" | "at" | "restoredAt" | "restoredBy">;
+
+/**
+ * Where deleted records go. Deleting removes them from the app and keeps a full
+ * copy here, so the owner can put them back from Settings > Recently deleted.
+ * The database and demo stores have one; Airtable mode does not.
+ */
+export interface RecycleBin {
+  /** Removes the records and keeps the copy, as one step. */
+  moveToBin(batch: NewDeletedBatch): Promise<DeletedBatch>;
+  listBin(limit: number): Promise<DeletedBatch[]>;
+  getBinBatch(id: string): Promise<DeletedBatch | null>;
+  /** Puts the records back (any whose id is in use again is skipped) and marks the batch restored. */
+  restoreFromBin(id: string, by: string): Promise<{ restored: number; skipped: number }>;
+}
+
+export function recycleBinOf(repo: Repository): RecycleBin | null {
+  const r = repo as Partial<RecycleBin>;
+  return typeof r.moveToBin === "function" && typeof r.restoreFromBin === "function" ? (repo as unknown as RecycleBin) : null;
+}
+
+export function newBinId(): string {
+  return "del" + newRecordId().slice(3);
 }
