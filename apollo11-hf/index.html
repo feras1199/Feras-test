@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en-AU" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --space: #05070d;
+        --ink: #f2efe6;
+        --dim: #9aa3b5;
+        --flame: #ff7a2f;
+        --gold: #ffb547;
+        --cool: #7fb2ff;
+        --moon: #c9c6bd;
+        --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+        --font-mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--space); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--space); color: var(--ink); font-family: var(--font-display); }
+      .clip { position: absolute; inset: 0; }
+      .mono { font-family: var(--font-mono); letter-spacing: 0.08em; }
+      .full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+
+      /* Starfield (built by script, deterministic) */
+      .star { position: absolute; border-radius: 50%; background: #fff; }
+
+      /* HUD */
+      #hud-label { position: absolute; left: 80px; top: 56px; font-size: 28px; color: var(--dim); }
+      #hud-label b { color: var(--flame); font-weight: 600; }
+      #progress { position: absolute; left: 0; bottom: 0; height: 6px; width: 1920px; background: var(--flame); transform-origin: left center; }
+
+      /* Scene 1: countdown */
+      #s1-date { position: absolute; left: 0; right: 0; top: 300px; text-align: center; font-size: 34px; color: var(--dim); }
+      #s1-tminus { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-size: 30px; color: var(--flame); }
+      #s1-count { position: absolute; left: 0; right: 0; top: 440px; text-align: center; font-family: var(--font-mono); font-weight: 600; font-size: 300px; line-height: 1; color: var(--ink); }
+
+      /* Scene 2: launch */
+      #s2-shake { position: absolute; inset: 0; }
+      #s2-glow { position: absolute; left: 0; right: 0; bottom: 0; height: 520px; background: radial-gradient(ellipse at 68% 100%, rgba(255,122,47,0.55) 0%, rgba(255,122,47,0.12) 40%, rgba(5,7,13,0) 70%); }
+      #ground { position: absolute; left: 0; right: 0; top: 900px; bottom: 0; background: #0b0d12; border-top: 2px solid #232733; }
+      #rocket { position: absolute; left: 1290px; top: 300px; width: 120px; height: 760px; overflow: visible; }
+      .smoke { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(220,220,225,0.55) 0%, rgba(160,160,170,0.25) 55%, rgba(160,160,170,0) 72%); }
+      #s2-title { position: absolute; left: 140px; top: 260px; font-size: 168px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+      #s2-sub { position: absolute; left: 146px; top: 455px; font-size: 32px; color: var(--gold); }
+      #s2-crew { position: absolute; left: 146px; top: 560px; font-size: 40px; line-height: 1.55; color: var(--ink); }
+      #s2-crew .role { color: var(--dim); font-family: var(--font-mono); font-size: 28px; letter-spacing: 0.08em; margin-left: 14px; }
+      #flash { background: #fff; opacity: 0; }
+
+      /* Scene 3: translunar */
+      #s3-title { position: absolute; left: 80px; top: 130px; font-size: 64px; font-weight: 600; letter-spacing: -0.02em; }
+      .s3-stat { position: absolute; top: 860px; }
+      .s3-stat .k { font-size: 28px; color: var(--dim); }
+      .s3-stat .v { font-family: var(--font-mono); font-weight: 600; font-size: 76px; color: var(--ink); line-height: 1.1; }
+      #s3-stat-a { left: 80px; }
+      #s3-stat-b { left: 760px; }
+
+      /* Scene 4: landing */
+      #s4-time { position: absolute; left: 140px; top: 200px; font-size: 30px; color: var(--gold); }
+      #s4-place { position: absolute; left: 140px; top: 248px; font-size: 28px; color: var(--dim); }
+      #s4-quote { position: absolute; left: 140px; top: 330px; width: 980px; font-size: 64px; font-weight: 600; line-height: 1.15; letter-spacing: -0.015em; }
+
+      /* Scene 5: quote + end card */
+      #s5-quote { position: absolute; left: 210px; right: 210px; top: 330px; text-align: center; font-size: 82px; font-weight: 600; line-height: 1.18; letter-spacing: -0.02em; }
+      #s5-who { position: absolute; left: 0; right: 0; top: 650px; text-align: center; font-size: 30px; color: var(--gold); }
+      #end-title { position: absolute; left: 0; right: 0; top: 380px; text-align: center; font-size: 220px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+      #end-sub { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font-size: 34px; color: var(--gold); }
+      #end-note { position: absolute; left: 0; right: 0; top: 960px; text-align: center; font-size: 28px; color: var(--dim); }
+      .w { display: inline-block; white-space: pre; }
+      #fade { background: #000; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="23" data-width="1920" data-height="1080">
+
+      <!-- Starfield, whole film -->
+      <div id="stars" class="clip" data-start="0" data-duration="23" data-track-index="0">
+        <div id="stars-far" class="full"></div>
+        <div id="stars-near" class="full"></div>
+      </div>
+
+      <!-- Scene 1: countdown, 0 to 3.9 s -->
+      <div id="s1" class="clip" data-start="0" data-duration="3.9" data-track-index="1">
+        <div id="s1-date" class="mono">16 JULY 1969 · KENNEDY SPACE CENTER, FLORIDA</div>
+        <div id="s1-tminus" class="mono">T-MINUS</div>
+        <div id="s1-count">10</div>
+      </div>
+
+      <!-- Scene 2: launch, 3.8 to 8.4 s -->
+      <div id="s2" class="clip" data-start="3.8" data-duration="4.6" data-track-index="2">
+        <div id="s2-shake">
+          <div id="s2-glow"></div>
+          <div id="ground"></div>
+          <div id="smoke-layer" class="full"></div>
+          <svg id="rocket" viewBox="-60 -40 120 760" aria-hidden="true">
+            <defs>
+              <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff6d8" />
+                <stop offset="0.25" stop-color="#ffc35a" />
+                <stop offset="0.7" stop-color="#ff7a2f" stop-opacity="0.75" />
+                <stop offset="1" stop-color="#ff7a2f" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <!-- Flame (below the engines, y 600 onward) -->
+            <g id="flame"><path d="M-34,600 C-40,680 -18,760 0,800 C18,760 40,680 34,600 Z" fill="url(#flameGrad)" /></g>
+            <!-- Escape tower -->
+            <line x1="0" y1="-38" x2="0" y2="20" stroke="#d9d9d9" stroke-width="3" />
+            <path d="M-12,20 L12,20 L8,0 L-8,0 Z" fill="#d9d9d9" />
+            <!-- Command module and adapter -->
+            <path d="M-18,20 L18,20 L26,60 L-26,60 Z" fill="#e8e8e8" />
+            <path d="M-26,60 L26,60 L34,140 L-34,140 Z" fill="#f4f4f4" />
+            <!-- S-IVB stage -->
+            <rect x="-34" y="140" width="68" height="120" fill="#f4f4f4" />
+            <rect x="-34" y="200" width="68" height="14" fill="#1b1d22" />
+            <!-- S-II stage -->
+            <path d="M-34,260 L34,260 L46,300 L-46,300 Z" fill="#f4f4f4" />
+            <rect x="-46" y="300" width="92" height="140" fill="#f4f4f4" />
+            <rect x="-46" y="300" width="92" height="12" fill="#1b1d22" />
+            <!-- S-IC stage with roll pattern -->
+            <rect x="-46" y="440" width="92" height="160" fill="#f4f4f4" />
+            <rect x="-46" y="440" width="23" height="40" fill="#1b1d22" />
+            <rect x="23" y="440" width="23" height="40" fill="#1b1d22" />
+            <rect x="-23" y="540" width="23" height="60" fill="#1b1d22" />
+            <text x="0" y="400" fill="#1b1d22" font-family="Space Grotesk, Arial" font-weight="700" font-size="17" text-anchor="middle" transform="rotate(-90 0 400)" data-layout-ignore>UNITED STATES</text>
+            <!-- Fins -->
+            <path d="M-46,560 L-62,600 L-46,600 Z" fill="#cfcfcf" />
+            <path d="M46,560 L62,600 L46,600 Z" fill="#cfcfcf" />
+          </svg>
+          <div id="s2-title">LIFT-OFF</div>
+          <div id="s2-sub" class="mono">13:32 UTC · SATURN V · 110 M TALL</div>
+          <div id="s2-crew">
+            <div class="crew">Neil Armstrong<span class="role">COMMANDER</span></div>
+            <div class="crew">Buzz Aldrin<span class="role">LUNAR MODULE PILOT</span></div>
+            <div class="crew">Michael Collins<span class="role">COMMAND MODULE PILOT</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 3: translunar coast, 8.0 to 12.4 s -->
+      <div id="s3" class="clip" data-start="8.0" data-duration="4.4" data-track-index="3">
+        <svg class="full" viewBox="0 0 1920 1080" aria-hidden="true">
+          <defs>
+            <radialGradient id="earthGrad" cx="0.38" cy="0.35" r="0.75">
+              <stop offset="0" stop-color="#8fd0ff" />
+              <stop offset="0.45" stop-color="#2f74c9" />
+              <stop offset="1" stop-color="#0b1f45" />
+            </radialGradient>
+            <radialGradient id="moonGrad" cx="0.35" cy="0.35" r="0.8">
+              <stop offset="0" stop-color="#ecebe6" />
+              <stop offset="0.6" stop-color="#a9a69e" />
+              <stop offset="1" stop-color="#4c4b48" />
+            </radialGradient>
+          </defs>
+          <g id="earth">
+            <circle cx="330" cy="600" r="150" fill="url(#earthGrad)" />
+            <path d="M260,520 C300,500 330,540 310,570 C290,600 250,590 240,560 Z" fill="#3f9a5a" opacity="0.75" />
+            <path d="M360,620 C400,600 430,640 410,680 C390,700 350,690 345,660 Z" fill="#3f9a5a" opacity="0.7" />
+          </g>
+          <g id="moon">
+            <circle cx="1600" cy="560" r="105" fill="url(#moonGrad)" />
+            <circle cx="1570" cy="530" r="16" fill="#8f8c84" opacity="0.7" />
+            <circle cx="1625" cy="590" r="22" fill="#8f8c84" opacity="0.6" />
+            <circle cx="1585" cy="610" r="10" fill="#8f8c84" opacity="0.6" />
+          </g>
+          <path id="traj" d="" fill="none" stroke="#7fb2ff" stroke-width="4" stroke-linecap="round" />
+          <circle id="craft" cx="0" cy="0" r="11" fill="#fff" />
+          <circle id="craft-halo" cx="0" cy="0" r="26" fill="#7fb2ff" opacity="0.35" />
+          <text x="330" y="805" fill="#9aa3b5" font-family="JetBrains Mono, monospace" font-size="28" text-anchor="middle" letter-spacing="3">EARTH</text>
+          <text x="1600" y="755" fill="#9aa3b5" font-family="JetBrains Mono, monospace" font-size="28" text-anchor="middle" letter-spacing="3">MOON</text>
+        </svg>
+        <div id="s3-title">Three days to the Moon</div>
+        <div id="s3-stat-a" class="s3-stat">
+          <div class="k mono">EARTH TO MOON · KM</div>
+          <div class="v" id="s3-km">0</div>
+        </div>
+        <div id="s3-stat-b" class="s3-stat">
+          <div class="k mono">DATE · LUNAR ORBIT 19 JULY</div>
+          <div class="v" id="s3-date">16 JUL</div>
+        </div>
+      </div>
+
+      <!-- Scene 4: landing, 12.0 to 16.0 s -->
+      <div id="s4" class="clip" data-start="12.0" data-duration="4.0" data-track-index="4">
+        <svg class="full" viewBox="0 0 1920 1080" aria-hidden="true">
+          <defs>
+            <radialGradient id="surfGrad" cx="0.5" cy="0" r="0.6">
+              <stop offset="0" stop-color="#b8b4aa" />
+              <stop offset="1" stop-color="#5e5b55" />
+            </radialGradient>
+            <linearGradient id="plumeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff2c8" stop-opacity="0.95" />
+              <stop offset="1" stop-color="#ffb547" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <!-- Earth in the black sky -->
+          <circle cx="1680" cy="190" r="56" fill="#2f74c9" />
+          <circle cx="1702" cy="178" r="56" fill="#05070d" />
+          <!-- Lunar surface -->
+          <circle cx="960" cy="2100" r="1300" fill="url(#surfGrad)" />
+          <ellipse cx="420" cy="960" rx="90" ry="18" fill="#7c786f" />
+          <ellipse cx="760" cy="1010" rx="140" ry="24" fill="#86827a" />
+          <ellipse cx="1640" cy="930" rx="70" ry="14" fill="#7c786f" />
+          <ellipse cx="1120" cy="1050" rx="60" ry="12" fill="#7c786f" />
+          <!-- Dust burst -->
+          <g id="dust">
+            <ellipse class="puff" cx="1300" cy="868" rx="60" ry="14" fill="#d8d3c7" />
+            <ellipse class="puff" cx="1460" cy="868" rx="60" ry="14" fill="#d8d3c7" />
+            <ellipse class="puff" cx="1380" cy="872" rx="90" ry="16" fill="#d8d3c7" />
+          </g>
+          <!-- Lunar module, feet at local (0,0) -->
+          <g id="lm">
+            <path id="plume" d="M-28,-60 L28,-60 L10,40 L-10,40 Z" fill="url(#plumeGrad)" />
+            <line x1="-60" y1="-90" x2="-110" y2="0" stroke="#d6d3cb" stroke-width="6" />
+            <line x1="60" y1="-90" x2="110" y2="0" stroke="#d6d3cb" stroke-width="6" />
+            <ellipse cx="-110" cy="0" rx="20" ry="6" fill="#d6d3cb" />
+            <ellipse cx="110" cy="0" rx="20" ry="6" fill="#d6d3cb" />
+            <path d="M-70,-130 L70,-130 L86,-95 L70,-60 L-70,-60 L-86,-95 Z" fill="#c9a24a" stroke="#8a6a25" stroke-width="3" />
+            <path d="M-55,-130 L-62,-190 L-20,-226 L36,-226 L62,-186 L55,-130 Z" fill="#b9bcc2" stroke="#6e7178" stroke-width="3" />
+            <path d="M-32,-200 L-10,-214 L6,-194 L-18,-184 Z" fill="#1a1d24" />
+            <line x1="40" y1="-226" x2="56" y2="-262" stroke="#d6d3cb" stroke-width="4" />
+            <circle cx="57" cy="-266" r="9" fill="#d6d3cb" />
+          </g>
+        </svg>
+        <div id="s4-time" class="mono">20 JULY 1969 · 20:17 UTC</div>
+        <div id="s4-place" class="mono">SEA OF TRANQUILITY</div>
+        <div id="s4-quote"></div>
+      </div>
+
+      <!-- Scene 5: quote and end card, 15.8 to 23 s -->
+      <div id="s5" class="clip" data-start="15.8" data-duration="7.2" data-track-index="5">
+        <div id="s5-quote"></div>
+        <div id="s5-who" class="mono">NEIL ARMSTRONG · 21 JULY 1969, 02:56 UTC</div>
+        <div id="end-title">APOLLO 11</div>
+        <div id="end-sub" class="mono">16–24 JULY 1969 · FIRST HUMANS ON THE MOON</div>
+        <div id="end-note" class="mono">Illustration, not archival footage</div>
+      </div>
+
+      <!-- HUD and overlays, whole film -->
+      <div id="hud" class="clip" data-start="0" data-duration="23" data-track-index="6">
+        <div id="hud-label" class="mono"><b>APOLLO 11</b> · MISSION LOG</div>
+        <div id="progress"></div>
+      </div>
+      <div id="flash" class="clip" data-start="3.6" data-duration="0.8" data-track-index="7"></div>
+
+      <!-- Sound design (synthesised with FFmpeg, see README) -->
+      <audio id="a-drone" src="assets/drone.wav" data-start="0" data-duration="23" data-volume="0.55" data-fade-in="1.2" data-fade-out="1.5" data-track-index="10"></audio>
+      <audio id="a-ticks" src="assets/ticks.wav" data-start="0.6" data-duration="3" data-volume="0.5" data-track-index="11"></audio>
+      <audio id="a-rumble" src="assets/rumble.wav" data-start="3.8" data-duration="5" data-volume="0.9" data-fade-in="0.15" data-fade-out="1.8" data-track-index="12"></audio>
+      <audio id="a-quindar1" src="assets/quindar.wav" data-start="12.1" data-duration="0.25" data-volume="0.45" data-track-index="13"></audio>
+      <audio id="a-quindar2" src="assets/quindar.wav" data-start="15.9" data-duration="0.25" data-volume="0.45" data-track-index="14"></audio>
+      <audio id="a-impact" src="assets/impact.wav" data-start="20.3" data-duration="1.6" data-volume="0.8" data-track-index="15"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------- deterministic helpers ----------
+      let seed = 1969;
+      const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+      const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      function words(el, text) {
+        el.innerHTML = "";
+        text.split(" ").forEach((w, i, arr) => {
+          if (w === "|") { el.appendChild(document.createElement("br")); return; }
+          const s = document.createElement("span");
+          s.className = "w";
+          s.textContent = w + (i < arr.length - 1 ? " " : "");
+          el.appendChild(s);
+        });
+        return el.querySelectorAll(".w");
+      }
+
+      // ---------- starfield ----------
+      [["stars-far", 170, 0.6, 1.6, 0.35, 0.75], ["stars-near", 60, 1.6, 3.0, 0.6, 1.0]].forEach(([id, n, rmin, rmax, omin, omax]) => {
+        const layer = document.getElementById(id);
+        for (let i = 0; i < n; i++) {
+          const d = document.createElement("div");
+          const r = rmin + rnd() * (rmax - rmin);
+          d.className = "star";
+          d.style.left = (rnd() * 2100 - 90).toFixed(1) + "px";
+          d.style.top = (rnd() * 1080).toFixed(1) + "px";
+          d.style.width = d.style.height = r.toFixed(2) + "px";
+          d.style.opacity = (omin + rnd() * (omax - omin)).toFixed(2);
+          layer.appendChild(d);
+        }
+      });
+      tl.fromTo("#stars-far", { x: 0 }, { x: -60, duration: 23, ease: "none" }, 0);
+      tl.fromTo("#stars-near", { x: 0 }, { x: -170, duration: 23, ease: "none" }, 0);
+      tl.fromTo("#stars", { opacity: 0.6 }, { opacity: 1, duration: 1.0, ease: "power1.out" }, 0);
+
+      // ---------- HUD ----------
+      tl.fromTo("#hud-label", { opacity: 0.5, x: -12 }, { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }, 0);
+      tl.fromTo("#progress", { scaleX: 0 }, { scaleX: 1, duration: 23, ease: "none" }, 0);
+
+      // ---------- Scene 1: countdown ----------
+      tl.fromTo("#s1-date", { opacity: 0.55, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" }, 0);
+      tl.fromTo("#s1-tminus", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.4);
+      tl.fromTo("#s1-count", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.4);
+      const cd = { n: 10 };
+      const cdEl = document.getElementById("s1-count");
+      tl.fromTo(cd, { n: 10 }, {
+        n: 0, duration: 3, ease: "none",
+        onUpdate: () => {
+          const v = Math.ceil(cd.n - 1e-6);
+          cdEl.textContent = v > 0 ? String(v) : "0";
+          // small pulse at each new number
+          const frac = cd.n - Math.floor(cd.n);
+          cdEl.style.transform = "scale(" + (1 + 0.06 * Math.max(0, frac - 0.75) * 4).toFixed(3) + ")";
+        }
+      }, 0.6);
+      tl.to("#s1", { opacity: 0, duration: 0.3, ease: "power1.in" }, 3.6);
+
+      // ---------- flash ----------
+      tl.fromTo("#flash", { opacity: 0 }, { opacity: 0.85, duration: 0.12, ease: "power2.out" }, 3.6);
+      tl.to("#flash", { opacity: 0, duration: 0.6, ease: "power2.in" }, 3.72);
+
+      // ---------- Scene 2: launch ----------
+      const smokeLayer = document.getElementById("smoke-layer");
+      const puffs = [];
+      for (let i = 0; i < 9; i++) {
+        const p = document.createElement("div");
+        const size = 160 + rnd() * 140;
+        p.className = "smoke";
+        p.style.width = p.style.height = size.toFixed(0) + "px";
+        p.style.left = (1350 - size / 2 + (i - 4) * 70 + (rnd() - 0.5) * 40).toFixed(0) + "px";
+        p.style.top = (900 - size * 0.6 + (rnd() - 0.5) * 30).toFixed(0) + "px";
+        smokeLayer.appendChild(p);
+        puffs.push(p);
+      }
+      puffs.forEach((p, i) => {
+        const dir = i < 4 ? -1 : i > 4 ? 1 : 0;
+        tl.fromTo(p, { scale: 0.2, opacity: 0, x: 0 }, { scale: 1.6 + rnd() * 0.6, opacity: 1, x: dir * (120 + rnd() * 160), duration: 2.2, ease: "power2.out" }, 3.9 + i * 0.05);
+        tl.to(p, { opacity: 0, duration: 1.4, ease: "power1.in" }, 6.2 + i * 0.04);
+      });
+      tl.fromTo("#s2-glow", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.8);
+      tl.fromTo("#rocket", { y: 0 }, { y: -1500, duration: 4.1, ease: "power2.in" }, 4.1);
+
+      // Flame flicker and camera shake, both derived from timeline time (seek-safe)
+      const launch = { t: 0 };
+      const flame = document.getElementById("flame");
+      const shake = document.getElementById("s2-shake");
+      tl.fromTo(launch, { t: 0 }, {
+        t: 1, duration: 4.6, ease: "none",
+        onUpdate: () => {
+          const s = launch.t * 4.6;
+          const sy = 1 + 0.16 * Math.sin(s * 47) + 0.08 * Math.sin(s * 83);
+          flame.setAttribute("transform", "translate(0 600) scale(" + (1 + 0.04 * Math.sin(s * 61)).toFixed(3) + " " + sy.toFixed(3) + ") translate(0 -600)");
+          const amp = 12 * Math.sin(Math.PI * Math.min(1, s / 4.0)) * (s > 4.0 ? 0 : 1);
+          shake.style.transform = "translate(" + (amp * Math.sin(s * 61)).toFixed(2) + "px," + (amp * 0.7 * Math.sin(s * 73 + 1)).toFixed(2) + "px)";
+        }
+      }, 3.8);
+
+      tl.fromTo("#s2-title", { opacity: 0, x: -60, filter: "blur(10px)" }, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out" }, 3.95);
+      tl.fromTo("#s2-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 4.3);
+      tl.fromTo("#s2-crew .crew", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.25 }, 4.7);
+      tl.to("#s2", { opacity: 0, duration: 0.4, ease: "power1.in" }, 8.0);
+
+      // ---------- Scene 3: translunar ----------
+      // Trajectory: cubic from Earth to the Moon, then an arc around the far side.
+      const P = [[470, 560], [820, 240], [1270, 230], [1561, 415]];
+      const MC = [1600, 560], MR = 150;
+      const pts = [];
+      for (let i = 0; i <= 120; i++) {
+        const t = i / 120, u = 1 - t;
+        pts.push([
+          u*u*u*P[0][0] + 3*u*u*t*P[1][0] + 3*u*t*t*P[2][0] + t*t*t*P[3][0],
+          u*u*u*P[0][1] + 3*u*u*t*P[1][1] + 3*u*t*t*P[2][1] + t*t*t*P[3][1]
+        ]);
+      }
+      const a0 = -105 * Math.PI / 180;
+      for (let i = 1; i <= 90; i++) {
+        const a = a0 + (i / 90) * (290 * Math.PI / 180);
+        pts.push([MC[0] + MR * Math.cos(a), MC[1] + MR * Math.sin(a)]);
+      }
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+      const L = cum[cum.length - 1];
+      const traj = document.getElementById("traj");
+      traj.setAttribute("d", "M" + pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L"));
+      traj.style.strokeDasharray = L.toFixed(1);
+      traj.style.strokeDashoffset = L.toFixed(1);
+      const craft = document.getElementById("craft"), halo = document.getElementById("craft-halo");
+      function placeCraft(f) {
+        const target = f * L;
+        let i = 1;
+        while (i < cum.length - 1 && cum[i] < target) i++;
+        const seg = cum[i] - cum[i - 1] || 1;
+        const k = Math.min(1, Math.max(0, (target - cum[i - 1]) / seg));
+        const x = pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k;
+        const y = pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k;
+        craft.setAttribute("cx", x.toFixed(1)); craft.setAttribute("cy", y.toFixed(1));
+        halo.setAttribute("cx", x.toFixed(1)); halo.setAttribute("cy", y.toFixed(1));
+        traj.style.strokeDashoffset = (L - target).toFixed(1);
+      }
+      placeCraft(0);
+      const trip = { f: 0 };
+      const kmEl = document.getElementById("s3-km"), dateEl = document.getElementById("s3-date");
+      tl.fromTo("#s3", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 8.0);
+      tl.fromTo("#earth", { scale: 0.85, transformOrigin: "330px 600px" }, { scale: 1, duration: 1.2, ease: "power2.out" }, 8.0);
+      tl.fromTo("#moon", { opacity: 0, scale: 0.6, transformOrigin: "1600px 560px" }, { opacity: 1, scale: 1, duration: 1.0, ease: "back.out(1.6)" }, 8.2);
+      tl.fromTo("#s3-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 8.2);
+      tl.fromTo(".s3-stat", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "power2.out" }, 8.4);
+      tl.fromTo(trip, { f: 0 }, {
+        f: 1, duration: 3.4, ease: "power1.inOut",
+        onUpdate: () => {
+          placeCraft(trip.f);
+          const toMoon = Math.min(1, trip.f / 0.58);
+          kmEl.textContent = (toMoon >= 1 ? "≈ " : "") + fmt(384400 * toMoon);
+          const day = 16 + Math.min(3, Math.floor(trip.f * 4));
+          dateEl.textContent = day + " JUL";
+        }
+      }, 8.4);
+      tl.to("#s3", { opacity: 0, duration: 0.4, ease: "power1.in" }, 12.0);
+
+      // ---------- Scene 4: landing ----------
+      const SURF_Y = 870, LM_X = 1380;
+      tl.fromTo("#s4", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 12.0);
+      tl.fromTo("#lm", { x: LM_X, y: -320, scale: 1.2 }, { x: LM_X, y: SURF_Y, scale: 1.2, duration: 2.0, ease: "power2.out" }, 12.1);
+      tl.fromTo("#plume", { opacity: 0.9 }, { opacity: 0, duration: 0.25 }, 14.05);
+      tl.fromTo("#dust .puff", { opacity: 0, scale: 0.3, transformOrigin: "50% 50%" }, { opacity: 0.8, scale: 2.4, duration: 0.5, ease: "power2.out", stagger: 0.04 }, 13.75);
+      tl.to("#dust .puff", { opacity: 0, duration: 1.0, ease: "power1.in" }, 14.35);
+      tl.fromTo("#s4-time", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 12.2);
+      tl.fromTo("#s4-place", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 12.35);
+      const q4 = words(document.getElementById("s4-quote"), "“Houston, Tranquility Base here. The Eagle has landed.”");
+      tl.fromTo(q4, { opacity: 0, y: 18, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power2.out", stagger: 0.1 }, 12.7);
+      tl.to("#s4", { opacity: 0, duration: 0.35, ease: "power1.in" }, 15.65);
+
+      // ---------- Scene 5: quote and end card ----------
+      const q5 = words(document.getElementById("s5-quote"), "“That’s one small step for [a] man, | one giant leap for mankind.”");
+      tl.fromTo(q5, { opacity: 0, y: 24, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.4, ease: "power3.out", stagger: 0.09 }, 16.0);
+      tl.fromTo("#s5-who", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 16.9);
+      tl.to("#s5-quote, #s5-who", { opacity: 0, y: -20, duration: 0.35, ease: "power2.in" }, 19.95);
+      tl.fromTo("#end-title", { opacity: 0, scale: 1.12, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }, 20.35);
+      tl.fromTo("#end-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 20.45);
+      tl.fromTo("#end-note", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 20.55);
+
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
