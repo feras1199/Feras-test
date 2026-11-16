@@ -32,7 +32,7 @@ services:
       # ATLAS runs without them and the AI buttons say "not set up". Add them
       # later in Render > atlas > Environment.
       - key: ATLAS_AI_MODEL
-        value: claude-sonnet-5-5   # claude-opus-5-5 is stronger and about twice the price
+        value: claude-haiku-5-5    # cheapest; change to claude-sonnet-5-5 if write-ups or estimates aren't good enough
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: DEEPGRAM_API_KEY

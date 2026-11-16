@@ -59,7 +59,7 @@ Once the additive "Atlas Audit Log" table is approved in Airtable, the audit log
 | `ATLAS_ADDRESS_LOOKUP` | no | Set to `off` to stop sending typed addresses to any outside service. |
 | `OPENAI_API_KEY` | no | Alternative speech-to-text if there is no Deepgram key. Model `gpt-4o-mini-transcribe` unless `ATLAS_TRANSCRIBE_MODEL` is set. Used for transcription only. |
 | `ATLAS_AI_DEMO` | no | `1` turns on labelled stand-ins for transcription and the write-up, **only** in demo-data mode, so the flow can be tested without keys. Ignored with real data. |
-| `ATLAS_AI_MODEL` | no | Defaults to `claude-sonnet-5-5` (Claude Sonnet 5.5, US$2 in / US$10 out per million tokens). Set `claude-opus-5-5` for the stronger, roughly twice as expensive model. Do not set `claude-haiku-5-5` without a code change: Ask ATLAS sends `fallbacks: "default"`, which Haiku 5.5 does not support. |
+| `ATLAS_AI_MODEL` | no | Defaults to `claude-haiku-5-5` (Claude Haiku 5.5, US$0.10 in / US$0.50 out per million tokens for prompts up to 100K tokens, US$0.50 / US$2.50 above that). Switch to `claude-sonnet-5-5` (US$2 / US$10) if the voice-note write-ups or estimate suggestions are not good enough, or `claude-opus-5-5` (US$4 / US$20) for the strongest. Sonnet and Opus also get Anthropic's automatic retry on a different model when a request is declined; Haiku has none, so a declined request just shows "I can't help with that request." |
 | `QUICKBOOKS_CLIENT_ID` / `QUICKBOOKS_CLIENT_SECRET` | no | Reserved. The QuickBooks connection is not built yet (see known limitations). |
 | `ATLAS_ALLOW_DEMO_LOGINS` | never in production | Enables the demo accounts. Only for test environments. |
 | `ATLAS_MEMORY_PERSIST` | no | `1` keeps the demo store in `data/local-store.json`. Demo mode only. |
