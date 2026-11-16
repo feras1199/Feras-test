@@ -1,0 +1,7 @@
+# HyperFrames local cache, state and per-run artefacts (machine-specific)
+.hyperframes/cache/
+.hyperframes/artifacts/
+.hyperframes/history-id
+.hyperframes/render-outputs.json
+.hyperframes/video-state.json
+node_modules/

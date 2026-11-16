@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en-AU" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg: #0e1a24;
+        --ink: #eef3f6;
+        --dim: #9fb0bd;
+        --water: #4fb3ff;
+        --grass: #5d9b4a;
+        --soil: #4a3626;
+        --concrete: #8a9099;
+        --hot: #ff8a3d;
+        --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+        --font-mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font-display); }
+      .clip { position: absolute; inset: 0; }
+      .full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      .mono { font-family: var(--font-mono); letter-spacing: 0.08em; }
+      .title { position: absolute; left: 120px; top: 150px; font-size: 76px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+      .sub { position: absolute; left: 124px; top: 250px; font-size: 36px; color: var(--dim); }
+      #chip { position: absolute; left: 120px; top: 64px; font-size: 28px; color: var(--water); }
+
+      /* Captions */
+      .cap { inset: auto; left: 160px; right: 160px; bottom: 56px; top: auto; text-align: center; }
+      .cap span { display: inline-block; background: rgba(4, 10, 16, 0.78); padding: 14px 30px; border-radius: 12px; font-size: 40px; line-height: 1.3; font-weight: 500; }
+
+      /* Charts */
+      .legend { position: absolute; font-size: 30px; }
+      .legend i { display: inline-block; width: 44px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 14px; }
+      .note { position: absolute; font-size: 30px; font-weight: 600; }
+
+      /* End card */
+      #f-1, #f-2 { position: absolute; left: 0; right: 0; text-align: center; font-size: 150px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+      #f-1 { top: 250px; }
+      #f-2 { top: 420px; color: var(--water); }
+      #f-sub { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font-size: 36px; color: var(--dim); }
+      #f-note { position: absolute; left: 0; right: 0; top: 720px; text-align: center; font-size: 28px; color: var(--dim); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="33.5" data-width="1920" data-height="1080">
+
+      <!-- Scenes A and B: catchment cross-section, 0 to 11.4 s -->
+      <div id="catch" class="clip" data-start="0" data-duration="11.4" data-track-index="0">
+        <svg class="full" viewBox="0 0 1920 1080" aria-hidden="true">
+          <defs>
+            <marker id="ahBlue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#4fb3ff" /></marker>
+            <marker id="ahHot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#ff8a3d" /></marker>
+          </defs>
+          <g id="rain"></g>
+          <rect x="0" y="620" width="1920" height="260" fill="#4a3626" />
+          <rect x="0" y="600" width="1920" height="22" fill="#5d9b4a" />
+          <g id="infil"></g>
+          <g id="urban">
+            <rect id="slab" x="0" y="594" width="1920" height="28" fill="#8a9099" />
+            <g id="bldgs"></g>
+            <rect x="1745" y="600" width="70" height="150" fill="#1b2630" stroke="#55636f" stroke-width="3" />
+            <rect x="1745" y="750" width="175" height="46" fill="#1b2630" stroke="#55636f" stroke-width="3" />
+            <g id="runoff"></g>
+          </g>
+        </svg>
+        <div id="a-title" class="title">Natural catchment</div>
+        <div id="a-sub" class="sub">Rain soaks into the soil</div>
+        <div id="b-title" class="title">Urban catchment</div>
+        <div id="b-sub" class="sub">Hard surfaces shed water fast</div>
+      </div>
+
+      <!-- Scene C: hydrograph before/after development, 11.3 to 16.4 s -->
+      <div id="sc" class="clip" data-start="11.3" data-duration="5.1" data-track-index="1">
+        <svg id="chart-c" class="full" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+        <div class="title" style="top: 120px">Runoff hydrograph</div>
+        <div class="legend" id="c-leg-1" style="left: 1230px; top: 300px"><i style="background:#6cc070"></i>Before development</div>
+        <div class="legend" id="c-leg-2" style="left: 1230px; top: 350px"><i style="background:#ff8a3d"></i>After development</div>
+        <div class="note" id="c-peak" style="left: 640px; top: 250px; color: #ff8a3d">Higher, sharper peak</div>
+      </div>
+
+      <!-- Scene D: the basin, 16.3 to 22.6 s -->
+      <div id="sd" class="clip" data-start="16.3" data-duration="6.3" data-track-index="2">
+        <svg class="full" viewBox="0 0 1920 1080" aria-hidden="true">
+          <path d="M0,520 L640,520 L760,800 L1160,800 L1280,520 L1920,520 L1920,880 L0,880 Z" fill="#4a3626" />
+          <path d="M0,520 L640,520 M1280,520 L1920,520" stroke="#5d9b4a" stroke-width="14" />
+          <path id="water" d="" fill="#4fb3ff" opacity="0.85" />
+          <!-- Inflow pipe and jet -->
+          <rect x="430" y="530" width="250" height="44" fill="#55636f" />
+          <path id="jet" d="M680,552 C740,552 770,600 790,690" stroke="#4fb3ff" stroke-width="30" fill="none" stroke-linecap="round" />
+          <path id="in-flow" d="M440,552 L670,552" stroke="#ff8a3d" stroke-width="8" fill="none" stroke-dasharray="26 22" />
+          <!-- Outlet pipe -->
+          <rect x="1140" y="772" width="560" height="22" fill="#55636f" />
+          <path id="out-flow" d="M1150,783 L1690,783" stroke="#4fb3ff" stroke-width="6" fill="none" stroke-dasharray="14 26" />
+          <path d="M1700,783 L1760,783" stroke="#4fb3ff" stroke-width="6" />
+        </svg>
+        <div class="title" style="top: 120px">Detention basin</div>
+        <div class="note" id="d-in" style="left: 300px; top: 450px; color: #ff8a3d">Fast inflow</div>
+        <div class="note" id="d-out" style="left: 1240px; top: 820px; color: #4fb3ff">Small outlet, slow release</div>
+      </div>
+
+      <!-- Scene E: inflow vs outflow, 22.5 to 28.8 s -->
+      <div id="se" class="clip" data-start="22.5" data-duration="6.3" data-track-index="3">
+        <svg id="chart-e" class="full" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+        <div class="title" style="top: 120px">With a detention basin</div>
+        <div class="legend" id="e-leg-1" style="left: 1230px; top: 300px"><i style="background:#ff8a3d"></i>Into the basin</div>
+        <div class="legend" id="e-leg-2" style="left: 1230px; top: 350px"><i style="background:#4fb3ff"></i>Out to the creek</div>
+        <div class="note" id="e-cut" style="left: 915px; top: 400px; color: #4fb3ff">Peak about halved</div>
+        <div class="note" id="e-late" style="left: 590px; top: 790px; color: #eef3f6">Peak arrives later</div>
+      </div>
+
+      <!-- Scene F: end card, 28.7 to 33.5 s -->
+      <div id="sf" class="clip" data-start="28.7" data-duration="4.8" data-track-index="4">
+        <div id="f-1">Same water.</div>
+        <div id="f-2">Smaller peak.</div>
+        <div id="f-sub">Detention basins store runoff briefly and release it slowly.</div>
+        <div id="f-note" class="mono">Illustrative curves, not design values</div>
+      </div>
+
+      <div id="hud" class="clip" data-start="0" data-duration="33.5" data-track-index="5">
+        <div id="chip" class="mono">STORMWATER 101</div>
+      </div>
+
+      <!-- Captions, timed to each voiceover line -->
+      <div id="cap1" class="clip cap" data-start="0.8" data-duration="4.95" data-track-index="6"><span>When rain falls on a natural catchment, much of it soaks into the soil.</span></div>
+      <div id="cap2" class="clip cap" data-start="6.05" data-duration="5.2" data-track-index="6"><span>Build roofs, roads and car parks, and that water has nowhere to go.</span></div>
+      <div id="cap3" class="clip cap" data-start="11.56" data-duration="4.75" data-track-index="6"><span>It rushes into the drains all at once, and the flood peak shoots up.</span></div>
+      <div id="cap4" class="clip cap" data-start="16.6" data-duration="5.9" data-track-index="6"><span>A detention basin catches that rush, and lets it out slowly through a small outlet.</span></div>
+      <div id="cap5" class="clip cap" data-start="22.81" data-duration="5.45" data-track-index="6"><span>The peak drops, and it arrives later, giving the creek downstream time to cope.</span></div>
+
+      <!-- Voiceover (Kokoro TTS, voice bm_george) -->
+      <audio id="a-vo1" src="assets/vo1.wav" data-start="0.8" data-duration="4.65" data-volume="1.6" data-track-index="10"></audio>
+      <audio id="a-vo2" src="assets/vo2.wav" data-start="6.05" data-duration="4.91" data-volume="1.6" data-track-index="10"></audio>
+      <audio id="a-vo3" src="assets/vo3.wav" data-start="11.56" data-duration="4.44" data-volume="1.6" data-track-index="10"></audio>
+      <audio id="a-vo4" src="assets/vo4.wav" data-start="16.6" data-duration="5.61" data-volume="1.6" data-track-index="10"></audio>
+      <audio id="a-vo5" src="assets/vo5.wav" data-start="22.81" data-duration="5.16" data-volume="1.6" data-track-index="10"></audio>
+      <audio id="a-vo6" src="assets/vo6.wav" data-start="28.97" data-duration="2.24" data-volume="1.6" data-track-index="10"></audio>
+      <!-- Music bed and rain (synthesised with FFmpeg) -->
+      <audio id="a-pad" src="assets/pad.wav" data-start="0" data-duration="33.5" data-volume="0.12" data-fade-in="1.5" data-fade-out="2.5" data-track-index="11"></audio>
+      <audio id="a-rain" src="assets/rain.wav" data-start="0" data-duration="17" data-volume="0.08" data-fade-in="0.8" data-fade-out="3" data-track-index="12"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const NS = "http://www.w3.org/2000/svg";
+      let seed = 2026;
+      const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+      function el(tag, attrs, parent) {
+        const e = document.createElementNS(NS, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+
+      // ---------- hydrology: inflow, pre-development, and level-pool routed outflow ----------
+      const N = 600, TMAX = 0.85;
+      const gam = (t, qp, tp, a) => (t <= 0 ? 0 : qp * Math.pow(t / tp, a) * Math.exp(a * (1 - t / tp)));
+      const T = [], Qpost = [], Qpre = [], Qout = [], Sto = [];
+      let S = 0;
+      const K = 1.6, dt = TMAX / N;
+      for (let i = 0; i <= N; i++) {
+        const t = i * dt;
+        T.push(t);
+        Qpost.push(gam(t, 1.0, 0.18, 4));
+        Qpre.push(gam(t, 0.36, 0.32, 3));
+        const O = K * Math.sqrt(Math.max(S, 0));
+        Qout.push(O); Sto.push(S);
+        S += (Qpost[i] - O) * dt;
+      }
+      const SMAX = Math.max(...Sto);
+
+      // Chart geometry
+      const X0 = 300, X1 = 1700, Y0 = 760, YH = 480;
+      const px = (t) => X0 + (t / TMAX) * (X1 - X0);
+      const py = (q) => Y0 - q * YH;
+      function axes(svg) {
+        el("line", { x1: X0, y1: Y0, x2: X1 + 20, y2: Y0, stroke: "#55636f", "stroke-width": 3 }, svg);
+        el("line", { x1: X0, y1: Y0, x2: X0, y2: Y0 - YH - 40, stroke: "#55636f", "stroke-width": 3 }, svg);
+        const tx = el("text", { x: X1 + 20, y: Y0 + 50, fill: "#9fb0bd", "font-family": "JetBrains Mono, monospace", "font-size": 28, "text-anchor": "end" }, svg);
+        tx.textContent = "TIME →";
+        const ty = el("text", { x: X0 - 20, y: Y0 - YH - 60, fill: "#9fb0bd", "font-family": "JetBrains Mono, monospace", "font-size": 28 }, svg);
+        ty.textContent = "FLOW ↑";
+      }
+      function curve(svg, Q, color, width) {
+        const pts = Q.map((q, i) => [px(T[i]), py(q)]);
+        let L = 0;
+        for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+        const p = el("path", {
+          d: "M" + pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L"),
+          fill: "none", stroke: color, "stroke-width": width, "stroke-linejoin": "round", "stroke-linecap": "round"
+        }, svg);
+        p.style.strokeDasharray = L.toFixed(1);
+        p.style.strokeDashoffset = L.toFixed(1);
+        return p;
+      }
+      const peakIdx = (Q) => Q.indexOf(Math.max(...Q));
+
+      // ---------- Scenes A and B: catchment ----------
+      const rainG = document.getElementById("rain");
+      const drops = [];
+      for (let i = 0; i < 90; i++) {
+        const x = 820 + rnd() * 1100, y0 = rnd() * 470, v = 700 + rnd() * 300;
+        drops.push({ e: el("line", { x1: 0, y1: 0, x2: -6, y2: 26, stroke: "#9fd3ff", "stroke-width": 3, opacity: (0.35 + rnd() * 0.4).toFixed(2) }, rainG), x, y0, v });
+      }
+      const rainClock = { t: 0 };
+      tl.fromTo(rainClock, { t: 0 }, {
+        t: 11.4, duration: 11.4, ease: "none",
+        onUpdate: () => drops.forEach((d) => {
+          const y = 110 + ((d.y0 + d.v * rainClock.t) % 470);
+          const x = d.x - (y - 110) * 0.23;
+          d.e.setAttribute("transform", "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ")");
+        })
+      }, 0);
+
+      const infil = document.getElementById("infil");
+      for (let i = 0; i < 9; i++) {
+        const x = 260 + i * 175;
+        el("line", { x1: x, y1: 650, x2: x, y2: 790, stroke: "#4fb3ff", "stroke-width": 8, "marker-end": "url(#ahBlue)", "stroke-linecap": "round" }, infil);
+      }
+      const bldgs = document.getElementById("bldgs");
+      [[200, 150, 185], [420, 120, 255], [600, 200, 145], [880, 140, 225], [1080, 220, 170], [1360, 130, 240]].forEach(([x, w, h]) => {
+        const g = el("g", { class: "bldg" }, bldgs);
+        el("rect", { x, y: 594 - h, width: w, height: h, fill: "#22313d", stroke: "#3f5160", "stroke-width": 3 }, g);
+        for (let r = 594 - h + 26; r < 560; r += 46)
+          for (let c = x + 20; c < x + w - 30; c += 40) el("rect", { x: c, y: r, width: 18, height: 22, fill: "#3b5366" }, g);
+      });
+      const runoff = document.getElementById("runoff");
+      for (let i = 0; i < 6; i++) {
+        const x = 180 + i * 260;
+        el("line", { x1: x, y1: 578, x2: x + 150, y2: 578, stroke: "#ff8a3d", "stroke-width": 9, "marker-end": "url(#ahHot)", "stroke-linecap": "round", class: "ro" }, runoff);
+      }
+
+      tl.fromTo("#a-title", { opacity: 0.4, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0);
+      tl.fromTo("#a-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
+      tl.fromTo("#infil line", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: "power2.out" }, 1.4);
+      gsap.set("#urban", { opacity: 0 });
+      gsap.set("#b-title, #b-sub", { opacity: 0 });
+
+      // A to B transition at 5.8 s
+      tl.to("#a-title, #a-sub", { opacity: 0, y: -10, duration: 0.35, ease: "power2.in" }, 5.8);
+      tl.to("#infil", { opacity: 0, duration: 0.5 }, 6.0);
+      tl.set("#urban", { opacity: 1 }, 6.0);
+      tl.fromTo("#slab", { scaleX: 0, transformOrigin: "0px 0px" }, { scaleX: 1, duration: 1.0, ease: "power2.inOut" }, 6.0);
+      tl.fromTo(".bldg", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.6, ease: "back.out(1.4)", stagger: 0.12 }, 6.4);
+      tl.fromTo("#b-title", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 6.2);
+      tl.fromTo("#b-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 6.6);
+      tl.fromTo(".ro", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power2.out" }, 8.0);
+      // Runoff arrows keep moving toward the drain (seek-safe, driven by a clock)
+      const roClock = { t: 0 };
+      const ros = Array.from(document.querySelectorAll(".ro"));
+      tl.fromTo(roClock, { t: 0 }, {
+        t: 2.9, duration: 2.9, ease: "none",
+        onUpdate: () => ros.forEach((r) => r.setAttribute("transform", "translate(" + ((roClock.t * 160) % 120).toFixed(1) + " 0)"))
+      }, 8.5);
+      tl.to("#catch", { opacity: 0, duration: 0.35, ease: "power1.in" }, 11.05);
+
+      // ---------- Scene C: hydrograph before/after ----------
+      const svgC = document.getElementById("chart-c");
+      axes(svgC);
+      const cPre = curve(svgC, Qpre, "#6cc070", 7);
+      const cPost = curve(svgC, Qpost, "#ff8a3d", 8);
+      const pk = peakIdx(Qpost);
+      const cDot = el("circle", { cx: px(T[pk]), cy: py(Qpost[pk]), r: 12, fill: "#ff8a3d" }, svgC);
+      tl.fromTo("#sc", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 11.3);
+      tl.fromTo("#c-leg-1", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 }, 11.6);
+      tl.fromTo(cPre, { strokeDashoffset: cPre.style.strokeDasharray }, { strokeDashoffset: 0, duration: 1.2, ease: "power1.inOut" }, 11.7);
+      tl.fromTo("#c-leg-2", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 }, 12.8);
+      tl.fromTo(cPost, { strokeDashoffset: cPost.style.strokeDasharray }, { strokeDashoffset: 0, duration: 1.6, ease: "power1.inOut" }, 12.9);
+      tl.fromTo(cDot, { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.35, ease: "back.out(2)" }, 13.6);
+      tl.fromTo("#c-peak", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 13.7);
+      tl.to("#sc", { opacity: 0, duration: 0.3, ease: "power1.in" }, 16.1);
+
+      // ---------- Scene D: basin ----------
+      const water = document.getElementById("water");
+      const xl = (y) => 640 + (y - 520) * (120 / 280);
+      const xr = (y) => 1280 - (y - 520) * (120 / 280);
+      function setLevel(f) {
+        const top = 800 - f * 230;
+        water.setAttribute("d", "M" + xl(top).toFixed(1) + "," + top.toFixed(1) + " L" + xr(top).toFixed(1) + "," + top.toFixed(1) + " L1160,800 L760,800 Z");
+      }
+      setLevel(0);
+      // Basin level follows the routed storage: scene time 16.6 to 22.2 maps to model time 0 to 0.55
+      const basin = { t: 0 };
+      const inF = document.getElementById("in-flow"), outF = document.getElementById("out-flow"), jet = document.getElementById("jet");
+      tl.fromTo("#sd", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 16.3);
+      tl.fromTo(basin, { t: 0 }, {
+        t: 1, duration: 5.6, ease: "none",
+        onUpdate: () => {
+          const i = Math.min(N, Math.round((basin.t * 0.55) / dt));
+          setLevel(Sto[i] / SMAX);
+          const s = basin.t * 5.6;
+          inF.style.strokeDashoffset = (-s * 260).toFixed(1);
+          outF.style.strokeDashoffset = (-s * 60).toFixed(1);
+          jet.setAttribute("stroke-width", (6 + 30 * Qpost[i]).toFixed(1));
+        }
+      }, 16.6);
+      tl.fromTo("#d-in", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 17.0);
+      tl.fromTo("#d-out", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 19.6);
+      tl.to("#sd", { opacity: 0, duration: 0.3, ease: "power1.in" }, 22.3);
+
+      // ---------- Scene E: inflow vs routed outflow ----------
+      const svgE = document.getElementById("chart-e");
+      axes(svgE);
+      const eIn = curve(svgE, Qpost, "#ff8a3d", 7);
+      eIn.setAttribute("opacity", "0.75");
+      const eOut = curve(svgE, Qout, "#4fb3ff", 9);
+      const pi = peakIdx(Qpost), po = peakIdx(Qout);
+      const g1 = el("line", { x1: px(T[pi]), y1: py(Qpost[pi]), x2: px(T[po]) + 80, y2: py(Qpost[pi]), stroke: "#ff8a3d", "stroke-width": 3, "stroke-dasharray": "10 10" }, svgE);
+      const g2 = el("line", { x1: px(T[po]) + 80, y1: py(Qpost[pi]) + 10, x2: px(T[po]) + 80, y2: py(Qout[po]) - 14, stroke: "#4fb3ff", "stroke-width": 6, "marker-end": "url(#ahE)" }, svgE);
+      const defs = el("defs", {}, svgE);
+      const m = el("marker", { id: "ahE", viewBox: "0 0 10 10", refX: 5, refY: 5, markerWidth: 4, markerHeight: 4, orient: "auto" }, defs);
+      el("path", { d: "M0,0 L10,5 L0,10 Z", fill: "#4fb3ff" }, m);
+      const g3 = el("line", { x1: px(T[pi]), y1: Y0 + 0, x2: px(T[pi]), y2: py(Qpost[pi]), stroke: "#ff8a3d", "stroke-width": 2, "stroke-dasharray": "6 8", opacity: 0.7 }, svgE);
+      const g4 = el("line", { x1: px(T[po]), y1: Y0, x2: px(T[po]), y2: py(Qout[po]), stroke: "#4fb3ff", "stroke-width": 2, "stroke-dasharray": "6 8", opacity: 0.8 }, svgE);
+      const g5 = el("line", { x1: px(T[pi]) + 6, y1: Y0 - 20, x2: px(T[po]) - 10, y2: Y0 - 20, stroke: "#eef3f6", "stroke-width": 5, "marker-end": "url(#ahE)" }, svgE);
+      tl.fromTo("#se", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 22.5);
+      tl.fromTo("#e-leg-1", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 }, 22.7);
+      tl.fromTo(eIn, { strokeDashoffset: eIn.style.strokeDasharray }, { strokeDashoffset: 0, duration: 0.9, ease: "power1.inOut" }, 22.7);
+      tl.fromTo("#e-leg-2", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 }, 23.5);
+      tl.fromTo(eOut, { strokeDashoffset: eOut.style.strokeDasharray }, { strokeDashoffset: 0, duration: 1.8, ease: "power1.inOut" }, 23.6);
+      tl.fromTo([g1, g2], { opacity: 0 }, { opacity: 1, duration: 0.4, stagger: 0.15 }, 24.0);
+      tl.fromTo("#e-cut", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 24.1);
+      tl.fromTo([g3, g4, g5], { opacity: 0 }, { opacity: 1, duration: 0.4, stagger: 0.12 }, 25.0);
+      tl.fromTo("#e-late", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 25.2);
+      tl.to("#se", { opacity: 0, duration: 0.3, ease: "power1.in" }, 28.5);
+
+      // ---------- Scene F ----------
+      tl.fromTo("#f-1", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out" }, 28.9);
+      tl.fromTo("#f-2", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out" }, 29.9);
+      tl.fromTo("#f-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 30.5);
+      tl.fromTo("#f-note", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 30.8);
+
+      tl.fromTo("#chip", { opacity: 0.6 }, { opacity: 1, duration: 0.6 }, 0);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
