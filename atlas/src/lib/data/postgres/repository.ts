@@ -62,6 +62,10 @@ CREATE INDEX IF NOT EXISTS atlas_files_record ON atlas_files (entity, record_id)
 ALTER TABLE atlas_files ADD COLUMN IF NOT EXISTS transcript text;
 `;
 
+const PAYMENT_KEY_INDEX_SQL = `CREATE UNIQUE INDEX IF NOT EXISTS atlas_payment_key ON atlas_records ((data->>'paymentKey')) WHERE entity = 'payments' AND coalesce(data->>'paymentKey', '') <> ''`;
+
+type Queryable = Pick<Pool, "query">;
+
 type Row = { id: string; created_time: Date; data: Record<string, unknown> };
 
 function toRec<E extends EntityName>(r: Row): Rec<E> {
@@ -94,30 +98,67 @@ export class PostgresRepository implements Repository, FileStore {
   readonly source = "postgres" as const;
   private ready: Promise<void> | null = null;
 
-  constructor(private pool: Pool) {}
+  /** Queries go to the pool, or to one connection while inside atomic(). */
+  private db: Queryable;
+
+  constructor(private pool: Pool, db?: Queryable) {
+    this.db = db ?? pool;
+  }
 
   /** Creates the tables on first use. Safe to run any number of times. */
   ensureSchema(): Promise<void> {
-    this.ready ??= this.pool.query(SCHEMA_SQL).then(() => undefined).catch((e) => { this.ready = null; throw e; });
+    this.ready ??= this.pool
+      .query(SCHEMA_SQL)
+      .then(async () => {
+        // A payment stage can exist only once. If old data already holds duplicates the
+        // rule can't be added; ATLAS still starts and says so in the log.
+        await this.pool.query(PAYMENT_KEY_INDEX_SQL).catch((e) => console.error(JSON.stringify({ type: "atlas.schema", error: `payment key rule not added: ${String(e)}` })));
+      })
+      .catch((e) => { this.ready = null; throw e; });
     return this.ready;
+  }
+
+  async ping(): Promise<void> {
+    await this.pool.query("SELECT 1");
+  }
+
+  async atomic<T>(key: string, fn: (repo: Repository) => Promise<T>): Promise<T> {
+    if (this.db !== this.pool) return fn(this); // already inside one
+    await this.ensureSchema();
+    const client: PoolClient = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      // Held until COMMIT or ROLLBACK, across every server process.
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
+      const tx = new PostgresRepository(this.pool, client);
+      tx.ready = this.ready;
+      const out = await fn(tx);
+      await client.query("COMMIT");
+      return out;
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
   async list<E extends EntityName>(entity: E, opts?: ListOptions<E>): Promise<Rec<E>[]> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<Row>("SELECT id, created_time, data FROM atlas_records WHERE entity = $1 ORDER BY created_time, id", [entity]);
+    const { rows } = await this.db.query<Row>("SELECT id, created_time, data FROM atlas_records WHERE entity = $1 ORDER BY created_time, id", [entity]);
     return applyListOptions(rows.map((r) => toRec<E>(r)), opts);
   }
 
   async get<E extends EntityName>(entity: E, id: string): Promise<Rec<E> | null> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<Row>("SELECT id, created_time, data FROM atlas_records WHERE entity = $1 AND id = $2", [entity, id]);
+    const { rows } = await this.db.query<Row>("SELECT id, created_time, data FROM atlas_records WHERE entity = $1 AND id = $2", [entity, id]);
     return rows[0] ? toRec<E>(rows[0]) : null;
   }
 
   async create<E extends EntityName>(entity: E, data: Partial<Rec<E>>): Promise<Rec<E>> {
     validateWrite(entity, data);
     await this.ensureSchema();
-    const { rows } = await this.pool.query<Row>(
+    const { rows } = await this.db.query<Row>(
       "INSERT INTO atlas_records (entity, id, data) VALUES ($1, $2, $3::jsonb) RETURNING id, created_time, data",
       [entity, newRecordId(), JSON.stringify(payload(entity, data as Record<string, unknown>))],
     );
@@ -129,7 +170,7 @@ export class PostgresRepository implements Repository, FileStore {
     await this.ensureSchema();
     // jsonb || merges at the top level in one statement, so two people saving
     // different fields of the same record don't overwrite each other.
-    const { rows } = await this.pool.query<Row>(
+    const { rows } = await this.db.query<Row>(
       "UPDATE atlas_records SET data = data || $3::jsonb, updated_time = now() WHERE entity = $1 AND id = $2 RETURNING id, created_time, data",
       [entity, id, JSON.stringify(payload(entity, data as Record<string, unknown>))],
     );
@@ -177,7 +218,7 @@ export class PostgresRepository implements Repository, FileStore {
   /** Every record, for the owner's download-a-backup button. */
   async exportAll(): Promise<{ [E in EntityName]?: Rec<E>[] }> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<Row & { entity: EntityName }>("SELECT entity, id, created_time, data FROM atlas_records ORDER BY entity, created_time, id");
+    const { rows } = await this.db.query<Row & { entity: EntityName }>("SELECT entity, id, created_time, data FROM atlas_records ORDER BY entity, created_time, id");
     const out: Record<string, Rec<EntityName>[]> = {};
     for (const r of rows) (out[r.entity] ??= []).push(toRec(r));
     return out as never;
@@ -185,24 +226,24 @@ export class PostgresRepository implements Repository, FileStore {
 
   async counts(): Promise<Record<string, number>> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<{ entity: string; n: string }>("SELECT entity, count(*) AS n FROM atlas_records GROUP BY entity");
+    const { rows } = await this.db.query<{ entity: string; n: string }>("SELECT entity, count(*) AS n FROM atlas_records GROUP BY entity");
     return Object.fromEntries(rows.map((r) => [r.entity, Number(r.n)]));
   }
 
   async writeAudit(entry: { at: string }): Promise<void> {
     await this.ensureSchema();
-    await this.pool.query("INSERT INTO atlas_audit (at, entry) VALUES ($1, $2::jsonb)", [entry.at, JSON.stringify(entry)]);
+    await this.db.query("INSERT INTO atlas_audit (at, entry) VALUES ($1, $2::jsonb)", [entry.at, JSON.stringify(entry)]);
   }
 
   async readAudit<T>(limit: number): Promise<T[]> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<{ entry: T }>("SELECT entry FROM atlas_audit ORDER BY seq DESC LIMIT $1", [limit]);
+    const { rows } = await this.db.query<{ entry: T }>("SELECT entry FROM atlas_audit ORDER BY seq DESC LIMIT $1", [limit]);
     return rows.map((r) => r.entry);
   }
 
   async listUsers(): Promise<DbUser[]> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<UserRow>("SELECT * FROM atlas_users ORDER BY created_time");
+    const { rows } = await this.db.query<UserRow>("SELECT * FROM atlas_users ORDER BY created_time");
     return rows.map(toUser);
   }
 
@@ -210,7 +251,7 @@ export class PostgresRepository implements Repository, FileStore {
   async createUser(u: Omit<DbUser, "id" | "active">): Promise<DbUser> {
     await this.ensureSchema();
     try {
-      const { rows } = await this.pool.query<UserRow>(
+      const { rows } = await this.db.query<UserRow>(
         "INSERT INTO atlas_users (id, email, name, role, customer_id, password_hash) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
         ["usr" + newRecordId().slice(3), u.email.trim(), u.name.trim(), u.role, u.customerId ?? null, u.passwordHash],
       );
@@ -232,25 +273,68 @@ export class PostgresRepository implements Repository, FileStore {
     if (patch.passwordHash !== undefined) set("password_hash", patch.passwordHash);
     if (patch.active !== undefined) set("active", patch.active);
     if (!cols.length) return (await this.listUsers()).find((u) => u.id === id) ?? null;
-    const { rows } = await this.pool.query<UserRow>(`UPDATE atlas_users SET ${cols.join(", ")}, updated_time = now() WHERE id = $1 RETURNING *`, vals);
+    const { rows } = await this.db.query<UserRow>(`UPDATE atlas_users SET ${cols.join(", ")}, updated_time = now() WHERE id = $1 RETURNING *`, vals);
     return rows[0] ? toUser(rows[0]) : null;
   }
 
   async listFiles(entity: FileOwner, recordId: string): Promise<StoredFile[]> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files WHERE entity = $1 AND record_id = $2 ORDER BY created_time, id`, [entity, recordId]);
+    const { rows } = await this.db.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files WHERE entity = $1 AND record_id = $2 ORDER BY created_time, id`, [entity, recordId]);
     return rows.map(toFile);
   }
 
-  async getFile(id: string): Promise<{ meta: StoredFile; bytes: Buffer } | null> {
+  async getFile(id: string, range?: { start: number; end: number }): Promise<{ meta: StoredFile; bytes: Buffer } | null> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<FileRow & { bytes: Buffer }>(`SELECT ${FILE_COLS}, bytes FROM atlas_files WHERE id = $1`, [id]);
+    // substring() on bytea is 1-based; with a range only that slice leaves the database.
+    const { rows } = range
+      ? await this.db.query<FileRow & { bytes: Buffer }>(`SELECT ${FILE_COLS}, substring(bytes from $2 for $3) AS bytes FROM atlas_files WHERE id = $1`, [id, range.start + 1, range.end - range.start + 1])
+      : await this.db.query<FileRow & { bytes: Buffer }>(`SELECT ${FILE_COLS}, bytes FROM atlas_files WHERE id = $1`, [id]);
     return rows[0] ? { meta: toFile(rows[0]), bytes: rows[0].bytes } : null;
+  }
+
+  async getFileMeta(id: string): Promise<StoredFile | null> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files WHERE id = $1`, [id]);
+    return rows[0] ? toFile(rows[0]) : null;
+  }
+
+  async listAllFiles(): Promise<StoredFile[]> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<FileRow>(`SELECT ${FILE_COLS} FROM atlas_files ORDER BY created_time, id`);
+    return rows.map(toFile);
+  }
+
+  /** Total bytes of photos, recordings and PDFs held, for the storage line in Settings. */
+  async fileUsage(): Promise<{ count: number; bytes: number }> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<{ n: string; b: string | null }>("SELECT count(*) AS n, sum(size) AS b FROM atlas_files");
+    return { count: Number(rows[0]?.n ?? 0), bytes: Number(rows[0]?.b ?? 0) };
+  }
+
+  /** The whole audit log, oldest first, for backups. */
+  async exportAudit(): Promise<unknown[]> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query<{ entry: unknown }>("SELECT entry FROM atlas_audit ORDER BY seq");
+    return rows.map((r) => r.entry);
+  }
+
+  /** Puts logins from a backup back. A login whose email is already here is left alone. */
+  async restoreUsers(users: DbUser[]): Promise<{ added: number; skipped: number }> {
+    await this.ensureSchema();
+    let added = 0;
+    for (const u of users) {
+      const { rowCount } = await this.db.query(
+        "INSERT INTO atlas_users (id, email, name, role, customer_id, password_hash, active) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING",
+        [u.id, u.email.trim(), u.name.trim(), u.role, u.customerId ?? null, u.passwordHash, u.active],
+      );
+      added += rowCount ?? 0;
+    }
+    return { added, skipped: users.length - added };
   }
 
   async addFile(m: NewFile, bytes: Buffer): Promise<StoredFile> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<FileRow>(
+    const { rows } = await this.db.query<FileRow>(
       `INSERT INTO atlas_files (id, entity, record_id, kind, mime, name, size, duration_s, created_by, bytes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING ${FILE_COLS}`,
       [newFileId(), m.entity, m.recordId, m.kind, m.mime, m.name, m.size, m.durationS ?? null, m.createdBy, bytes],
     );
@@ -259,13 +343,13 @@ export class PostgresRepository implements Repository, FileStore {
 
   async setFileArchived(id: string, archived: boolean): Promise<StoredFile | null> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<FileRow>(`UPDATE atlas_files SET archived = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, archived]);
+    const { rows } = await this.db.query<FileRow>(`UPDATE atlas_files SET archived = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, archived]);
     return rows[0] ? toFile(rows[0]) : null;
   }
 
   async setFileTranscript(id: string, transcript: string): Promise<StoredFile | null> {
     await this.ensureSchema();
-    const { rows } = await this.pool.query<FileRow>(`UPDATE atlas_files SET transcript = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, transcript]);
+    const { rows } = await this.db.query<FileRow>(`UPDATE atlas_files SET transcript = $2 WHERE id = $1 RETURNING ${FILE_COLS}`, [id, transcript]);
     return rows[0] ? toFile(rows[0]) : null;
   }
 }

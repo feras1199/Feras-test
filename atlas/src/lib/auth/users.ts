@@ -117,7 +117,17 @@ export async function authenticate(email: string, password: string): Promise<Atl
  * user is still listed, active, and has the same role and customer link.
  * Removing or deactivating someone signs them out on their next click.
  */
-export async function stillAuthorised(p: { uid: string; role: string; customerId?: string }) {
+export async function stillAuthorised(p: { uid: string; role: string; customerId?: string; pv?: string }) {
   const u = (await allUsers()).find((x) => x.id === p.uid);
-  return !!u && u.active && u.role === p.role && (u.customerId ?? undefined) === (p.customerId ?? undefined);
+  return !!u && u.active && u.role === p.role && (u.customerId ?? undefined) === (p.customerId ?? undefined) && p.pv === passwordVersion(u);
+}
+
+/**
+ * A short fingerprint of a login's current password, kept in the session. When
+ * the password is changed or reset the fingerprint no longer matches, so every
+ * session opened with the old password stops working on its next click.
+ */
+export function passwordVersion(u: Pick<AtlasUser, "passwordHash">): string {
+  const basis = u.passwordHash === ENV_OWNER_MARK ? `env:${process.env.ATLAS_OWNER_PASSWORD ?? ""}` : u.passwordHash;
+  return createHash("sha256").update(basis).digest("hex").slice(0, 16);
 }

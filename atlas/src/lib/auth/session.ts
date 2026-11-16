@@ -13,6 +13,8 @@ export interface SessionPayload {
   role: Role;
   /** For customer logins: the only customer record they can see. */
   customerId?: string;
+  /** Fingerprint of the password this session signed in with; a changed password ends the session. */
+  pv?: string;
   exp: number; // unix seconds
 }
 

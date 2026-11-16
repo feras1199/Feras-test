@@ -5,14 +5,22 @@ import { PostgresRepository, type ImportMode } from "../data/postgres/repository
 import type { ParsedImport } from "../data/importer";
 import { HttpError } from "./api";
 
-/** Everything ATLAS holds, in the format the importer reads back. */
+/**
+ * Everything ATLAS holds except the bytes of photos and recordings (those come as a
+ * separate download, because they can be far larger than everything else together).
+ * With ATLAS's own database the file also carries the logins, the audit log and the
+ * list of stored files, so a fresh database can be brought back to the same state.
+ */
 export async function buildExport(repo: Repository) {
   const entities: { [E in EntityName]?: Rec<E>[] } = {};
   for (const e of Object.keys(ENTITIES) as EntityName[]) {
     const rows = await repo.list(e);
     if (rows.length) (entities as Record<string, unknown>)[e] = rows;
   }
-  return { format: "atlas-export" as const, version: 1 as const, exportedAt: new Date().toISOString(), source: repo.source, entities };
+  const base = { format: "atlas-export" as const, version: 2 as const, exportedAt: new Date().toISOString(), source: repo.source, entities };
+  if (!(repo instanceof PostgresRepository)) return base;
+  const [logins, auditLog, files] = await Promise.all([repo.listUsers(), repo.exportAudit(), repo.listAllFiles()]);
+  return { ...base, logins, audit: auditLog, files };
 }
 
 export interface ImportPreview {
@@ -32,5 +40,8 @@ export async function previewImport(repo: Repository, parsed: ParsedImport): Pro
 
 export async function runImport(repo: Repository, parsed: ParsedImport, mode: ImportMode, by: string) {
   if (!(repo instanceof PostgresRepository)) throw new HttpError(409, "Importing needs ATLAS's own database. Set ATLAS_DATA_SOURCE=postgres and DATABASE_URL first.");
-  return repo.importRecords(parsed.batches, mode, { by, source: parsed.source });
+  const results = await repo.importRecords(parsed.batches, mode, { by, source: parsed.source });
+  // Logins from a backup are only ever added; one already here (same email) is never changed.
+  const logins = parsed.logins?.length ? await repo.restoreUsers(parsed.logins) : null;
+  return { results, logins };
 }
