@@ -2,6 +2,18 @@
 
 Legend: **Tested** = fully implemented and covered by automated or scripted tests. **Implemented** = built and used manually, not covered by a test. **Partial** = core works, listed parts missing. **Demo only** = shown with labelled sample behaviour. **Not implemented**.
 
+## v0.3 / v0.4 additions
+
+| Requirement | Status | Notes |
+|---|---|---|
+| Interactive 3D (mouse / touch) linked to the plan | Tested | Renders in headless Chromium with SwiftShader; not tested on a real phone |
+| Before photo → checklist → yard size → ranked ideas | Tested | Ideas come from the checklist and yard size, not from reading the photo |
+| Six layout ideas fitted to any rectangular yard | Tested | 72 combinations: inside boundary, no overlaps, priced. Non-rectangular yards use the outline's bounding box (Partial) |
+| Pergola, fire pit, stepping stones, pebble, synthetic turf | Tested | Prices are quote-required; example allowances optional and labelled |
+| AI reading the photo to tick the checklist | Not implemented | Would use the existing photo-analysis endpoint with a key |
+| Photoreal "after" image | Implemented, not verified (server key) / Manual via ChatGPT prompt + import | |
+| Demo gallery with real licensed photos | Tested | North American yards; synthetic sizes, customers and prices |
+
 ## v0.2: photo → concepts → customer choice → build
 
 | Requirement | Status | Evidence / notes |

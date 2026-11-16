@@ -1,5 +1,22 @@
 # Change log
 
+## v0.4 — Photo-first design ideas (16 Nov 2026)
+- Visual Concepts starts from the before photo: upload or take a photo, tick what you see (overgrown, slope, kids/pets, entertains, low maintenance, trees to keep, old patio), enter the yard size (width × depth, house width).
+- Six design ideas fitted to the yard, each with a plan sketch, a fit ranking with reasons, and a minimum yard size ("Doesn't fit" when too small): Entertainer's terrace, Stepping-stone gravel garden, Lawn with fire-pit circle, Side-yard path and lounge nook, Family play lawn, Terraced slope (`src/core/ideas.ts`).
+- "Use this idea" generates Economy / Balanced / Premium proposals for that idea; the rest of the flow is unchanged.
+- New elements: pergola (area), fire pit (point), stepping stones, black pebble, synthetic turf. Each has take-off, labour, compliance prompts (pergola exempt-development standards; fire-pit council and gasfitting), 2D, 3D and build layers (pergola structure always "by kit manufacturer / engineer").
+- Inset surfaces (`props.hostId`): stones in gravel and a paved circle in a lawn reduce the host's area instead of being counted twice.
+- Stepping stones are counted one per position (previously rounded to 2 each because of the waste allowance).
+- Optional example allowances (`EXAMPLE_ALLOWANCES` in `catalogue.ts`), applied only when the user ticks the box or presses the button, stored on the project and labelled "EXAMPLE ALLOWANCE, not a quote".
+- "Copy prompt for ChatGPT" on each concept card; prompt builder shared with the server (`src/core/prompt.ts`).
+- Tests: 115 unit (72 idea × tier × yard-shape combinations), 25 browser; `e2e/photo-tour.mjs` runs any folder of before photos through the flow.
+
+## v0.3 — Interactive 3D and demo gallery (16 Nov 2026)
+- three.js 3D model (`src/ui/pages/Scene3D.tsx`) built from the plan geometry and selected materials: orbit, zoom, pan, touch, reset and top views. Lazy-loaded. The isometric massing (`src/core/iso.ts`) is still used for the PDF sheet.
+- Dashboard demo gallery: three freely licensed Wikimedia Commons backyard photos (credits in `public/demo/credits.json`) with three synthetic customers, briefs, budgets and choices (`src/core/demoGallery.ts`).
+- Fix: generic concept layouts without a wall overlapped lawn and garden.
+- `SINGLE=1 npx vite build` makes one self-contained script for the claude.ai phone preview.
+
 ## v0.2 — Photo → concepts → customer choice → buildable project (12 Nov 2026)
 
 Everything from v0.1 is kept: drawing, quantities, estimate, safety labels, approvals, NSW checks, supplier provenance, PDF/DXF/CSV, tests.

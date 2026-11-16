@@ -40,6 +40,15 @@ Rules that keep the numbers honest. Tests depend on them:
 - `src/core/iso.ts` is the single 3D massing function for screen and PDF.
 - `src/core/approval.ts` `statusChangeError` is the only place status rules live; the UI calls it.
 
+## 2c. Photo-first ideas and 3D (v0.3 / v0.4)
+
+- `src/core/ideas.ts`: six `Idea`s, each with `min` yard size, `fit(yard, conditions)` → score and reasons, and `layout(yard, tierSpec, tier)` → objects. `ideaChanges()` turns a layout into proposal changes. Yard = bounding box of the site outline beyond the house (house along the top edge, y grows towards the back fence).
+- `props.hostId` marks an area set into another (stepping stones in gravel, fire-pit circle in lawn); `netArea()` in assemblies.ts subtracts it and validation skips that overlap.
+- `props.isStepper` makes a paving object count as one unit with no jointing or edge restraint.
+- `src/ui/pages/Scene3D.tsx` (three.js, lazy-loaded via Iso3D.tsx) is the interactive 3D view; `src/core/iso.ts` still draws the PDF massing sheet.
+- `EXAMPLE_ALLOWANCES` in catalogue.ts are applied only on user request and stored on the project, never in the catalogue.
+- Next-AI prompts: docs/PROMPTS-FOR-NEXT-AI.md.
+
 ## 3. How it was built (process that worked)
 
 1. **Research first, only what changes decisions.** Official NSW pages gave the licence and contract thresholds ($5k licence and written contract, $20k HBCF), exempt-development limits (600 mm cut/fill, deck limits), the AS 4678 800 mm bound and the AS 4970 12 × DBH root zone. Supplier pages gave real prices with URL and date. Anything not retrieved verbatim (the full text of Codes SEPP clause 2.30) was marked not encoded rather than invented. Note: Nuway turned out to be in Queensland, so it is kept only as a density reference.

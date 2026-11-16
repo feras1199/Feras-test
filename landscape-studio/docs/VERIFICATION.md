@@ -67,3 +67,18 @@ Totals: unit **38/38**, browser **25/25** (fresh database each run; the E2E scri
 | Console errors | None across the run | PASS | E2E |
 
 Note on the demo site estimate: before any design, it already shows about $3,600 inc GST. That is the demo's labelled assumption lines (mini excavator day, spoil disposal, electrician allowance, delivery allowance), not a bug.
+
+
+## v0.3 / v0.4 additions (run 16 Nov 2026)
+
+Totals: unit **115/115**, browser **25/25**.
+
+| Area | Test | Result |
+|---|---|---|
+| Ideas fit | Each of 6 ideas × 3 tiers × 4 yard shapes (16×12, 10×18, 7×7, 3.2×14): inside boundary, no overlaps, priced; ideas too big for the yard return nothing and say why | PASS (unit) |
+| Ranking | Narrow → side path; entertains → terrace; overgrown + low maintenance → gravel garden; kids → play lawn; slope → terraced | PASS (unit) |
+| Tiers | Economy < Balanced < Premium cost; Economy terrace has no pergola | PASS (unit) |
+| Stepping stones | One stone per position; no jointing sand or edge restraint | PASS (unit) |
+| Pergola / fire pit checks | Pergola 0.3 m from boundary flagged against 900 mm; fire pit flagged | PASS (unit) |
+| Photo tour | Four user-supplied before photos run end to end (photo, checklist, size, ideas, tier, select, apply, 3D, plan, layers, purchase list), no browser errors | PASS (script `e2e/photo-tour.mjs`) |
+| Demo tour | Three gallery demos end to end incl. 3D rotation by mouse | PASS (script `e2e/demo-tour.mjs`) |

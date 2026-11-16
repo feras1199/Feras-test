@@ -31,7 +31,7 @@ Browser-only mode: if the app is served without the Node server (for example `di
 ## Tests
 
 ```bash
-npm test                       # 38 unit tests: geometry, quantities, purchase rounding, pricing, compliance, concepts, build layers, approval gate, exports
+npm test                       # 115 unit tests: geometry, quantities, purchase rounding, pricing, compliance, concepts, build layers, approval gate, exports
 npm run server &               # then, in another terminal:
 npm run e2e                    # 25 browser checks against the running app (Playwright + Chromium)
 ```
@@ -79,4 +79,4 @@ e2e/             browser tests (Playwright)
 docs/            research, verification, feature matrix, architecture, operating costs
 ```
 
-See `docs/` for the research report, verification table, feature-completeness matrix, architecture and operating requirements.
+See `docs/PROMPTS-FOR-NEXT-AI.md` to continue the work with another AI. See `docs/` for the research report, verification table, feature-completeness matrix, architecture and operating requirements.
