@@ -1,3 +1,7 @@
 out/score_and_sfx.wav
 render.log
 __pycache__/
+out/_vo_*/
+out/voiceover_*.wav
+out/voltari_one_launch_ad_45s_vo_es.mp4
+out/voltari_one_launch_ad_45s_vo_ar.mp4
