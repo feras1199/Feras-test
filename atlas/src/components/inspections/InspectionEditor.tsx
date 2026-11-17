@@ -35,6 +35,9 @@ export function InspectionEditor({ inspection: i, measurements, editable, areas 
     <label className="block text-sm"><span className="label">{label}</span><textarea name={name} rows={rows} defaultValue={String(i[name] ?? "")} disabled={!editable} className="input py-2" /></label>
   );
 
+  // No remount when the AI write-up lands. The boxes are uncontrolled, so the browser keeps anything a
+  // person has already typed and only boxes they haven't touched pick up the newly saved text. The two
+  // dropdowns are keyed on their saved value because React doesn't refresh a dropdown's default itself.
   return (
     <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
       <section className="card p-5">
@@ -58,7 +61,7 @@ export function InspectionEditor({ inspection: i, measurements, editable, areas 
           </div>
           {area("scope", "What the customer wants", 3)}
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm"><span className="label">Access</span><select name="accessDifficulty" defaultValue={i.accessDifficulty} disabled={!editable} className="input"><option value="">Not assessed</option>{["Easy", "Moderate", "Difficult", "Unknown"].map((x) => <option key={x}>{x}</option>)}</select></label>
+            <label className="text-sm"><span className="label">Access</span><select key={i.accessDifficulty} name="accessDifficulty" defaultValue={i.accessDifficulty} disabled={!editable} className="input"><option value="">Not assessed</option>{["Easy", "Moderate", "Difficult", "Unknown"].map((x) => <option key={x}>{x}</option>)}</select></label>
             <label className="text-sm"><span className="label">Narrowest access (m)</span><input name="accessWidthM" inputMode="decimal" defaultValue={i.accessWidthM ?? ""} disabled={!editable} className="input" /></label>
           </div>
           {area("existingConditions", "Existing conditions")}
@@ -68,7 +71,7 @@ export function InspectionEditor({ inspection: i, measurements, editable, areas 
           {area("risks", "Risks and hazards")}
           {area("priorities", "Customer priorities and style")}
           {area("notes", "Other notes")}
-          <label className="text-sm"><span className="label">Budget fit</span><select name="budgetFit" defaultValue={i.budgetFit} disabled={!editable} className="input"><option value="">Not assessed</option>{["Good Fit", "Likely Fits", "May Need Scope Change", "Budget Mismatch", "Unknown"].map((x) => <option key={x}>{x}</option>)}</select></label>
+          <label className="text-sm"><span className="label">Budget fit</span><select key={i.budgetFit} name="budgetFit" defaultValue={i.budgetFit} disabled={!editable} className="input"><option value="">Not assessed</option>{["Good Fit", "Likely Fits", "May Need Scope Change", "Budget Mismatch", "Unknown"].map((x) => <option key={x}>{x}</option>)}</select></label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="complete" defaultChecked={i.complete} disabled={!editable} className="h-5 w-5" />Inspection complete</label>
           {editable && <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save notes"}</button>}
           {saved && !error && <span className="ml-3 text-sm text-forest-700" role="status">Saved</span>}

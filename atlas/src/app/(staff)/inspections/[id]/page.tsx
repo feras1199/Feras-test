@@ -38,7 +38,6 @@ export default async function InspectionPage({ params }: { params: Promise<{ id:
         <SiteMedia inspectionId={insp.id} available={!!store} editable={can(s.role, "inspections.edit")} files={files.flatMap((f) => (f.kind === "document" ? [] : [{ id: f.id, kind: f.kind, name: f.name, durationS: f.durationS, createdBy: f.createdBy, createdTime: f.createdTime, transcript: f.transcript }]))} ai={voiceAiStatus()} summary={insp.aiMeetingSummary ?? ""} />
       </div>
       <InspectionEditor
-        key={insp.aiFilledJson ?? "manual"}
         areas={(await loadSuggestions(repo, ["areas"])).areas}
         editable={can(s.role, "inspections.edit")}
         inspection={{ id: insp.id, inspectionDate: insp.inspectionDate ?? "", inspectionTime: insp.inspectionTime ?? "", complete: !!insp.complete, scope: insp.scope ?? "", accessDifficulty: insp.accessDifficulty ?? "", accessWidthM: insp.accessWidthM ?? null, existingConditions: insp.existingConditions ?? "", slopeLevels: insp.slopeLevels ?? "", drainage: insp.drainage ?? "", services: insp.services ?? "", risks: insp.risks ?? "", priorities: insp.priorities ?? "", notes: insp.notes ?? "", budgetFit: insp.budgetFit ?? "" }}
