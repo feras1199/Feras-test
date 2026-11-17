@@ -1,2 +1,3 @@
-voltari-ad/out/score_and_sfx.wav
-voltari-ad/render.log
+out/score_and_sfx.wav
+render.log
+__pycache__/
