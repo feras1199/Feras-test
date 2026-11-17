@@ -10,3 +10,7 @@ node_modules/
 assets/myvoice/
 assets/me*.wav
 renders/detention-basin-myvoice.mp4
+
+# Cloned-voice render and clips (personal)
+assets/clone*.wav
+renders/detention-basin-clone.mp4
